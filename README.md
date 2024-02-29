@@ -1,5 +1,5 @@
 
-SOCRATES
+##SOCRATES     
 Suite Of Community RAdiative Transfer codes based on Edwards and Slingo
 -----------------------------------------------------------------------
 
