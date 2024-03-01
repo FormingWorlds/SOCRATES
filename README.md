@@ -8,7 +8,7 @@ Contents:
 
 0. Licence
 1. What's included?
-2. Compiling the source code within the Met Office
+2. [Omitted in this redistribution of the code]
 3. Compiling the source code externally
 4. Compilation of scripts in sbin
 5. Running the code
@@ -47,30 +47,6 @@ in netCDF format to be used as input for the radiation code (l_run_cdf).
 
 docs/ contain the user guide and technical guide for the ES code.
 
-
-### 2) Compiling the source code within the Met Office
-
-For users within the Met Office simply run the command:
-
-`./build_code`
-
-to compile the entire suite. To setup your path to the executables
-and man pages you should then source the following file:
-
-`. ./set_rad_env`
-
-Individual programs can also be compiled using the build_code script
-(build_code will take as an argument the target to pass to the makefile).
-
-For example, to build the routines that don't require netCDF:
-
-`./build_code cdl`
-
-To build just the two-stream/radiance code (netCDF version):
-
-`./build_code l_run_cdf`
-
-
 ### 3) Compiling the source code externally
 
 For external users it should only be necessary to edit the file
@@ -83,6 +59,7 @@ The following commands can then be run to build the suite and setup
 your path to the executables and man pages:
 
 `./build_code`
+`ksh2bash.sh`
 `. ./set_rad_env`
 
 See section 2 for building individual routines.

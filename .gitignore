@@ -1,3 +1,13 @@
+# Misc files
 .vscode
 .DS_Store
 nogit*
+
+# Model files
+set_rad_env
+radiation_code.lock
+bin/
+sbin/Cgen_null
+sbin/Cinc_field
+sbin/Cscale_field
+

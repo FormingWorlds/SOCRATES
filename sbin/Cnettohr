@@ -1,4 +1,4 @@
-#! /bin/ksh
+#! /bin/bash
 #
 # Script to run teh conversion from net fluxes to heating rates.
 #
