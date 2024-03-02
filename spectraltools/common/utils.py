@@ -17,7 +17,7 @@ def wl2wn(wl:float) -> float:
         return 10000000.0 / wl
     
 # Named directories
-dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "python_spectralfiles/")}
+dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
 dirs["output"] = os.path.join(dirs["tools"] , "output/" )
 dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
 dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )

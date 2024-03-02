@@ -13,5 +13,5 @@ sbin/Cinc_field
 sbin/Cscale_field
 
 # Outputs
-python_spectralfiles/output/
+spectraltools/output/
 
