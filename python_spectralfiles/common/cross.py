@@ -12,7 +12,12 @@ import common.phys as phys
 class xsec():
 
     # Set up class
-    def __init__(self, formula:str, fname:str) -> None:
+    def __init__(self, formula:str, source:str, fname:str) -> None:
+
+        # Validate
+        source = source.strip().lower() 
+        if not source in ["dace", "hitran", "exomol"]:
+            raise Exception("Invalid source databse provided (%s)" % source)
 
         # Meta parameters
         self.dummy  = bool(len(formula) == 0)
@@ -22,7 +27,8 @@ class xsec():
         else:
             self.form = "XX"
             self.mmw  = 0.0
-        self.fname  = fname     # DACE filename
+        self.source = source    # Source database
+        self.fname  = fname     # Path to source file
         self.t      = -1.0      # Temperature [K]
         self.p      = -1.0      # Pressure [bar]
         self.loaded = False     # Loaded data?
@@ -33,11 +39,13 @@ class xsec():
         self.nbins  = -1        # Quantity of wavenumber bins
 
         # The data itself 
-        self.arr_k  = np.array([])  # Cross-sections [cm2 molec-1]
+        self.arr_k  = np.array([])  # Cross-sections [cm2 g-1]
         self.arr_nu = np.array([])  # Wavenumbers [cm-1]
 
     # Read the filename information and use it to set scalar variables in this object
     def parse_binname(self):
+        if not (self.source == "dace"):
+            print("WARNING: Cannot execute parse_binname because source (%s) is not DACE" % self.source)
         splt = self.fname.split("/")[-1].split(".")[0].split("_")[1:]
         self.numin = float(splt[0])  # cm-1
         self.numax = float(splt[1])  # cm-1
@@ -52,6 +60,9 @@ class xsec():
 
     # Read DACE bin file
     def readbin(self):
+
+        if not (self.source == "dace"):
+            print("WARNING: Cannot execute readbin because source (%s) is not DACE" % self.source)
 
         # check conflicts
         if self.loaded:
@@ -76,7 +87,7 @@ class xsec():
             for _ in range(nbins):
                 K = struct.unpack('f', hdl.read(4))[0]  # 4 bytes at a time (Float32)
                 k_read.append(K)
-        self.arr_k = np.array(k_read, dtype=float) * self.mmw / (1.0e3 * phys.N_av)
+        self.arr_k = np.array(k_read, dtype=float)
 
         # Read filename info
         self.parse_binname()
@@ -93,8 +104,11 @@ class xsec():
         # Flag as loaded 
         self.loaded = True 
 
-    # Read an xsc file (for validation)
+    # Read HITRAN xsc file
     def readxsc(self):
+        if not (self.source == "hitran"):
+            print("WARNING: Cannot execute readxsc because source (%s) is not HITRAN" % self.source)
+
         # check conflicts
         if self.loaded:
             raise Exception("This xsec object already contains data")
@@ -133,14 +147,34 @@ class xsec():
         # Flag as loaded 
         self.loaded = True 
 
+    # Read ExoMol sigma file
+    def readsigma(self):
+        if not (self.source == "hitran"):
+            print("WARNING: Cannot execute readsigma because source (%s) is not ExoMol" % self.source)
+
+        # check conflicts
+        if self.loaded:
+            raise Exception("This xsec object already contains data")
+        if not os.access(self.fname, os.R_OK):
+            raise Exception("Cannot read file '%s'" % self.fname)
+
+        raise Exception("Function readsigma() is not yet implemented!")
+        
+    # Read source file 
+    def read(self):
+        match self.source:
+            case "dace":   self.readbin()
+            case "hitran": self.readxsc()
+            case "exomol": self.readsigma()
+
 
     # Return cross-section in units of cm2.molecule-1
     def cross_per_molec(self):
-        return np.array(self.arr_k[:])
+        return np.array(self.arr_k[:]) * self.mmw / (1000.0 * phys.N_av)
     
     # Return cross-section in units of cm2.g-1
     def cross_per_gram(self):
-        return np.array(self.arr_k[:]) * 1.0e3 * phys.N_av / self.mmw
+        return np.array(self.arr_k[:])
 
     # Write to a HITRAN-formatted xsc file in the given folder
     def writexsc(self, dir:str):
@@ -186,7 +220,7 @@ class xsec():
 
             # Write data 
             counter = 0
-            for k in self.arr_k:
+            for k in self.cross_per_molec():
                 counter += 1
 
                 hdl.write("%10.3e" % k)

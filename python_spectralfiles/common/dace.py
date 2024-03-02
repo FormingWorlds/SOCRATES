@@ -9,19 +9,21 @@ import os, shutil
 import common.cross as cross
 import common.utils as utils
 
+# List DACE bin files in directory
+def list_files(directory:str) -> list:
+    files = glob(directory+"/"+"Out*.bin")
+    if len(files) == 0:
+        print("WARNING: No bin files found in '%s'"%directory)
+    return [os.path.abspath(f) for f in files]
 
-# List DACE bin files in dir
-def list_files(dir:str) -> list:
-    return list(glob(dir+"/"+"Out*.bin"))
-
-def find_bin_close(dir:str, p_aim:float, t_aim:float) -> str:
+def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
     """Search for DACE bin file.
 
     Finds the DACE bin file in the directory which most closely matches the target p,t values.
 
     Parameters
     ----------
-    dir : str
+    directory : str
         Directory containing bin files
     p_aim : float
         Target pressure [bar]
@@ -37,16 +39,16 @@ def find_bin_close(dir:str, p_aim:float, t_aim:float) -> str:
     if (p_aim < 0) or (t_aim < 0):
         raise Exception("Target pressure and temperature must be positive values")
 
-    files = list_files(dir)
+    files = list_files(directory)
     count = len(files)
     if count == 0:
-        raise Exception("Could not find any bin files in '%s'" % dir)
+        raise Exception("Could not find any bin files in '%s'" % directory)
     
     p_arr = []  # pressure
     t_arr = []  # temperature
     d_arr = []  # distance from target
     for f in files:
-        temp = cross.xsec("", f)
+        temp = cross.xsec("", "dace", f)
         temp.parse_binname()
         p_arr.append(temp.p)
         t_arr.append(temp.t)
@@ -58,21 +60,105 @@ def find_bin_close(dir:str, p_aim:float, t_aim:float) -> str:
 
     return files[i_close]
 
-# Get DACE files that are close to the given p,t values
-def get_grid(dir:str, p_list:list, t_list:list):
+def find_grid(directory:str, p_list:list, t_list:list):
+    """Get DACE files that are close to the given p,t values.
+
+    Parameters
+    ----------
+    directory : str
+        Directory containing bin files
+    p_list : list
+        Target pressures [bar]
+    t_list : float
+        Target temperatures [K]
+
+    Returns
+    -------
+    list
+        List of file paths
+    """
 
     # Gather files
     files = []
     for p in p_list:
         for t in t_list:
-            new = find_bin_close(dir, p, t)
+            new = find_bin_close(directory, p, t)
             if new in files:
                 print("This p,t grid would result in duplicate points")
                 return
             else:
                 files.append(new)
-
     return files
+
+def get_pt(directory:str):
+    """Get p,t points covered by DACE bin files within a given directory.
+
+    The p,t arrays will be sorted in ascending order, pressure first.
+    Also returns the file paths, for them to be read fully later.
+
+    Parameters
+    ----------
+    directory : str
+        Directory containing bin files
+
+    Returns
+    -------
+    np.ndarray
+        pressures [bar]
+    np.ndarray 
+        temperatures [K]
+    list 
+        file paths which map to these p,t values
+    """
+
+    print("Mapping p,t points")
+
+    # Get files
+    files = list_files(directory)
+
+    # P,T points
+    arr_p = []
+    arr_t = []
+    for f in files:
+        x = cross.xsec("", "dace", f)
+        x.parse_binname()
+        arr_p.append(x.p)
+        arr_t.append(x.t)
+
+    # Unique P,T values
+    unique_p = sorted(list(set(arr_p)))
+    num_p = len(unique_p)  
+    unique_t = sorted(list(set(arr_t)))
+    num_t = len(unique_t)  
+
+    # Sorted arrays
+    sorted_p = []
+    sorted_t = []
+    sorted_f = []
+    for p in unique_p:
+        for t in unique_t:
+            # store these p,t
+            sorted_p.append(p)
+            sorted_t.append(t)
+            # record which file maps to this p,t pair
+            for i,f in enumerate(files):
+                if np.isclose(arr_p[i],p) and np.isclose(arr_t[i],t):
+                    sorted_f.append(f)
+
+    if (len(sorted_f) != len(sorted_p)) or (len(sorted_p) != len(sorted_t)):
+        raise Exception("Mapping failed!")
+    
+    # Get total size on disk (to warn user)
+    size = 0.0
+    for f in  files:
+        size += os.path.getsize(f)
+    size *= 1.0e-9
+    
+    # Result
+    print("    %d files found, totaling %.2f GB" % (len(sorted_p), size))
+    return np.array(sorted_p, dtype=float), np.array(sorted_t, dtype=float), sorted_f
+
+
 
 # Write xsc files and p,t grid to files in the given folder
 def write_grid(outdir:str, form:str, binfiles:list, concat=True):
@@ -114,7 +200,7 @@ def write_grid(outdir:str, form:str, binfiles:list, concat=True):
     modprint = 10
     pctlast  = -999.0
     for i in range(nfiles):
-        x = cross.xsec(form, binfiles[i])
+        x = cross.xsec(form, "dace", binfiles[i])
         x.readbin()
         wnmin = x.numin
         wnmax = x.numax

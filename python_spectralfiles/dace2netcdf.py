@@ -2,43 +2,40 @@
 # Convert DACE bin files to a NetCDF file
 
 # Import local files 
-import common.cross as cross
 import common.dace as dace
-import common.phys as phys
+import common.utils as utils
+import common.netcdf as netcdf
 
-import os, sys
+import sys, os
 
 # Main function
-def main(formula:str, pres, temp):
+def main(formula:str):
 
-    dace_db = os.path.join( os.path.abspath(".") , "data" , "dace")
-    formula_path =  os.path.join(dace_db, formula.strip())
-    bin_path = dace.find_bin_close(formula_path, float(pres), float(temp))
+    print("Processing DACE bin files for %s"%formula)
 
-    dace_test = cross.xsec(formula, bin_path)
-    dace_test.readbin()
-    dace_test.plot(units=0)
+    dace_db = os.path.join(utils.get_tools_dir(),  "data" , "dace")
+    formula_path = os.path.join(dace_db, formula.strip()+"/")
+    if not os.path.exists(formula_path):
+        raise Exception("Could not find folder '%s'" % formula_path)
 
-
-    # p_list = [1.0, 10.0, 100.0]
-    # t_list = [100.0, 1500.0, 3000.0]
-
-    # binfiles = batch.get_grid(d, p_list, t_list)
-    # batch.write_grid(".", "H2O", binfiles, concat=True)
-
-    # htrn_test = cross.xsec("CH3F", hitran_db+"CH3F/CH3F_278.1K-760.0Torr_600.0-6500.0_0.11_N2_123_43.xsc")
-    # htrn_test.readxsc()
-    # htrn_test.plot(units=1)
+    arr_p, arr_t, arr_f = dace.get_pt(formula_path)
+    netcdf.write_ncdf(formula, "dace", arr_p, arr_t, arr_f)
+    
+    # dace_test = cross.xsec(formula, bin_path)
+    # dace_test.readbin()
+    # dace_test.plot(units=0)
 
 
 # Run main function
 if __name__ == "__main__":
 
+    if not utils.check_output_exists():
+        print("ERROR: Output folder does not exist - refer to README.md for more information")
+        exit(1)
+
     args = sys.argv
-    if not (len(args) == 4):
-        raise Exception("Invalid arguments")
-    
-    main(args[1], args[2], args[3])
+    main(args[1])
+    exit(0)
 
 
 # End of file

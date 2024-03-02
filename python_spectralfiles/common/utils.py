@@ -1,5 +1,7 @@
 # General utilities 
 
+import os
+
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
     if wn == 0:
@@ -13,6 +15,14 @@ def wl2wn(wl:float) -> float:
         return float("inf")
     else:
         return 10000000.0 / wl
+    
+# Return absolute path to pytools directory
+def get_tools_dir():
+    return os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "python_spectralfiles/")
+
+# Check if output folder exists
+def check_output_exists():
+    return os.path.exists( os.path.join(get_tools_dir() , "output/" )  )
 
 # DACE temperature grid [K]
 grid_t = [  50,

@@ -15,7 +15,7 @@ def main(formula:str, pres, temp):
     formula_path =  os.path.join(dace_db, formula.strip())
     bin_path = dace.find_bin_close(formula_path, float(pres), float(temp))
 
-    dace_test = cross.xsec(formula, bin_path)
+    dace_test = cross.xsec(formula, "dace", bin_path)
     dace_test.readbin()
     dace_test.plot(units=0)
 
@@ -26,7 +26,7 @@ def main(formula:str, pres, temp):
     # binfiles = batch.get_grid(d, p_list, t_list)
     # batch.write_grid(".", "H2O", binfiles, concat=True)
 
-    # htrn_test = cross.xsec("CH3F", hitran_db+"CH3F/CH3F_278.1K-760.0Torr_600.0-6500.0_0.11_N2_123_43.xsc")
+    # htrn_test = cross.xsec("CH3F", "hitran", hitran_db+"CH3F/CH3F_278.1K-760.0Torr_600.0-6500.0_0.11_N2_123_43.xsc")
     # htrn_test.readxsc()
     # htrn_test.plot(units=1)
 
