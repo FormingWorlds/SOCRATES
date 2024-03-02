@@ -32,8 +32,7 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
     # Open file
     ds_path = os.path.join( utils.dirs["output"] , "x_%s.nc"%formula)
     print("Writing netCDF for '%s'..."%formula)
-    if os.path.exists(ds_path):
-        os.remove(ds_path)
+    utils.rmsafe(ds_path)
     ds = Dataset(ds_path, "w", format="NETCDF4")
 
     # Read first xsec to get nu array

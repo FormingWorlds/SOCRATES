@@ -171,6 +171,10 @@ class xsec():
     # Return cross-section in units of cm2.g-1
     def cross_cm2_per_gram(self):
         return np.array(self.arr_k[:])
+    
+    # Return cross-section in units of cm2.g-1
+    def cross_m2_per_kg(self):
+        return 100.0 * self.cross_cm2_per_gram()
 
     # Write to a HITRAN-formatted xsc file in the given folder
     def writexsc(self, dir:str):
@@ -232,7 +236,7 @@ class xsec():
 
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
-    def plot(self, yunits=1, fig=None, ax=None, show=True):
+    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout=None, xmin=None, xmax=1e4):
 
         if not self.loaded:
             raise Exception("Cannot plot data because xsec object is empty!")
@@ -241,23 +245,49 @@ class xsec():
             fig,ax = plt.subplots(figsize=(10,5))
 
         lw=0.4
-        
+        col = 'k'
+
+        # Crop data
+        if (xmin == None):
+            xmin = self.numin
+        xmin_idx = np.argmin( abs(self.arr_nu-xmin))
+        if (xmax == None):
+            xmax = self.numax
+        xmax_idx = np.argmin( abs(self.arr_nu-xmax))
+        xlim = [xmin, xmax]
+
+        if xmin > xmax:
+            print("WARNING: Encountered invalid xlimits:", xlim)
+        ax.set_xlim(xlim)
+
         if yunits == 0:
-            ax.plot(self.arr_nu,self.cross_cm2_per_gram(), lw=lw)
-            ax.set_ylabel("Cross-section [cm$^2$ g$^{-1}$]")
+            yarr = self.cross_cm2_per_gram()
+            ylbl = "Cross-section [cm$^2$ g$^{-1}$]"
         elif yunits == 1:
-            ax.plot(self.arr_nu, self.cross_cm2_per_molec(), lw=lw)
-            ax.set_ylabel("Cross-section [cm$^2$ molecule$^{-1}$]")
+            yarr = self.cross_cm2_per_molec()
+            ylbl = "Cross-section [cm$^2$ molecule$^{-1}$]"
         elif yunits == 2:
-            ax.plot(self.arr_nu, self.cross_m2_per_kg(), lw=lw)
-            ax.set_ylabel("Cross-section [m$^2$ kg$^{-1}$]")
+            yarr = self.cross_m2_per_kg()
+            ylbl = "Cross-section [m$^2$ kg$^{-1}$]"
         else:
             raise Exception("Invalid unit choice for plot")
         
+        xarr = self.arr_nu[xmin_idx:xmax_idx]
+        yarr = yarr[xmin_idx:xmax_idx]
+        
+        ax.plot(xarr, yarr, lw=lw, color=col)
+
+        ax.set_ylabel(ylbl)
         ax.set_xlabel("Wavenumber [cm$^{-1}$]")
 
-        title = self.form + " : %.3e bar, %.2f K" % (self.t, self.p)
+        title = self.form + " : %.3e bar, %.2f K" % (self.p, self.t)
         ax.set_title(title)
+
+        if not (saveout == None):
+            save_path = os.path.join(utils.dirs["output"], saveout)
+            print("Saving plot to '%s'"%save_path)
+            utils.rmsafe(save_path)
+            fig.savefig(save_path, bbox_inches="tight")
 
         if show:
             plt.show()

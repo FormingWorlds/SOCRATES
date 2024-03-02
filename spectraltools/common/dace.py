@@ -181,8 +181,7 @@ def write_grid(outdir:str, form:str, binfiles:list, concat=True):
     rmvout.extend(list(glob(outdir+"/%s.xsc"%form)))
     rmvout.extend([tsvout, totout])
     for r in rmvout:
-        if os.path.exists(r):
-            os.remove(r)
+        utils.rmsafe(r)
 
     xscdir = outdir
     if concat:

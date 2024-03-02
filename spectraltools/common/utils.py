@@ -35,6 +35,14 @@ def sourcesafe(source:str):
         raise Exception("Invalid source '%s'"% source)
     return safe
 
+# Safely remove a file
+def rmsafe(file:str):
+    if file in ["","."]:
+        print("WARNING: an attempt was made to remove the current working directory!")
+        return
+    if os.path.exists(file):
+        os.remove(file)
+
 # DACE temperature grid [K]
 grid_t = [  50,
             100,
