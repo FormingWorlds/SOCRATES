@@ -2,6 +2,7 @@
 .vscode
 .DS_Store
 nogit*
+__pycache__
 
 # Model files
 set_rad_env
@@ -10,4 +11,7 @@ bin/
 sbin/Cgen_null
 sbin/Cinc_field
 sbin/Cscale_field
+
+# Outputs
+python_spectralfiles/output/
 
