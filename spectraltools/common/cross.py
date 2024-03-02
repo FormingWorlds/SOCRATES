@@ -22,7 +22,7 @@ class xsec():
             self.mmw    = phys.mmw(self.form)
         else:
             self.form = "XX"
-            self.mmw  = 0.0
+            self.mmw  = -1.0
         self.source = utils.sourcesafe(source)    # Source database
         self.fname  = fname     # Path to source file
         self.t      = -1.0      # Temperature [K]
@@ -38,7 +38,7 @@ class xsec():
         self.arr_k  = np.array([])  # Cross-sections [cm2 g-1]
         self.arr_nu = np.array([])  # Wavenumbers [cm-1]
 
-    # Read the filename information and use it to set scalar variables in this object
+    # Read bin filename information and use it to set scalar variables in this object
     def parse_binname(self):
         if not (self.source == "dace"):
             print("WARNING: Cannot execute parse_binname because source (%s) is not DACE" % self.source)
@@ -126,15 +126,11 @@ class xsec():
         self.p     = float(head[i:i+6 ]);   i += 6
         self.p /= 750.06 # convert torr to bar 
         
-        print(self.nbins)
-        print(self.p , "bar")
-        print(self.t , "K")
-
         # Process body 
         raw_data = np.array([],dtype=float)
         for b in body:
             raw_data = np.append(raw_data, [float(v) for v in b.split()])
-        self.arr_k = raw_data
+        self.arr_k = raw_data * phys.N_av / (self.mmw * 1000.0)
 
         # Generate wavenumber grid
         self.nbins = len(self.arr_k)
@@ -166,10 +162,12 @@ class xsec():
 
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):
-        return np.array(self.arr_k[:]) * self.mmw / (1000.0 * phys.N_av)
+        if self.dummy: print("WARNING: Accessing kabs of dummy xsec object!")
+        return np.array(self.arr_k[:]) * self.mmw * 1000.0 / phys.N_av
     
     # Return cross-section in units of cm2.g-1
     def cross_cm2_per_gram(self):
+        if self.dummy: print("WARNING: Accessing kabs of dummy xsec object!")
         return np.array(self.arr_k[:])
     
     # Return cross-section in units of cm2.g-1
@@ -236,7 +234,7 @@ class xsec():
 
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
-    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout=None, xmin=None, xmax=1e4):
+    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout="", xmin=None, xmax=1e4):
 
         if not self.loaded:
             raise Exception("Cannot plot data because xsec object is empty!")
@@ -250,9 +248,13 @@ class xsec():
         # Crop data
         if (xmin == None):
             xmin = self.numin
+        else:
+            xmin = max(xmin, self.numin)
         xmin_idx = np.argmin( abs(self.arr_nu-xmin))
         if (xmax == None):
             xmax = self.numax
+        else:
+            xmax = min(xmax, self.numax)
         xmax_idx = np.argmin( abs(self.arr_nu-xmax))
         xlim = [xmin, xmax]
 
@@ -283,11 +285,13 @@ class xsec():
         title = self.form + " : %.3e bar, %.2f K" % (self.p, self.t)
         ax.set_title(title)
 
-        if not (saveout == None):
+        if len(saveout) > 0:
             save_path = os.path.join(utils.dirs["output"], saveout)
             print("Saving plot to '%s'"%save_path)
             utils.rmsafe(save_path)
             fig.savefig(save_path, bbox_inches="tight")
+            show=False
+            plt.close()
 
         if show:
             plt.show()

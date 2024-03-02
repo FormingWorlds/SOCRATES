@@ -3,7 +3,6 @@
 
 # Import local files 
 import common.cross as cross
-import common.dace as dace
 import common.utils as utils
 
 import os, argparse
@@ -18,9 +17,11 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
 
     match safe:
         case "dace":
+            import common.dace as dace
             close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))
         case "hitran":
-            close_path = ""
+            import common.hitran as hitran
+            close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
         case "exomol":
             close_path = ""
 

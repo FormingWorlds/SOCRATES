@@ -1,4 +1,4 @@
-# Tools for batch processing files
+# Tools for processing DACE files
 
 # Import system libraries
 from glob import glob
