@@ -136,8 +136,15 @@ def get_pt(directory:str):
     sorted_p = []
     sorted_t = []
     sorted_f = []
+
+    counter = 1
+    num_pt = num_p * num_t
+    modprint = int(num_pt*0.1)
     for p in unique_p:
         for t in unique_t:
+            if counter % modprint == 0:
+                print("    point %5d of %5d   (%5.1f%%)" % (counter,num_pt, 100.0*(counter/num_pt)))
+
             # store these p,t
             sorted_p.append(p)
             sorted_t.append(t)
@@ -145,6 +152,8 @@ def get_pt(directory:str):
             for i,f in enumerate(files):
                 if np.isclose(arr_p[i],p) and np.isclose(arr_t[i],t):
                     sorted_f.append(f)
+
+            counter += 1
 
     if (len(sorted_f) != len(sorted_p)) or (len(sorted_p) != len(sorted_t)):
         raise Exception("Mapping failed!")
@@ -156,7 +165,7 @@ def get_pt(directory:str):
     size *= 1.0e-9
     
     # Result
-    print("    %d files found, totaling %.2f GB" % (len(sorted_p), size))
+    print("    %d files mapped, totaling %.2f GB" % (len(sorted_p), size))
     return np.array(sorted_p, dtype=float), np.array(sorted_t, dtype=float), sorted_f
 
 

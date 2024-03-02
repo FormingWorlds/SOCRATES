@@ -81,8 +81,8 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
 
     # Read and write cross-sections (2D)
     print("    write cross-section data")
-    modprint = 10
     counter = 0
+    modprint = int(len_pt*0.1)
     for i in range(len_pt):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:
