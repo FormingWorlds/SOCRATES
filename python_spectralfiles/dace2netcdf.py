@@ -13,8 +13,7 @@ def main(formula:str):
 
     print("Processing DACE bin files for %s"%formula)
 
-    dace_db = os.path.join(utils.get_tools_dir(),  "data" , "dace")
-    formula_path = os.path.join(dace_db, formula.strip()+"/")
+    formula_path = os.path.join(utils.dirs["dace"], formula.strip()+"/")
     if not os.path.exists(formula_path):
         raise Exception("Could not find folder '%s'" % formula_path)
 

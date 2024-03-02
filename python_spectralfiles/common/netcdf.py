@@ -30,7 +30,7 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
     """
 
     # Open file
-    ds_path = os.path.join( utils.get_tools_dir() , "output" , "x_%s.nc"%formula)
+    ds_path = os.path.join( utils.dirs["output"] , "x_%s.nc"%formula)
     print("Writing netCDF for '%s'..."%formula)
     if os.path.exists(ds_path):
         os.remove(ds_path)

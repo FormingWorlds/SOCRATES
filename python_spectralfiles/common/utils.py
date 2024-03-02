@@ -16,13 +16,24 @@ def wl2wn(wl:float) -> float:
     else:
         return 10000000.0 / wl
     
-# Return absolute path to pytools directory
-def get_tools_dir():
-    return os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "python_spectralfiles/")
+# Named directories
+dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "python_spectralfiles/")}
+dirs["output"] = os.path.join(dirs["tools"] , "output/" )
+dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
+dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
+dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
+dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
 
 # Check if output folder exists
 def check_output_exists():
-    return os.path.exists( os.path.join(get_tools_dir() , "output/" )  )
+    return os.path.exists( dirs["output"]  )
+
+# Sanitise source string
+def sourcesafe(source:str):
+    safe = source.strip().lower()
+    if safe not in ["dace", "hitran", "exomol"]:
+        raise Exception("Invalid source '%s'"% source)
+    return safe
 
 # DACE temperature grid [K]
 grid_t = [  50,

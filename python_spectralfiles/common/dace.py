@@ -53,10 +53,11 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 
-        dist = ( ( (p_aim-temp.p)/temp.p )**2.0 + ( (t_aim-temp.t)/temp.t )**2.0 ) ** 0.5
+        dist = 100.0 * ( ( (p_aim-temp.p)/temp.p )**2.0 + ( (t_aim-temp.t)/temp.t )**2.0 ) ** 0.5
         d_arr.append(dist)
 
     i_close = np.argmin(d_arr)
+    print("Found BIN file with distance = %.3f%%" % d_arr[i_close])
 
     return files[i_close]
 

@@ -7,17 +7,13 @@ import matplotlib.pyplot as plt
 
 # Files 
 import common.phys as phys
+import common.utils as utils
 
 # Object for holding cross-sections at a given T,P
 class xsec():
 
     # Set up class
     def __init__(self, formula:str, source:str, fname:str) -> None:
-
-        # Validate
-        source = source.strip().lower() 
-        if not source in ["dace", "hitran", "exomol"]:
-            raise Exception("Invalid source databse provided (%s)" % source)
 
         # Meta parameters
         self.dummy  = bool(len(formula) == 0)
@@ -27,7 +23,7 @@ class xsec():
         else:
             self.form = "XX"
             self.mmw  = 0.0
-        self.source = source    # Source database
+        self.source = utils.sourcesafe(source)    # Source database
         self.fname  = fname     # Path to source file
         self.t      = -1.0      # Temperature [K]
         self.p      = -1.0      # Pressure [bar]
@@ -169,11 +165,11 @@ class xsec():
 
 
     # Return cross-section in units of cm2.molecule-1
-    def cross_per_molec(self):
+    def cross_cm2_per_molec(self):
         return np.array(self.arr_k[:]) * self.mmw / (1000.0 * phys.N_av)
     
     # Return cross-section in units of cm2.g-1
-    def cross_per_gram(self):
+    def cross_cm2_per_gram(self):
         return np.array(self.arr_k[:])
 
     # Write to a HITRAN-formatted xsc file in the given folder
@@ -220,7 +216,7 @@ class xsec():
 
             # Write data 
             counter = 0
-            for k in self.cross_per_molec():
+            for k in self.cross_cm2_per_molec():
                 counter += 1
 
                 hdl.write("%10.3e" % k)
@@ -235,8 +231,8 @@ class xsec():
         return fpath
 
     # Plot cross-section versus wavenumber (and optionally save to file)
-    # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule)
-    def plot(self, units=1, fig=None, ax=None, show=True):
+    # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
+    def plot(self, yunits=1, fig=None, ax=None, show=True):
 
         if not self.loaded:
             raise Exception("Cannot plot data because xsec object is empty!")
@@ -246,18 +242,21 @@ class xsec():
 
         lw=0.4
         
-        if units == 0:
-            ax.plot(self.arr_nu,self.cross_per_gram(), lw=lw)
+        if yunits == 0:
+            ax.plot(self.arr_nu,self.cross_cm2_per_gram(), lw=lw)
             ax.set_ylabel("Cross-section [cm$^2$ g$^{-1}$]")
-        elif units == 1:
-            ax.plot(self.arr_nu, self.cross_per_molec(), lw=lw)
+        elif yunits == 1:
+            ax.plot(self.arr_nu, self.cross_cm2_per_molec(), lw=lw)
             ax.set_ylabel("Cross-section [cm$^2$ molecule$^{-1}$]")
+        elif yunits == 2:
+            ax.plot(self.arr_nu, self.cross_m2_per_kg(), lw=lw)
+            ax.set_ylabel("Cross-section [m$^2$ kg$^{-1}$]")
         else:
             raise Exception("Invalid unit choice for plot")
         
         ax.set_xlabel("Wavenumber [cm$^{-1}$]")
 
-        title = self.form + " : %.2f K, %.3e bar" % (self.t, self.p)
+        title = self.form + " : %.3e bar, %.2f K" % (self.t, self.p)
         ax.set_title(title)
 
         if show:
