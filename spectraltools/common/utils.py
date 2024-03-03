@@ -1,6 +1,7 @@
 # General utilities 
 
 import os
+import numpy as np
 
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
@@ -15,6 +16,16 @@ def wl2wn(wl:float) -> float:
         return float("inf")
     else:
         return 10000000.0 / wl
+    
+# Find the closest point in a p,t grid, returning its index, distance, p, t.
+def find_pt_close(arr_p, arr_t, target_p, target_t):
+    nvals = len(arr_p)
+    dists = []
+    for i in range(nvals):
+        dists.append(100.0 * ( ( (arr_p[i]-target_p)/target_p)**2.0 + (  (arr_t[i]-target_t)/target_t  )**2.0   )**0.5)
+    iclose = np.argmin(dists)
+    dclose = dists[iclose]
+    return iclose, dclose, arr_p[iclose], arr_t[iclose]
     
 # Named directories
 dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
@@ -31,7 +42,7 @@ def check_output_exists():
 # Sanitise source string
 def sourcesafe(source:str):
     safe = source.strip().lower()
-    if safe not in ["dace", "hitran", "exomol"]:
+    if safe not in ["dace", "hitran", "exomol", "direct"]:
         raise Exception("Invalid source '%s'"% source)
     return safe
 

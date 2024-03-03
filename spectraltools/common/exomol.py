@@ -1,25 +1,22 @@
-# Tools for processing HITRAN files
+# Tools for handling exomol files
 
-# Import system libraries
-from glob import glob
-import numpy as np
-import os, shutil
+from glob import glob 
+import os
 
-# Import files
 import common.cross as cross
 import common.utils as utils
 
-# List HITRAN xsc files in directory
+# List ExoMol sigma files in directory
 def list_files(directory:str) -> list:
-    files = glob(directory+"/*.xsc")
+    files = glob(directory+"/*.sigma")
     if len(files) == 0:
-        print("WARNING: No xsc files found in '%s'"%directory)
+        print("WARNING: No sigma files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
 
-def find_xsc_close(directory:str, p_aim:float, t_aim:float) -> str:
-    """Search for HITRAN xsc file.
+def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
+    """Search for ExoMol sigma file.
 
-    Finds the HITRAN xsc file in the directory which most closely matches the target p,t values.
+    Finds the ExoMol sigma file in the directory which most closely matches the target p,t values.
 
     Parameters
     ----------
@@ -33,7 +30,7 @@ def find_xsc_close(directory:str, p_aim:float, t_aim:float) -> str:
     Returns
     -------
     str
-        Absolute path to best xsc file
+        Absolute path to best bin file
     """
 
     if (p_aim < 0) or (t_aim < 0):
@@ -42,17 +39,17 @@ def find_xsc_close(directory:str, p_aim:float, t_aim:float) -> str:
     files = list_files(directory)
     count = len(files)
     if count == 0:
-        raise Exception("Could not find any xsc files in '%s'" % directory)
+        raise Exception("Could not find any bin files in '%s'" % directory)
     
     p_arr = []  # pressure
     t_arr = []  # temperature
     for f in files:
-        temp = cross.xsec("", "hitran", f)
-        temp.read()
+        temp = cross.xsec("", "exomol", f)
+        temp.parse_sigmaname()
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
-    print("Found xsc file with distance = %.3f%%" % d)
+    print("Found sigma file with distance = %.3f%%" % d)
 
     return files[i]

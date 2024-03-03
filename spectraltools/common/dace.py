@@ -46,20 +46,16 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
     
     p_arr = []  # pressure
     t_arr = []  # temperature
-    d_arr = []  # distance from target
     for f in files:
         temp = cross.xsec("", "dace", f)
         temp.parse_binname()
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 
-        dist = 100.0 * ( ( (p_aim-temp.p)/temp.p )**2.0 + ( (t_aim-temp.t)/temp.t )**2.0 ) ** 0.5
-        d_arr.append(dist)
+    i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
+    print("Found BIN file with distance = %.3f%%" % d)
 
-    i_close = np.argmin(d_arr)
-    print("Found BIN file with distance = %.3f%%" % d_arr[i_close])
-
-    return files[i_close]
+    return files[i]
 
 def find_grid(directory:str, p_list:list, t_list:list):
     """Get DACE files that are close to the given p,t values.

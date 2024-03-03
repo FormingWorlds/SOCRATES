@@ -91,7 +91,7 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
         this_xsec.read()
-        var_xc[i,:] = this_xsec.arr_k * 10.0  # convert cm2/g to m2/kg
+        var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
         del this_xsec
 
     print("    done writing to '%s'" % ds_path)
@@ -99,5 +99,55 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
     ds.close()
     return ds_path
 
+def read_netcdf_pt(fpath:str):
+    """Read p,t values from netCDF file
 
-    
+    Parameters
+    ----------
+    fpath : str
+        Path to netCDF file
+
+    Returns
+    -------
+    np.ndarray
+        Sorted pressure values [bar]
+    np.ndarray 
+        Sorted temperature values [K]
+    """
+
+    ds = Dataset(fpath, "r", format="NETCDF4")
+
+    arr_p  = np.array(ds.variables["p_calc"][:] ) * 1.0e-5  # pa to bar
+    arr_t  = np.array(ds.variables["t_calc"][:] )
+
+    ds.close()
+
+    return arr_p, arr_t
+
+def read_netcdf_point(fpath:str, idx:int):
+    """Read netCDF cross-section data at a specific index
+
+    Parameters
+    ----------
+    fpath : str
+        Path to netCDF file
+    idx : int
+        Index of point
+
+    Returns
+    -------
+    np.ndarray
+        Wavenumber array [cm-1]
+    np.ndarray
+        Cross-section array [cm2/g]
+    """
+
+    ds = Dataset(fpath, "r", format="NETCDF4")
+
+    arr_nu = np.array(ds.variables["nu"][:]) / 100.0   # m-1 to cm-1
+    arr_k  = np.array(ds.variables["kabs"][idx][:]) * 10.0  # m2/kg to cm2/g
+
+    ds.close()
+
+    return arr_nu, arr_k
+

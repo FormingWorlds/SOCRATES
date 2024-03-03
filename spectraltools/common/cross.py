@@ -130,7 +130,7 @@ class xsec():
         raw_data = np.array([],dtype=float)
         for b in body:
             raw_data = np.append(raw_data, [float(v) for v in b.split()])
-        self.arr_k = raw_data * phys.N_av / (self.mmw * 1000.0)
+        self.arr_k = raw_data * phys.N_av / (self.mmw * 1000.0)  # cm2/molec -> cm2/gram
 
         # Generate wavenumber grid
         self.nbins = len(self.arr_k)
@@ -139,9 +139,26 @@ class xsec():
         # Flag as loaded 
         self.loaded = True 
 
+    # Parse ExoMol sigma file name
+    def parse_sigmaname(self):
+        if not (self.source == "exomol"):
+            print("WARNING: Cannot execute parse_sigmaname because source (%s) is not ExoMol" % self.source)
+        
+        # Exomol values are always at zero pressure
+        self.p = 0.0
+
+        # Process filename
+        splt = self.fname[:-6].split("_")
+        splt_nu = splt[1].split("-")
+
+        self.numin = float(splt_nu[0]) 
+        self.numax = float(splt_nu[1]) 
+        self.t     = float(splt[2][:-1])
+
+
     # Read ExoMol sigma file
     def readsigma(self):
-        if not (self.source == "hitran"):
+        if not (self.source == "exomol"):
             print("WARNING: Cannot execute readsigma because source (%s) is not ExoMol" % self.source)
 
         # check conflicts
@@ -149,16 +166,44 @@ class xsec():
             raise Exception("This xsec object already contains data")
         if not os.access(self.fname, os.R_OK):
             raise Exception("Cannot read file '%s'" % self.fname)
+    
+        self.parse_sigmaname()
 
-        raise Exception("Function readsigma() is not yet implemented!")
+        data = np.loadtxt(self.fname).T 
+        self.arr_nu = data[0]
+        self.arr_k  = data[1] * phys.N_av / (self.mmw * 1000.0) 
+        self.nbins  = len(data[0])
+
+        # Flag as loaded
+        self.loaded = True
+
+
+    # Read input variables instead of from a file (bar, K, cm-1, cm2/g)
+    def readdirect(self, p, t, nu_arr, k_arr):
+        # check conflicts
+        if self.loaded:
+            raise Exception("This xsec object already contains data")
+
+        if len(nu_arr) != len(k_arr):
+            raise Exception("nu and k arrays have different lengths")
+
+        self.p = p 
+        self.t = t
+        self.arr_nu = nu_arr 
+        self.numin = nu_arr[0]
+        self.numax = nu_arr[1]
+        self.nbins = len(nu_arr)
+        self.arr_k = k_arr
+        self.loaded = True
+
         
     # Read source file 
-    def read(self):
+    def read(self, p=None, t=None, nu_arr=None, k_arr=None):
         match self.source:
             case "dace":   self.readbin()
             case "hitran": self.readxsc()
             case "exomol": self.readsigma()
-
+            case "direct": self.readdirect(p,t,nu_arr,k_arr)
 
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):
