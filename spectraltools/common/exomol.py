@@ -41,7 +41,7 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     if count == 0:
         raise Exception("Could not find any sigma files in '%s'" % directory)
     
-    print("WARNING: Attempting ExoMol spectra are calculated at zero pressure, so 'best' value will not be ideal")
+    print("WARNING: ExoMol spectra are calculated at zero pressure, so 'best' value will not be ideal")
     
     p_arr = []  # pressure
     t_arr = []  # temperature

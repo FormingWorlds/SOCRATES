@@ -88,12 +88,12 @@ class xsec():
         # Read filename info
         self.parse_binname()
 
-        # Set nu array 
-        self.arr_nu = np.linspace(self.numin, self.numax, self.nbins)
+        # Set nu array
+        res = 0.01    # expected resolution [cm-1]
+        self.arr_nu = np.linspace(self.numin, self.numax, self.nbins) - res*2.0
 
         # Check resolution 
         eps = 1.0e-5  # numerical precision
-        res = 0.01    # expected resolution
         if (self.arr_nu[5] - self.arr_nu[4] - res) > eps:
             raise Exception("Wavenumber resolution mismatch. Either file size is wrong, or resolution is not %f cm-1" % res)
 

@@ -53,7 +53,7 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
         t_arr.append(temp.t)
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
-    print("Found BIN file with distance = %.3f%%" % d)
+    print("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K" % (d,p,t))
 
     return files[i]
 
