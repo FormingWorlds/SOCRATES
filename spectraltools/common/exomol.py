@@ -21,7 +21,7 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     Parameters
     ----------
     directory : str
-        Directory containing bin files
+        Directory containing sigma files
     p_aim : float
         Target pressure [bar]
     t_aim : float
@@ -30,7 +30,7 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     Returns
     -------
     str
-        Absolute path to best bin file
+        Absolute path to best sigma file
     """
 
     if (p_aim < 0) or (t_aim < 0):
@@ -39,7 +39,9 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     files = list_files(directory)
     count = len(files)
     if count == 0:
-        raise Exception("Could not find any bin files in '%s'" % directory)
+        raise Exception("Could not find any sigma files in '%s'" % directory)
+    
+    print("WARNING: Attempting ExoMol spectra are calculated at zero pressure, so 'best' value will not be ideal")
     
     p_arr = []  # pressure
     t_arr = []  # temperature

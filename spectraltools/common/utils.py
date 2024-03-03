@@ -19,6 +19,8 @@ def wl2wn(wl:float) -> float:
     
 # Find the closest point in a p,t grid, returning its index, distance, p, t.
 def find_pt_close(arr_p, arr_t, target_p, target_t):
+    target_p = max(1.0e-9, target_p)
+    target_t = max(1.0e-9, target_t)
     nvals = len(arr_p)
     dists = []
     for i in range(nvals):
