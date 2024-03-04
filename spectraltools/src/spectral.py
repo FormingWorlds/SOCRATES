@@ -4,12 +4,14 @@ import numpy as np
 import os, subprocess
 import src.utils as utils
 
-def best_bands(nu_arr:np.ndarray, method:int, nband:int):
+def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
 
     Given all the available nu values, calculates the 'best' band edges for a given method. \n
     Methods:    
-        0 = linspace
+        0 = linspace   \n 
+        1 = logspace   \n
+        2 = logspace, but using a single band to cover the longest wavelengths \n
 
     Parameters
     ----------
@@ -19,10 +21,12 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int):
         Selection method
     nband : int 
         Required number of bands
+    floor : float
+        Restrict nu to be larger than this value
 
     Returns
     -------
-    list
+    np.ndarray
         Band edges, ascending [cm-1]
     """
 
@@ -36,17 +40,31 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int):
     if nband > len(nu_arr)-2:
         raise Exception("Too many bands! (%d requested)"%nband)
     
-    numin = nu_arr[0]
+    # Check range
+    numin = max(nu_arr[0], floor)
     numax = nu_arr[-1]
+    lognumin = np.log10(numin)
+    lognumax = np.log10(numax)
 
     # Simple case
     if nband == 1:
         return [numin, numax]
     
-    # Other cases
+    # Other cases ...
+
+    vlong_cutoff = 100.0 # [cm-1] Value where the "very long wavelengths" region starts.
+    if (numin > vlong_cutoff) and (method == 2):
+        method = 1 
+    
+    nedges = nband+1
     match method:
         case 0:
-            bands = np.linspace(numin, numax, nband)
+            bands = np.linspace(numin, numax, nedges)
+        case 1: 
+            bands = np.logspace(lognumin, lognumax, nedges)
+        case 2:
+            bands = np.array([numin, vlong_cutoff])
+            bands = np.append(bands, np.logspace(np.log10(vlong_cutoff) , lognumax , nedges-1 )[1:])
         case _:
             raise Exception("Invalid band selection method (%d)"%method)
 
@@ -54,12 +72,16 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int):
     bands_out = []
     for be in bands:
         bands_out.append(utils.get_closest(be, nu_arr))
-        
+    bands_out = np.array(bands_out)
+
     if not utils.is_unique(bands_out):
+        print(utils.get_arr_as_str(bands_out))
         raise Exception("Best band edges are not unique! Try a different method, or increase the resolution")
     if not utils.is_ascending(bands_out):
+        print(utils.get_arr_as_str(bands_out))
         raise Exception("Best band edges are ascending! Try a different method, or increase the resolution")
 
+    # print("Best bands: " + utils.get_arr_as_str(bands_out))
     return bands_out
     
 
@@ -88,14 +110,13 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     """
 
     print("Creating skeleton spectral file '%s'"%name)
-    skel_path = os.path.join(utils.dirs["output"], name+"_skel.ssf")
+    skel_path = os.path.join(utils.dirs["output"], name+"_skel.sf")
     utils.rmsafe(skel_path)
  
     # Sanitise bands
     if not utils.is_ascending(band_edges):
         raise Exception("Band edges must be strictly ascending")
-    numin = max(1.0, band_edges[0])
-    band_edges[0] = numin
+    numin = band_edges[0]
     numax = band_edges[-1]
     nband = len(band_edges)-1
     print("    number of bands: %d"%nband)
@@ -123,16 +144,16 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     T_grid = t_points
     P_grid = p_points * 1.0e5  # bar to Pa
     
-    print("    T_grid [K]  (n=%d): "%len(T_grid) + " " + str(T_grid))
-    print("    P_grid [Pa] (n=%d): "%len(P_grid) + " " + str(P_grid))
+    print("    T_grid [K]  (n=%d): "%len(T_grid) + utils.get_arr_as_str(T_grid))
+    print("    P_grid [Pa] (n=%d): "%len(P_grid) + utils.get_arr_as_str(P_grid))
 
     # Generate P-T files to be read by Ccorr script
     pt_lbl_file = open(pt_lbl, "w+")
     pt_lbl_file.write('*PTVAL' + '\n')
-    for prs in P_grid:
+    for prs in np.unique(P_grid):
         line = ""
         line += "%.5e"%prs 
-        for t in T_grid:
+        for t in np.unique(T_grid):
             line +=" %.5e"%t 
         line += "\n" 
         pt_lbl_file.write(line)
@@ -315,29 +336,31 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     print("    done")
     return skel_path
 
-def calculate_kcoefficients(name:str, formula:str, nc_xsc_path:str, nband:int):
+def calc_kcoeff(name:str, formula:str, nc_xsc_path:str, nband:int):
+
+    print("Calculating k-coefficients for '%s' in '%s'..."%(formula, name))
 
     # Parameters
     max_path = 1.0e4
-    tol_type = 'n'
+    tol_type = 'b'
 
     # Check that files exist
-    skel_path   = os.path.join(utils.dirs["output"], name+"_skel.ssf")
-    pt_lbl      = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%name); utils.rmsafe(pt_lbl)
-    pt_cia      = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%name); utils.rmsafe(pt_cia)
+    skel_path   = os.path.join(utils.dirs["output"], name+"_skel.sf")
+    pt_lbl      = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%name)
+    pt_cia      = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%name)
     for f in [nc_xsc_path, skel_path, pt_lbl, pt_cia]:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
         
     formula = formula.strip()
 
-    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_kco.ssf"%(name,formula)); utils.rmsafe(kcoeff_path)
+    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_kco.sfk"%(name,formula)); utils.rmsafe(kcoeff_path)
     monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(name,formula)); utils.rmsafe(monitor_path)
     mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (name,formula)); utils.rmsafe(mapping_path)
     logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (name,formula)); utils.rmsafe(logging_path)
 
     # Open executable file for writing
-    exec_file_name = os.path.join(utils.dirs["output"],"make_ssf_%s_%s.sh"%(name,formula)); utils.rmsafe(exec_file_name)
+    exec_file_name = os.path.join(utils.dirs["output"],"make_sfk_%s_%s.sh"%(name,formula)); utils.rmsafe(exec_file_name)
     f = open(exec_file_name, 'w+')
 
     f.write("Ccorr_k")
@@ -361,6 +384,7 @@ def calculate_kcoefficients(name:str, formula:str, nc_xsc_path:str, nband:int):
     f.close()
     os.chmod(exec_file_name,0o777)
 
+    print("    start")
     with open(logging_path,'w') as hdl:
         sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
     sp.check_returncode()

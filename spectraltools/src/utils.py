@@ -38,11 +38,16 @@ def is_ascending(arr):
 
 # Check if array is unique (no repeated values)
 def is_unique(arr):
-   return bool( len(np.unique(arr)) != len(arr) )
+   return bool( len(np.unique(arr)) == len(arr) )
 
 # Convert all of the values in an array into one long string
 def get_arr_as_str(arr):
-    return " ".join([str(v) for v in arr])
+    if type(arr[0]) == float:
+        return " ".join(["%g"%v for v in arr])
+    elif type(arr[0]) == int:
+        return " ".join(["%d"%v for v in arr])
+    else:
+        return " ".join([str(v) for v in arr])
 
 # Get item in 'arr' that is numerically closest to 'value'
 def get_closest(value, arr):

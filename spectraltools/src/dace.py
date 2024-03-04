@@ -16,7 +16,7 @@ def list_files(directory:str) -> list:
         print("WARNING: No bin files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
 
-def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
+def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
     """Search for DACE bin file.
 
     Finds the DACE bin file in the directory which most closely matches the target p,t values.
@@ -53,39 +53,10 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float) -> str:
         t_arr.append(temp.t)
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
-    print("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K" % (d,p,t))
+    if not quiet:
+        print("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K" % (d,p,t))
 
     return files[i]
-
-def find_grid(directory:str, p_list:list, t_list:list):
-    """Get DACE files that are close to the given p,t values.
-
-    Parameters
-    ----------
-    directory : str
-        Directory containing bin files
-    p_list : list
-        Target pressures [bar]
-    t_list : float
-        Target temperatures [K]
-
-    Returns
-    -------
-    list
-        List of file paths
-    """
-
-    # Gather files
-    files = []
-    for p in p_list:
-        for t in t_list:
-            new = find_bin_close(directory, p, t)
-            if new in files:
-                print("This p,t grid would result in duplicate points")
-                return
-            else:
-                files.append(new)
-    return files
 
 def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     """Get p,t points covered by DACE bin files within a given directory.
@@ -132,7 +103,7 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
         print("    use_all = False")
         for p in p_targets:
             for t in t_targets:
-                f = find_bin_close(directory, p, t)
+                f = find_bin_close(directory, p, t, quiet=True)
                 x = cross.xsec("", "dace", f)
                 x.parse_binname()
                 arr_p.append(x.p)
@@ -173,90 +144,11 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     
     # Get total size on disk (to warn user)
     size = 0.0
-    for f in  files:
+    for f in sorted_f:
         size += os.path.getsize(f)
     size *= 1.0e-9
     
     # Result
-    print("    %d files mapped, totaling %.2f GB" % (len(sorted_p), size))
+    print("    %d files mapped, totaling %g GB" % (len(sorted_p), size))
     return np.array(sorted_p, dtype=float), np.array(sorted_t, dtype=float), sorted_f
 
-
-
-# Write xsc files and p,t grid to files in the given folder
-def write_grid(outdir:str, form:str, binfiles:list, concat=True):
-
-    nfiles = len(binfiles)
-
-    print("Writing grid with %d points" % nfiles)
-
-    # Check output dir
-    if not os.path.exists(outdir):
-        raise Exception("Cannot write xsc files (output folder does not exist)")
-
-    # Expected output files
-    tsvout = outdir+"/"+"%s_grid.tsv"%form
-    totout = outdir+"/%s_grid.xsc"%form
-
-    print("    removing old files")
-    rmvout = [] 
-    rmvout.extend(list(glob(outdir+"/%s.xsc"%form)))
-    rmvout.extend([tsvout, totout])
-    for r in rmvout:
-        utils.rmsafe(r)
-
-    xscdir = outdir
-    if concat:
-        xscdir = outdir + "/.xsctemp/"
-        if os.path.isdir(xscdir):
-            shutil.rmtree(xscdir)
-        os.mkdir(xscdir)
-
-    # Get data and write xsc files
-    print("    please wait...")
-    p_arr = []
-    t_arr = []
-    xscfiles = []
-    wnmin = -1
-    wnmax = -1
-    modprint = 10
-    pctlast  = -999.0
-    for i in range(nfiles):
-        x = cross.xsec(form, "dace", binfiles[i])
-        x.readbin()
-        wnmin = x.numin
-        wnmax = x.numax
-        t_arr.append(x.t)
-        p_arr.append(x.p)
-        xscfiles.append(x.writexsc(xscdir))
-        thispct = i/float(nfiles-1)*100.0
-        if (thispct > pctlast + modprint - 1.0e-9):
-            pctlast = thispct
-            print("    %3d%%" % thispct)
-
-    wlmax = utils.wn2wl(wnmin)
-    wlmin = utils.wn2wl(wnmax)
-
-    print("    p_arr = %s bar" % str(p_arr))
-    print("    t_arr = %s K"   % str(t_arr))
-    print("    wlmin = %.3f nm\t\tnumax = %.3f cm-1"  % (wlmin, wnmax))
-    print("    wlmax = %.3f nm\t\tnumin = %.3f cm-1"  % (wlmax, wnmin))
-
-    # If concat: concatenate xsc files and then remove temp dir
-    if concat:
-        with open(totout, 'w') as totfile:
-            for xfile in xscfiles:
-                with open(xfile) as infile:
-                    for line in infile:
-                        totfile.write(line)
-                totfile.write("\n")
-        shutil.rmtree(xscdir)
-        print("    wrote xsc data to the file '%s'" % totout)
-    else:
-        print("    wrote xsc data to files in '%s'" % outdir)
-
-    # Write p,t file
-    grid = np.array([p_arr,t_arr]).T
-    np.savetxt(tsvout, grid, fmt="%1.3e", delimiter=" ", header="p/bar    T/K")
-
-    print("    wrote p,t values to the file '%s'" % tsvout)
