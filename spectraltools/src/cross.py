@@ -6,8 +6,8 @@ import struct, os, io
 import matplotlib.pyplot as plt
 
 # Files 
-import common.phys as phys
-import common.utils as utils
+import src.phys as phys
+import src.utils as utils
 
 # Object for holding cross-sections at a given T,P
 class xsec():
@@ -37,6 +37,18 @@ class xsec():
         # The data itself 
         self.arr_k  = np.array([])  # Cross-sections [cm2 g-1]
         self.arr_nu = np.array([])  # Wavenumbers [cm-1]
+
+    # Get nu
+    def get_nu(self):
+        if not self.loaded:
+            raise Exception("Cannot get nu values from unloaded xsec object")
+        return self.arr_nu
+    
+    # Get k
+    def get_k(self):
+        if not self.loaded:
+            raise Exception("Cannot get k values from unloaded xsec object")
+        return self.arr_k
 
     # Read bin filename information and use it to set scalar variables in this object
     def parse_binname(self):
@@ -189,11 +201,11 @@ class xsec():
 
         self.p = p 
         self.t = t
-        self.arr_nu = nu_arr 
+        self.arr_nu = np.array(nu_arr)
         self.numin = nu_arr[0]
         self.numax = nu_arr[1]
         self.nbins = len(nu_arr)
-        self.arr_k = k_arr
+        self.arr_k = np.array(k_arr)
         self.loaded = True
 
         
@@ -230,7 +242,7 @@ class xsec():
 
 
         # Other header variables
-        k_max   = np.amax(self.arr_k)
+        k_max   = np.amax(self.get_k())
         ptorr   = self.p * 750.06
         ires    = 0.01
         broad   = ""
@@ -319,7 +331,7 @@ class xsec():
         else:
             raise Exception("Invalid unit choice for plot")
         
-        xarr = self.arr_nu[xmin_idx:xmax_idx]
+        xarr = self.get_nu()[xmin_idx:xmax_idx]
         yarr = yarr[xmin_idx:xmax_idx]
         
         ax.plot(xarr, yarr, lw=lw, color=col)

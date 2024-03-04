@@ -6,8 +6,8 @@ import numpy as np
 import os, shutil
 
 # Import files
-import common.cross as cross
-import common.utils as utils
+import src.cross as cross
+import src.utils as utils
 
 # List DACE bin files in directory
 def list_files(directory:str) -> list:
@@ -87,7 +87,7 @@ def find_grid(directory:str, p_list:list, t_list:list):
                 files.append(new)
     return files
 
-def get_pt(directory:str):
+def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     """Get p,t points covered by DACE bin files within a given directory.
 
     The p,t arrays will be sorted in ascending order, pressure first.
@@ -113,14 +113,31 @@ def get_pt(directory:str):
     # Get files
     files = list_files(directory)
 
+    # Targets?
+    use_all = (len(p_targets) == 0) or (len(t_targets) == 0)
+
     # P,T points
     arr_p = []
     arr_t = []
-    for f in files:
-        x = cross.xsec("", "dace", f)
-        x.parse_binname()
-        arr_p.append(x.p)
-        arr_t.append(x.t)
+    arr_f = []
+    if use_all:
+        print("    use_all = True")
+        for f in files:
+            x = cross.xsec("", "dace", f)
+            x.parse_binname()
+            arr_p.append(x.p)
+            arr_t.append(x.t)
+            arr_f.append(f)
+    else:
+        print("    use_all = False")
+        for p in p_targets:
+            for t in t_targets:
+                f = find_bin_close(directory, p, t)
+                x = cross.xsec("", "dace", f)
+                x.parse_binname()
+                arr_p.append(x.p)
+                arr_t.append(x.t)
+                arr_f.append(f)
 
     # Unique P,T values
     unique_p = sorted(list(set(arr_p)))
@@ -145,7 +162,7 @@ def get_pt(directory:str):
             sorted_p.append(p)
             sorted_t.append(t)
             # record which file maps to this p,t pair
-            for i,f in enumerate(files):
+            for i,f in enumerate(arr_f):
                 if np.isclose(arr_p[i],p) and np.isclose(arr_t[i],t):
                     sorted_f.append(f)
 

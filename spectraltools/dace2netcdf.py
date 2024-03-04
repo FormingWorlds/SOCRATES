@@ -2,9 +2,9 @@
 # Convert DACE bin files to a NetCDF file
 
 # Import local files 
-import common.dace as dace
-import common.utils as utils
-import common.netcdf as netcdf
+import src.dace as dace
+import src.utils as utils
+import src.netcdf as netcdf
 
 import sys, os
 
@@ -18,7 +18,8 @@ def main(formula:str):
         raise Exception("Could not find folder '%s'" % formula_path)
 
     arr_p, arr_t, arr_f = dace.get_pt(formula_path)
-    netcdf.write_ncdf(formula, "dace", arr_p, arr_t, arr_f)
+    nc_path = os.path.join(utils.dirs["output"] , formula+"_dace.nc")
+    netcdf.write_ncdf_from_grid(nc_path, formula, "dace", arr_p, arr_t, arr_f)
     
     # dace_test = cross.xsec(formula, bin_path)
     # dace_test.readbin()

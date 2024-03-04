@@ -2,8 +2,8 @@
 # Plot absorption spectrum
 
 # Import local files 
-import common.cross as cross
-import common.utils as utils
+import src.cross as cross
+import src.utils as utils
 
 import os, argparse
 
@@ -17,10 +17,10 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
 
     match safe:
         case "dace":
-            import common.dace as dace
+            import src.dace as dace
             close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))
         case "hitran":
-            import common.hitran as hitran
+            import src.hitran as hitran
             close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
         case "exomol":
             close_path = ""

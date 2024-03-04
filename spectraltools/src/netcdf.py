@@ -4,14 +4,16 @@ import numpy as np
 from netCDF4 import Dataset
 import os
 
-import common.utils as utils
-import common.cross as cross
+import src.utils as utils
+import src.cross as cross
 
-def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list):
+def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list):
     """Write netCDF file containing P, T, nu, and cross-section data.
 
     Parameters
     ----------
+    nc_path : str
+        Output file path
     formula : str
         Chemical formula for absorber
     source : str
@@ -29,25 +31,33 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
         Path to resultant netCDF file.
     """
 
+    # Check input is valid 
+    len_p = len(p_points)
+    len_t = len(t_points)
+    if len_p != len_t:
+        raise Exception("Pressure and Temperature points have different lengths (%d,%d)"%(len_p,len_t))
+    if not utils.is_ascending(p_points):
+        print(utils.get_arr_as_str(p_points))
+        raise Exception("Pressure array is not strictly ascending") 
+
     # Open file
-    ds_path = os.path.join( utils.dirs["output"] , "x_%s.nc"%formula)
-    print("Writing netCDF for '%s'..."%formula)
-    utils.rmsafe(ds_path)
-    ds = Dataset(ds_path, "w", format="NETCDF4")
+    print("Writing netCDF for '%s' from '%s'..."%(formula,source))
+    utils.rmsafe(nc_path)
+    ds = Dataset(nc_path, "w", format="NETCDF4")
 
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read()
-    nu_arr = x_first.arr_nu * 100.0  # convert cm-1 to m-1
+    nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
     print("    nu_min = %.2f cm-1" % x_first.numin)
     print("    nu_max = %.2f cm-1" % x_first.numax)
 
     # Create dimensions
     print("    define dimensions")
-    len_pt = len(p_points)
+    
     len_nu = len(nu_arr)
     dim_nu = ds.createDimension("nu",      len_nu)
-    dim_pt = ds.createDimension("pt_pair", len_pt)
+    dim_pt = ds.createDimension("pt_pair", len_p)
 
     # Create variables
     print("    define variables")
@@ -82,11 +92,11 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
     # Read and write cross-sections (2D)
     print("    write cross-section data")
     counter = 0
-    modprint = int(len_pt*0.1)
-    for i in range(len_pt):  # for each p,t point
+    modprint = int(len_p*0.1)
+    for i in range(len_p):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:
-            print("    point %5d of %5d   (%5.1f%%)" % (counter,len_pt, 100.0*(counter/len_pt)))
+            print("    point %5d of %5d   (%5.1f%%)" % (counter,len_p, 100.0*(counter/len_p)))
 
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
@@ -94,10 +104,10 @@ def write_ncdf(formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray
         var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
         del this_xsec
 
-    print("    done writing to '%s'" % ds_path)
+    print("    done writing to '%s'" % nc_path)
     # Finish up
     ds.close()
-    return ds_path
+    return nc_path
 
 def read_netcdf_pt(fpath:str):
     """Read p,t values from netCDF file

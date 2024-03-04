@@ -3,8 +3,8 @@
 from glob import glob 
 import os
 
-import common.cross as cross
-import common.utils as utils
+import src.cross as cross
+import src.utils as utils
 
 # List ExoMol sigma files in directory
 def list_files(directory:str) -> list:

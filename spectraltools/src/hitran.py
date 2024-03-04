@@ -6,8 +6,8 @@ import numpy as np
 import os, shutil
 
 # Import files
-import common.cross as cross
-import common.utils as utils
+import src.cross as cross
+import src.utils as utils
 
 # List HITRAN xsc files in directory
 def list_files(directory:str) -> list:

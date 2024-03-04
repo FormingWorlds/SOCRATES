@@ -3,6 +3,15 @@
 import os
 import numpy as np
 
+# Named directories
+dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
+dirs["output"] = os.path.join(dirs["tools"] , "output/" )
+dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
+dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
+dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
+dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
+
+
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
     if wn == 0:
@@ -17,6 +26,29 @@ def wl2wn(wl:float) -> float:
     else:
         return 10000000.0 / wl
     
+# Check iterable is strictly ascending
+def is_ascending(arr):
+    l = len(arr)
+    if l < 2:
+        return True
+    for i in range(1,l):
+        if not arr[i] >= arr[i-1]:
+            return False 
+    return True
+
+# Check if array is unique (no repeated values)
+def is_unique(arr):
+   return bool( len(np.unique(arr)) != len(arr) )
+
+# Convert all of the values in an array into one long string
+def get_arr_as_str(arr):
+    return " ".join([str(v) for v in arr])
+
+# Get item in 'arr' that is numerically closest to 'value'
+def get_closest(value, arr):
+    return arr[np.argmin(np.abs(np.array(arr)-value))]
+
+    
 # Find the closest point in a p,t grid, returning its index, distance, p, t.
 def find_pt_close(arr_p, arr_t, target_p, target_t):
     target_p = max(1.0e-9, target_p)
@@ -29,14 +61,6 @@ def find_pt_close(arr_p, arr_t, target_p, target_t):
     dclose = dists[iclose]
     return iclose, dclose, arr_p[iclose], arr_t[iclose]
     
-# Named directories
-dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
-dirs["output"] = os.path.join(dirs["tools"] , "output/" )
-dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
-dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
-dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
-dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
-
 # Check if output folder exists
 def check_output_exists():
     return os.path.exists( dirs["output"]  )
