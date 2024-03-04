@@ -2,8 +2,8 @@
 # Python wizard for interactive file conversion
 
 # Import local files 
-import src.spectral as spectral
 import src.utils as utils
+import src.spectral as spectral
 import src.dace as dace
 import src.cross as cross
 import src.netcdf as netcdf
@@ -16,7 +16,7 @@ def main():
     formula = "CO2"
     source = "dace"
     vols = [formula]
-    name = "demo"
+    alias = "demo"
     nband = 10
 
     formula_path = os.path.join(utils.dirs[source], formula.strip()+"/")
@@ -30,14 +30,14 @@ def main():
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])
     temp_xc.read()
     band_edges = spectral.best_bands(temp_xc.get_nu(), 2, nband)
-    spectral.create_skeleton(name, arr_p, arr_t, vols, band_edges)
+    spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
 
     # Write netCDF containing absorption spectra
-    nc_path = os.path.join(utils.dirs["output"] , name+"_"+formula+".nc")
+    nc_path = os.path.join(utils.dirs["output"] , alias+"_"+formula+".nc")
     netcdf.write_ncdf_from_grid(nc_path, formula, source, arr_p, arr_t, arr_f)
 
     # Calculate k-coefficients from netCDF 
-    spectral.calc_kcoeff(name, formula, nc_path, nband)
+    spectral.calc_kcoeff_lbl(alias, formula, nc_path, nband)
 
 
     print("Goodbye")

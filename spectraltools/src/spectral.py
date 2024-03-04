@@ -85,15 +85,15 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     return bands_out
     
 
-def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list):
+def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list):
     """Create skeleton spectral file.
 
     Creates a spectral file with meta-data. Does not calculate k-terms or other physical properties.
 
     Parameters
     ----------
-    name : str
-        Name of spectral file
+    alias : str
+        alias of spectral file
     p_points : np.ndarray
         Pressure values [bar]
     t_points : np.ndarray
@@ -109,8 +109,8 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
         Path to skeleton spectral file
     """
 
-    print("Creating skeleton spectral file '%s'"%name)
-    skel_path = os.path.join(utils.dirs["output"], name+"_skel.sf")
+    print("Creating skeleton spectral file '%s'"%alias)
+    skel_path = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     utils.rmsafe(skel_path)
  
     # Sanitise bands
@@ -120,7 +120,7 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     numax = band_edges[-1]
     nband = len(band_edges)-1
     print("    number of bands: %d"%nband)
-    print("    numin, numax: %.2f , %.2f cm-1"%(numin, numax))
+    print("    numin , numax: %.2f , %.2f cm-1"%(numin, numax))
 
     # Sanitise volatiles 
     volatile_list_unique = list(set(volatile_list))
@@ -134,11 +134,11 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     print("    included volatiles (n=%d): "%len(volatile_list) + utils.get_arr_as_str(volatile_list))
 
     # P-T grids for LbL and CIA data
-    pt_lbl = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%name); utils.rmsafe(pt_lbl)
-    pt_cia = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%name); utils.rmsafe(pt_cia)
+    pt_lbl = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias); utils.rmsafe(pt_lbl)
+    pt_cia = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%alias); utils.rmsafe(pt_cia)
 
     # File name of bash execution script to be written
-    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%name)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
     T_grid = t_points
@@ -328,7 +328,7 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    logfile = os.path.join(utils.dirs["output"], "%s_skel.log"%name); utils.rmsafe(logfile)
+    logfile = os.path.join(utils.dirs["output"], "%s_skel.log"%alias); utils.rmsafe(logfile)
     with open(logfile,'w') as hdl:
         sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
     sp.check_returncode()
@@ -336,37 +336,65 @@ def create_skeleton(name:str, p_points:np.ndarray, t_points:np.ndarray, volatile
     print("    done")
     return skel_path
 
-def calc_kcoeff(name:str, formula:str, nc_xsc_path:str, nband:int):
+def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
+    """Calculate k-coefficients for line absorption
 
-    print("Calculating k-coefficients for '%s' in '%s'..."%(formula, name))
+    Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
+
+    Parameters
+    ----------
+    alias : str
+        Alias of spectral file
+    formula : str
+        Formula of absorber
+    nc_xsc_path : str
+        Input netCDF file containing cross-section data for range of p,t,nu
+    nband : int
+        Number of bands (THIS MUST MATCH THE SKELETON FILE)
+
+    """
+
+    # <EXAMPLE>
+    # 
+    # Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
+    #   -R 1 400 -l 1 ${COL_MASS_K_H2O} -b 5.0e-4 \
+    #   -s $skelfile +p -lk \
+    #   -o $sp_dir/h2o_lwf_l -m $sp_dir/h2o_lwf_lm \
+    #   -L $H2O_LBL_LWF \
+    #   -sm $sp_dir/h2o_lwf_l_map.nc \
+    #    > $sp_dir/h2o_lwf_log
+    #
+    # </EXAMPLE>
+
+    print("Calculating k-coefficients for '%s' line absorption for '%s'..."%(formula, alias))
 
     # Parameters
     max_path = 1.0e4
     tol_type = 'b'
 
     # Check that files exist
-    skel_path   = os.path.join(utils.dirs["output"], name+"_skel.sf")
-    pt_lbl      = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%name)
-    pt_cia      = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%name)
-    for f in [nc_xsc_path, skel_path, pt_lbl, pt_cia]:
+    skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
+    pt_lbl      = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias)
+    for f in [nc_xsc_path, skel_path, pt_lbl]:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
         
     formula = formula.strip()
+    absid = utils.absorber_id[formula]
 
-    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_kco.sfk"%(name,formula)); utils.rmsafe(kcoeff_path)
-    monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(name,formula)); utils.rmsafe(monitor_path)
-    mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (name,formula)); utils.rmsafe(mapping_path)
-    logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (name,formula)); utils.rmsafe(logging_path)
+    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_lbl.sfk"%(alias,formula)); utils.rmsafe(kcoeff_path)
+    monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias,formula)); utils.rmsafe(monitor_path)
+    mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias,formula)); utils.rmsafe(mapping_path)
+    logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias,formula)); utils.rmsafe(logging_path)
 
     # Open executable file for writing
-    exec_file_name = os.path.join(utils.dirs["output"],"make_sfk_%s_%s.sh"%(name,formula)); utils.rmsafe(exec_file_name)
+    exec_file_name = os.path.join(utils.dirs["output"],"make_sfk_%s_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
     f = open(exec_file_name, 'w+')
 
     f.write("Ccorr_k")
-    f.write(" -F %s"%pt_lbl)       # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients. 
-    f.write(" -R 1 %d"%nband)       # The range of spectral bands to be used 
-    f.write(" -l 1 %.3e"%max_path)  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients. 
+    f.write(" -R 1 %d"%nband)                 # The range of spectral bands to be used 
+    f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
 
     match tol_type:
         case 'n': f.write(" -n 4")          # Use this many k-terms
@@ -384,18 +412,90 @@ def calc_kcoeff(name:str, formula:str, nc_xsc_path:str, nband:int):
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start")
+    print("    start lbl")
     with open(logging_path,'w') as hdl:
         sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
     sp.check_returncode()
 
-    print("    done")
+    print("        done")
 
-    # Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
-    #   -R 1 400 -l 1 ${COL_MASS_K_H2O} -b 5.0e-4 \
-    #   -s $skelfile +p -lk \
-    #   -o $sp_dir/h2o_lwf_l -m $sp_dir/h2o_lwf_lm \
-    #   -L $H2O_LBL_LWF \
-    #   -sm $sp_dir/h2o_lwf_l_map.nc \
-    #    > $sp_dir/h2o_lwf_log
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nband:int):
+    """Calculate k-coefficients for continuum absorption
+
+    Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
+
+    Parameters
+    ----------
+    alias : str
+        Alias of spectral file
+    formula_A : str
+        Formula of absorber A
+    formula_B : str
+        Formula of absorber B
+    nc_xsc_path : str
+        Input netCDF file containing cross-section data for range of p,t,nu
+    nband : int
+        Number of bands (THIS MUST MATCH THE SKELETON FILE)
+
+    """
+
+    # <EXAMPLE>
+    # 
+    # Ccorr_k -F $CONT_PT_FILE \
+    #     -R 1 400 -i 0.1 -ct 1 1 ${COL_H2OC} -t 5.0e-4 \
+    #     -e $CONT_H2O_S296 $CONT_H2O_S260 \
+    #     -s $skelfile +p -lk \
+    #     -o $sp_dir/h2o-h2o_lw_c -m $sp_dir/h2o-h2o_lw_cm \
+    #     -L $sp_dir/h2o-h2o_lw_clbl.nc \
+    #     -lw $sp_dir/h2o_lwf_l_map.nc \
+    #     > $sp_dir/h2o-h2o_lw_clog
+    # </EXAMPLE>
+
+
+def assemble():
+
+    print("Assembling final spectral file...")
+
+    # <EXAMPLE>
+    # 
+    # echo 'Constructing spectral file'
+    # prep_spec << EOF > ${specfile}_log 2>&1
+    # $skelfile                 # skeleton file
+    # n                         # don't overwrite
+    # $specfile                 # output file
+    # 6                         # add thermal emission
+    # n                         #     no filter
+    # t                         #     tabulated planck function
+    # 60 540                    #     table range
+    # 500                       #     table npoints
+    # 5                         # add k-terms
+    # $sp_dir/h2o_lwf_l         #    path to esft data (.sfk file)
+    # 5                         #
+    # y
+    # $sp_dir/co2_lw_l
+    # 5
+    # y
+    # $sp_dir/so2_lw_l
+    # 19
+    # $sp_dir/h2o-h2o_lw_c
+    # 19
+    # y
+    # $sp_dir/co2-co2_lw_c
+    # 10
+    # 5
+    # $sp_dir/fit_lw_drop5
+    # 1.50000E-06 5.00000E-05
+    # 11
+    # $sp_dir/sulphuric_lw.avg
+    # 12
+    # 8
+    # $sp_dir/fit_lw_ice8
+    # -1
+    # EOF
+    #
+    # </EXAMPLE>
+
+
+
+    print("    done")
 

@@ -3,6 +3,10 @@
 import os
 import numpy as np
 
+# Check that SOCRATES is setup
+if os.environ["RAD_DIR"] == None:
+    raise Exception("Cannot find SOCRATES")
+
 # Named directories
 dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
 dirs["output"] = os.path.join(dirs["tools"] , "output/" )
@@ -10,7 +14,6 @@ dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
 dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
-
 
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
