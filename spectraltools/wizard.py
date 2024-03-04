@@ -17,7 +17,7 @@ def main():
     source = "dace"
     vols = [formula]
     alias = "demo"
-    nband = 10
+    nband = 20
 
     formula_path = os.path.join(utils.dirs[source], formula.strip()+"/")
     if not os.path.exists(formula_path):
@@ -39,6 +39,8 @@ def main():
     # Calculate k-coefficients from netCDF 
     spectral.calc_kcoeff_lbl(alias, formula, nc_path, nband)
 
+    # Assemble final spectral file
+    spectral.assemble(alias, vols)
 
     print("Goodbye")
 

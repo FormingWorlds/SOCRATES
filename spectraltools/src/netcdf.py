@@ -49,7 +49,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read()
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
-    print("    nu_min , nu_max = %.2f , %.2fc m-1" % (x_first.numin,x_first.numax))
+    print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
 
     # Create dimensions
     print("    define dimensions")

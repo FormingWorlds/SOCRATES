@@ -1,7 +1,7 @@
 # Tools for handling socrates spectral files
 
 import numpy as np
-import os, subprocess
+import os, subprocess, time
 import src.utils as utils
 
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
@@ -310,7 +310,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
 
     # Set bands manually (in reverse order, since they'll be converted to wavelength)
     f.write('c'+ '\n')
-    for i in range(nband,-1,-1):
+    for i in range(nband,0,-1):
         f.write("%.2f %.2f \n"%(band_edges[i], band_edges[i-1]))
 
     # Set absorbers in each band to zero for now
@@ -333,6 +333,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
     sp.check_returncode()
 
+    time.sleep(1.0)
     print("    done")
     return skel_path
 
@@ -352,6 +353,10 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     nband : int
         Number of bands (THIS MUST MATCH THE SKELETON FILE)
 
+    Returns 
+    ----------
+    str
+        Path to file containing the new k-coefficients
     """
 
     # <EXAMPLE>
@@ -382,13 +387,13 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     formula = formula.strip()
     absid = utils.absorber_id[formula]
 
-    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_lbl.sfk"%(alias,formula)); utils.rmsafe(kcoeff_path)
+    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_lbl.sf_k"%(alias,formula)); utils.rmsafe(kcoeff_path)
     monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias,formula)); utils.rmsafe(monitor_path)
     mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias,formula)); utils.rmsafe(mapping_path)
     logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias,formula)); utils.rmsafe(logging_path)
 
     # Open executable file for writing
-    exec_file_name = os.path.join(utils.dirs["output"],"make_sfk_%s_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
     f = open(exec_file_name, 'w+')
 
     f.write("Ccorr_k")
@@ -412,12 +417,14 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start lbl")
-    with open(logging_path,'w') as hdl:
+    print("    start")
+    with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
         sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
     sp.check_returncode()
 
-    print("        done")
+    time.sleep(1.0)
+    print("    done")
+    return kcoeff_path
 
 def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nband:int):
     """Calculate k-coefficients for continuum absorption
@@ -439,6 +446,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nb
 
     """
 
+    print("Calculating k-coefficients for '%s-%s' CIA for '%s'..."%(formula_A, formula_B, alias))
+
     # <EXAMPLE>
     # 
     # Ccorr_k -F $CONT_PT_FILE \
@@ -451,10 +460,12 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nb
     #     > $sp_dir/h2o-h2o_lw_clog
     # </EXAMPLE>
 
+    raise Exception("Not yet implemented")
 
-def assemble():
 
-    print("Assembling final spectral file...")
+def assemble(alias:str, volatile_list:list):
+
+    
 
     # <EXAMPLE>
     # 
@@ -469,33 +480,89 @@ def assemble():
     # 60 540                    #     table range
     # 500                       #     table npoints
     # 5                         # add k-terms
-    # $sp_dir/h2o_lwf_l         #    path to esft data (.sfk file)
-    # 5                         #
-    # y
-    # $sp_dir/co2_lw_l
-    # 5
-    # y
-    # $sp_dir/so2_lw_l
-    # 19
-    # $sp_dir/h2o-h2o_lw_c
-    # 19
-    # y
-    # $sp_dir/co2-co2_lw_c
-    # 10
-    # 5
-    # $sp_dir/fit_lw_drop5
-    # 1.50000E-06 5.00000E-05
-    # 11
-    # $sp_dir/sulphuric_lw.avg
-    # 12
-    # 8
-    # $sp_dir/fit_lw_ice8
-    # -1
+    # $sp_dir/h2o_lwf_l         #     path to esft data
+    # 5                         # add k-terms
+    # y                         #     append
+    # $sp_dir/co2_lw_l          #     path to esft data
+    # 5                         # add k-terms
+    # y                         #     append
+    # $sp_dir/so2_lw_l          #     path to esft data
+    # 19                        # add CIA 
+    # $sp_dir/h2o-h2o_lw_c      #     path to esft data
+    # 19                        # add CIA
+    # y                         #     append
+    # $sp_dir/co2-co2_lw_c      #     path to esft data
+    # 10                        # add droplet parameters in each band.
+    # 5                         #     ?
+    # $sp_dir/fit_lw_drop5      #     ?
+    # 1.50000E-06 5.00000E-05   #     ?
+    # 11                        # add aerosol parameters in each band
+    # $sp_dir/sulphuric_lw.avg  #     ?
+    # 12                        # add ice crystal parameters in each band
+    # 8                         #     ?
+    # $sp_dir/fit_lw_ice8       #     ?
+    # -1                        # done
     # EOF
     #
     # </EXAMPLE>
 
+    # Parameters
+    planck_npoints = 2000
+    planck_range   = (200.0, 4000.0)
 
+    # Check that files exist
+    skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
+    for f in [skel_path]:
+        if not os.path.exists(f):
+            raise Exception("File not found: '%s'"%f)
+
+    # Write script
+    print("Assembling final spectral file for '%s'..."%alias)
+    spec_path = os.path.join(utils.dirs["output"], alias+"_final.sf"); utils.rmsafe(spec_path)
+    logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
+    f = open(exec_file_name,'w+')
+
+    #    point to input/output spectral files
+    f.write('prep_spec <<EOF'+ '\n')
+    f.write(skel_path + '\n')
+    f.write('n \n')
+    f.write('%s \n' % spec_path)
+
+    #    add thermal emission
+    f.write('6 \n')
+    f.write('n      \n')
+    f.write('t      \n')
+    f.write('%.2f %.2f \n'%planck_range)
+    f.write('%d    \n'%planck_npoints)
+
+    #    add line absorption
+    for i,v in enumerate(volatile_list):
+        lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
+        f.write('5 \n')
+        if i > 0:
+            f.write('y \n')
+        f.write('%s \n'%lbl_path)
+
+    #    add CIA 
+
+    #    add droplets
+        
+    #    add aerosols
+        
+    #    add ice
+
+    #    done
+    f.write('-1'+ '\n')
+    f.write('EOF'+ '\n')
+    f.close()
+    os.chmod(exec_file_name,0o777)
+
+    # Execute script
+    print("    start")
+    with open(logging_path,'w') as hdl:
+        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+    sp.check_returncode()
 
     print("    done")
 
