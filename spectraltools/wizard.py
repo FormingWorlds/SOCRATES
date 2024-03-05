@@ -24,7 +24,7 @@ def main():
         raise Exception("Could not find folder '%s'" % formula_path)
 
     # Get P,T grid
-    arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.1, 1.0, 10.0] , [100.0, 300.0, 500.0, 1000.0, 2000.0])
+    arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.1, 1.0, 10.0, 30.0, 60.0, 100.0, 1000.0] , [10.0, 250.0, 500.0, 750.0, 1000.0, 2000.0])
 
     # Get nu grid + write skeleton
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])
@@ -38,6 +38,7 @@ def main():
 
     # Calculate k-coefficients from netCDF 
     spectral.calc_kcoeff_lbl(alias, formula, nc_path, nband)
+    spectral.calc_kcoeff_cia(alias, formula, formula, nband)
 
     # Assemble final spectral file
     spectral.assemble(alias, vols)

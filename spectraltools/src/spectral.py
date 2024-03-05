@@ -85,8 +85,41 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     return bands_out
 
 
+def get_cia_pair(fA:str, fB:str):
+    """Get the valid CIA pairing.
 
-def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list):
+    If the two absorber names fA,fB form a valid CIA pair, returns that pair as 
+    as list with two elements. Otherwise returns an empty list.
+
+    Parameters
+    ----------
+    fA : str
+        formula A
+    fB : str
+        formula B
+
+    Returns
+    -------
+    list
+        CIA pairing
+    """
+
+    p_in  = [fA,fB]
+    p_out = []
+
+    for p_check in utils.cia_pairs:
+        # Is valid
+        if p_in == p_check:
+            p_out = p_in
+            break 
+        # Is valid, but swapped
+        if [p_in[1], p_in[0]] == p_check:
+            p_out = [p_in[1], p_in[0]]
+            break
+        
+    return p_out
+
+def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list, dry:bool=False):
     """Create skeleton spectral file.
 
     Creates a spectral file with meta-data. Does not calculate k-terms or other physical properties.
@@ -103,6 +136,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         List of absorber names
     band_edges : list 
         List of band edges (length = nbands+1) [cm-1]
+    
+    dry : bool
+        Dry run?
 
     Returns
     -------
@@ -225,15 +261,16 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     os.chmod(exec_file_name,0o777)
 
     logfile = os.path.join(utils.dirs["output"], "%s_skel.log"%alias); utils.rmsafe(logfile)
-    with open(logfile,'w') as hdl:
-        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
-    sp.check_returncode()
+    if not dry:
+        with open(logfile,'w') as hdl:
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+        sp.check_returncode()
 
     time.sleep(1.0)
     print("    done")
     return skel_path
 
-def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
+def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:bool=False):
     """Calculate k-coefficients for line absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
@@ -248,6 +285,9 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
         Input netCDF file containing cross-section data for range of p,t,nu
     nband : int
         Number of bands (THIS MUST MATCH THE SKELETON FILE)
+
+    dry : bool
+        Dry run?
 
     Returns 
     ----------
@@ -315,15 +355,16 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     os.chmod(exec_file_name,0o777)
 
     print("    start")
-    with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
-    sp.check_returncode()
+    if not dry:
+        with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+        sp.check_returncode()
 
     time.sleep(1.0)
     print("    done")
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool=False):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -341,6 +382,13 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
     nband : int
         Number of bands (THIS MUST MATCH THE SKELETON FILE)
 
+    dry : bool
+        Dry run?
+
+    Returns 
+    ----------
+    str
+        Path to file containing the new k-coefficients
     """
 
     # Parameters
@@ -352,20 +400,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
 
     # Re-order pair and check if valid
     p_in = [formula_A.strip(),formula_B.strip()]
-    is_valid = False
-    for p_check in utils.cia_pairs:
-        # Is valid
-        if p_in == p_check:
-            pair = p_in
-            is_valid = True
-            break 
-        # Is valid, but swapped
-        if [p_in[1], p_in[0]] == p_check:
-            pair = [p_in[1], p_in[0]]
-            is_valid = True
-            break
-    if not is_valid:
-        raise Exception("Invalid CIA pairing " + str(p_in))
+    pair = get_cia_pair(p_in[0], p_in[1])
+    if len(pair) == 0:
+        raise Exception("Invalid CIA pair " + str(pair))
     
     pair_ids = [utils.absorber_id[p] for p in pair]
     pair_str = "%s-%s"%(pair[0],pair[1])
@@ -407,7 +444,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
         f.write(" -R 1 %d"%nband) 
         f.write(" -c %.3f"%nu_cutoff)
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %d %d %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
         match tol_type:
             case 'n': f.write(" -n 4")          # Use this many k-terms
@@ -434,7 +471,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
         f.write(" -CIA %s"%db_cia)
         f.write(" -R 1 %d"%nband)
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %d %d %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
         match tol_type:
             case 'n': f.write(" -n 4")       
@@ -454,17 +491,34 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
     os.chmod(exec_file_name,0o777)
 
     print("    start")
-    with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
-    sp.check_returncode()
+    if not dry:
+        with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+        sp.check_returncode()
 
     time.sleep(1.0)
     print("    done")
     return kcoeff_path
 
 
-def assemble(alias:str, volatile_list:list):
+def assemble(alias:str, volatile_list:list, dry:bool=False):
+    """Assemble final spectral file.
 
+    Parameters
+    ----------
+    alias : str
+        Alias of spectral file
+    volatile_list : str
+        List of volatiles
+
+    dry : bool
+        Dry run?
+
+    Returns 
+    ----------
+    str
+        Path to file
+    """
 
 
     # <EXAMPLE>
@@ -524,27 +578,40 @@ def assemble(alias:str, volatile_list:list):
     f = open(exec_file_name,'w+')
 
     #    point to input/output spectral files
-    f.write('prep_spec <<EOF'+ '\n')
-    f.write(skel_path + '\n')
-    f.write('n \n')
-    f.write('%s \n' % spec_path)
+    f.write("prep_spec <<EOF  \n")
+    f.write(skel_path + "\n")
+    f.write("n \n")
+    f.write("%s \n" % spec_path)
 
     #    add thermal emission
-    f.write('6 \n')
-    f.write('n      \n')
-    f.write('t      \n')
-    f.write('%.2f %.2f \n'%planck_range)
-    f.write('%d    \n'%planck_npoints)
+    f.write("6 \n")
+    f.write("n      \n")
+    f.write("t      \n")
+    f.write("%.3f %.3f \n"%planck_range)
+    f.write("%d    \n"%planck_npoints)
 
     #    add line absorption
     for i,v in enumerate(volatile_list):
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
-        f.write('5 \n')
+        f.write("5 \n")
         if i > 0:
-            f.write('y \n')
-        f.write('%s \n'%lbl_path)
+            f.write("y \n")
+        f.write("%s \n"%lbl_path)
 
     #    add CIA 
+    cia_count = 0
+    for i,p in enumerate(utils.cia_pairs):
+        if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
+
+            f.write("19 \n")
+            if cia_count > 0:
+                f.write("y \n")
+
+            pair_str = p[0]+"-"+p[1]
+            cia_path = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str))
+            f.write("%s \n"%cia_path)
+
+            cia_count += 1
 
     #    add droplets
         
@@ -553,16 +620,19 @@ def assemble(alias:str, volatile_list:list):
     #    add ice
 
     #    done
-    f.write('-1'+ '\n')
-    f.write('EOF'+ '\n')
+    f.write("-1 \n")
+    f.write("EOF \n")
+    f.write(" \n ")
     f.close()
     os.chmod(exec_file_name,0o777)
 
     # Execute script
     print("    start")
-    with open(logging_path,'w') as hdl:
-        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
-    sp.check_returncode()
+    if not dry:
+        with open(logging_path,'w') as hdl:
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+        sp.check_returncode()
 
     print("    done")
+    return spec_path
 

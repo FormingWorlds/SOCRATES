@@ -97,6 +97,10 @@ class xsec():
                 k_read.append(K)
         self.arr_k = np.array(k_read, dtype=float)
 
+        # Check lengths
+        if len(self.arr_k) != self.nbins:
+            raise Exception("Invalid array length when reading DACE bin file")
+
         # Read filename info
         self.parse_binname()
 
