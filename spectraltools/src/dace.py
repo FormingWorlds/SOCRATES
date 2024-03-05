@@ -183,5 +183,6 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     
     # Result
     print("    %d files mapped, totaling %g GB" % (out_n, size))
+    print("    done\n")
     return np.array(out_p, dtype=float), np.array(out_t, dtype=float), out_f
 

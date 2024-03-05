@@ -8,13 +8,14 @@ if os.environ["RAD_DIR"] == None:
     raise Exception("Cannot find SOCRATES")
 
 # Named directories
-dirs = {"tools":os.path.join(os.path.abspath(os.environ["RAD_DIR"]), "spectraltools/")}
+dirs = {"socrates":os.path.abspath(os.environ["RAD_DIR"])}
+dirs["tools"]  = os.path.join(dirs["socrates"], "spectraltools/")
 dirs["output"] = os.path.join(dirs["tools"] , "output/" )
-dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
-dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
+dirs["data"]   = os.path.join(dirs["tools"]   , "data/" )
+dirs["dace"]   = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
-dirs["cia"] = os.path.join(dirs["data"]     , "cia/" )
+dirs["cia"]    = os.path.join(dirs["data"]     , "cia/" )
 
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
@@ -42,7 +43,8 @@ def is_ascending(arr):
 
 # Check if array is unique (no repeated values)
 def is_unique(arr):
-   return bool( len(np.unique(arr)) == len(arr) )
+   flat = np.array(arr).flatten()
+   return bool( len(np.unique(flat)) == len(flat) )
 
 # Convert all of the values in an array into one long string
 def get_arr_as_str(arr):

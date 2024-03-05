@@ -7,8 +7,7 @@ import src.spectral as spectral
 import src.dace as dace
 import src.cross as cross
 import src.netcdf as netcdf
-import os
-import numpy as np
+import os, glob
 
 def main():
     print("Wizard says hello")
@@ -22,6 +21,9 @@ def main():
     formula_path = os.path.join(utils.dirs[source], formula.strip()+"/")
     if not os.path.exists(formula_path):
         raise Exception("Could not find folder '%s'" % formula_path)
+    
+    for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
+        os.remove(f)
 
     # Get P,T grid
     arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.01, 10.0, 100.0, 1000.0] , [100, 800, 2000.0])
@@ -40,7 +42,7 @@ def main():
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_path, nband)
         for f2 in vols[i:]:
-            spectral.calc_kcoeff_cia(alias, f1, f2, nband)
+            spectral.calc_kcoeff_cia(alias, f1, f2, band_edges)
 
     # Assemble final spectral file
     spectral.assemble(alias, vols)

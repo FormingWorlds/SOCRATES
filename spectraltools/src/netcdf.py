@@ -103,7 +103,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
         var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
         del this_xsec
 
-    print("    done writing to '%s'" % nc_path)
+    print("    done writing to '%s' \n" % nc_path)
     # Finish up
     ds.close()
     return nc_path

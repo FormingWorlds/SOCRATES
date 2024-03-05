@@ -30,6 +30,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Band edges, ascending [cm-1]
     """
 
+    print("Finding best bands (method=%d)..."%method)
+
     # Validate
     if len(nu_arr) < 2:
         raise Exception("Wavenumber array is too short")
@@ -41,8 +43,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         raise Exception("Too many bands! (%d requested)"%nband)
     
     # Check range
-    numin = max(nu_arr[0], floor)
-    numax = nu_arr[-1]
+    numin = max(nu_arr[1], floor)
+    numax = nu_arr[-2]
     lognumin = np.log10(numin)
     lognumax = np.log10(numax)
 
@@ -82,6 +84,10 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         raise Exception("Best band edges are ascending! Try a different method, or increase the resolution")
 
     # print("Best bands: " + utils.get_arr_as_str(bands_out))
+    for i in range(nband):
+        print("    band %3d : %.2f - %.2f cm-1" % (i,bands_out[i], bands_out[i+1]))
+    print("    done\n")
+
     return bands_out
 
 
@@ -184,7 +190,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     print("    T_grid [K]  (n=%d): "%len(T_grid) + utils.get_arr_as_str(T_grid))
     print("    P_grid [Pa] (n=%d): "%len(P_grid) + utils.get_arr_as_str(P_grid))
 
-    # Generate P-T files to be read by Ccorr script
+    # Generate P-T files to be read by Ccorr_k script
     pt_lbl_file = open(pt_lbl, "w+")
     pt_lbl_file.write('*PTVAL' + '\n')
     for prs in np.unique(P_grid):
@@ -197,12 +203,14 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     pt_lbl_file.write('*END' + '\n')
     pt_lbl_file.close()
     
-    T_grid_as_str = str(" ").join(["%.2f"%t for t in T_grid])
-    ref_pres_cia = P_grid[int( len(P_grid) * 0.5 )]
+    ref_pres_cia = utils.get_closest(1.0e5, P_grid) # set reference pressure to ~1 bar
     pt_cia_file = open(pt_cia, "w+")
-    pt_cia_file.write('*PTVAL' + '\n')
-    pt_cia_file.write("%.2e %s \n" % (ref_pres_cia, T_grid_as_str))
-    pt_cia_file.write('*END' + '\n')
+    pt_cia_file.write('*PTVAL \n')
+    line = "%.5e"%ref_pres_cia 
+    for t in np.unique(T_grid):
+        line +=" %.5e"%t 
+    pt_cia_file.write(line + " \n")
+    pt_cia_file.write('*END \n')
     pt_cia_file.close()
 
     # Open file to produce bash script
@@ -268,7 +276,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'"%skel_path)
+    print("    done writing to '%s' \n"%skel_path)
     return skel_path
 
 def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:bool=False):
@@ -363,10 +371,10 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'"%kcoeff_path)
+    print("    done writing to '%s'\n"%kcoeff_path)
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool=False):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarray, dry:bool=False):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -381,8 +389,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
         Formula of absorber B
     nc_xsc_path : str
         Input netCDF file containing cross-section data for range of p,t,nu
-    nband : int
-        Number of bands (THIS MUST MATCH THE SKELETON FILE)
+    band_edges : np.ndarray
+        Band edges in [cm-1]. MUST MATCH SKELETON FILE.
 
     dry : bool
         Dry run?
@@ -418,10 +426,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
     
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        lbl_xsc_path  = os.path.join(utils.dirs["output"],"%s_H2O.nc"% alias)
         mt_ckd_296    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
         mt_ckd_260    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
-        check_files.extend([lbl_map_path, lbl_xsc_path, mt_ckd_260, mt_ckd_296])
+        check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
         check_files.extend([db_cia])
@@ -429,12 +436,17 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
     for f in check_files:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
+        
+    # Band range
+    nband = len(band_edges)-1
+    iband = [0, nband]
 
     # Setup file (write) paths
-    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str)); utils.rmsafe(kcoeff_path)
-    monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias, pair_str)); utils.rmsafe(monitor_path)
-    mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias, pair_str)); utils.rmsafe(mapping_path)
-    logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias, pair_str)); utils.rmsafe(logging_path)
+    kcoeff_path    = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str)); utils.rmsafe(kcoeff_path)
+    kcoeffnc_path  = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k.nc"%(alias,pair_str)); utils.rmsafe(kcoeffnc_path)
+    monitor_path   = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias, pair_str)); utils.rmsafe(monitor_path)
+    mapping_path   = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias, pair_str)); utils.rmsafe(mapping_path)
+    logging_path   = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias, pair_str)); utils.rmsafe(logging_path)
  
     # Open executable file for writing
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,pair_str)); utils.rmsafe(exec_file_name)
@@ -442,9 +454,19 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
 
     #    Handle water self-broadening as a special case
     if both_water:
+
+        # Limit band range for MT_CKD case
+        ckd_numax = 2.0e4 - 100.0  # cm-1
+        for i in range(1,nband):
+            if band_edges[i+1] < ckd_numax:
+                iband[1] = i
+            else:
+                break 
+        print("MT_CKD band limits: " + str(iband))
+
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
-        f.write(" -R 2 %d"%nband) 
+        f.write(" -R %d %d"%(iband[0], iband[1])) 
         f.write(" -c %.3f"%nu_cutoff)
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
@@ -461,8 +483,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
         f.write(" -lk")
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
-        # f.write(" -L %s"%lbl_xsc_path)
-        f.write(" -L temp")
+        f.write(" -L %s"%kcoeffnc_path)
         f.write(" -lw %s"%lbl_map_path) 
         f.write(" \n ")
 
@@ -482,7 +503,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
         f.write(" -CIA %s"%db_cia)
-        f.write(" -R 1 %d"%nband)
+        f.write(" -R %d %d"%(iband[0], iband[1])) 
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
@@ -510,7 +531,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'"%kcoeff_path)
+    print("    done writing to '%s'\n"%kcoeff_path)
     return kcoeff_path
 
 
@@ -646,6 +667,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done writing to '%s'"%spec_path)
+    print("    done writing to '%s'\n"%spec_path)
     return spec_path
 
