@@ -91,7 +91,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     # Read and write cross-sections (2D)
     print("    write cross-section data")
     counter = 0
-    modprint = int(len_p*0.1)
+    modprint = max(int(len_p*0.1), 1)
     for i in range(len_p):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:

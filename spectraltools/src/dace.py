@@ -3,7 +3,8 @@
 # Import system libraries
 from glob import glob
 import numpy as np
-import os, shutil
+import os
+from scipy.spatial import KDTree
 
 # Import files
 import src.cross as cross
@@ -32,8 +33,8 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
 
     Returns
     -------
-    str
-        Absolute path to best bin file
+    list
+        List of ranked closest bin files (length=rank)
     """
 
     if (p_aim < 0) or (t_aim < 0):
@@ -44,6 +45,7 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
     if count == 0:
         raise Exception("Could not find any bin files in '%s'" % directory)
     
+    # Read all files
     p_arr = []  # pressure
     t_arr = []  # temperature
     for f in files:
@@ -52,6 +54,7 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 
+    # Find bin
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
     if not quiet:
         print("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K" % (d,p,t))
@@ -81,74 +84,106 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
 
     print("Mapping p,t points")
 
-    # Get files
     files = list_files(directory)
 
     # Targets?
     use_all = (len(p_targets) == 0) or (len(t_targets) == 0)
 
-    # P,T points
-    arr_p = []
-    arr_t = []
-    arr_f = []
-    if use_all:
-        print("    use_all = True")
-        for f in files:
-            x = cross.xsec("", "dace", f)
-            x.parse_binname()
-            arr_p.append(x.p)
-            arr_t.append(x.t)
-            arr_f.append(f)
-    else:
-        print("    use_all = False")
-        for p in p_targets:
-            for t in t_targets:
-                f = find_bin_close(directory, p, t, quiet=True)
-                x = cross.xsec("", "dace", f)
-                x.parse_binname()
-                arr_p.append(x.p)
-                arr_t.append(x.t)
-                arr_f.append(f)
+    # Record all P,T points
+    all_p = []
+    all_t = []
+    all_f = []
+    for f in files:
+        x = cross.xsec("", "dace", f)
+        x.parse_binname()
+        all_p.append(x.p)
+        all_t.append(x.t)
+        all_f.append(f)
+    all_n = len(all_f)
 
     # Unique P,T values
-    unique_p = sorted(list(set(arr_p)))
-    num_p = len(unique_p)  
-    unique_t = sorted(list(set(arr_t)))
-    num_t = len(unique_t)  
+    unique_p = sorted(list(set(all_p)))
+    unique_t = sorted(list(set(all_t)))
 
-    # Sorted arrays
-    sorted_p = []
-    sorted_t = []
-    sorted_f = []
+    if use_all:
+        print("    use_all = True")
+        # Store all points
+        use_p = all_p[:] 
+        use_t = all_t[:] 
+    else:
+        print("    use_all = False")
+        
+        # Setup KD tree for search
+        X = np.array([np.log10(all_p), all_t]).T
+        tree = KDTree(X, leafsize=100, copy_data=True)
 
-    counter = 1
-    num_pt = num_p * num_t
-    modprint = int(num_pt*0.1)
-    for p in unique_p:
-        for t in unique_t:
-            if counter % modprint == 0:
-                print("    point %5d of %5d   (%5.1f%%)" % (counter,num_pt, 100.0*(counter/num_pt)))
+        # Setup points to search by
+        tgt_p = []
+        tgt_t = []
+        for p in p_targets:
+            for t in t_targets:
+                tgt_p.append(p)
+                tgt_t.append(t)
 
-            # store these p,t
-            sorted_p.append(p)
-            sorted_t.append(t)
-            # record which file maps to this p,t pair
-            for i,f in enumerate(arr_f):
-                if np.isclose(arr_p[i],p) and np.isclose(arr_t[i],t):
-                    sorted_f.append(f)
+        # Perform search
+        Q = np.array([np.log10(tgt_p), tgt_t]).T
+        best_d, best_i = tree.query(Q)
+        use_p = np.array(all_p, dtype=float)[best_i]
+        use_t = np.array(all_t, dtype=float)[best_i]
 
-            counter += 1
+    use_n = len(use_p)
+    print("Use p: ", use_p)
+    print("Use t: ", use_t)
 
-    if (len(sorted_f) != len(sorted_p)) or (len(sorted_p) != len(sorted_t)):
+    # Sort points into the correct p,t order, dropping duplicates
+    out_p = []
+    out_t = []
+    for p in unique_p:     #  for all unique p
+        for t in unique_t: #  for all unique t
+            for i in range(use_n):  # for all selected points
+                if np.isclose(use_p[i], p) and np.isclose(use_t[i], t): # select this point?
+
+                    # Check if duplicate
+                    duplicate = False 
+                    for j in range(len(out_p)):
+                        if (p == out_p[j]) and (t == out_t[j]):
+                            duplicate = True
+                            break
+                    
+                    # Add to output array (if not a duplicate)
+                    if not duplicate:
+                        out_p.append(p)
+                        out_t.append(t)
+                        break 
+
+    # Warn on dropped values
+    out_n = len(out_p)
+    lost = abs(out_n - use_n)
+    if lost > 0:
+        print("WARNING: Duplicate values dropped from p,t grid (dropped count = %d)"%lost)
+
+    # Map to files
+    atol = 1.0e-8
+    out_f = []
+    
+    for i in range(all_n):
+        p = all_p[i]
+        t = all_t[i]
+        for j in range(out_n):
+            if np.isclose(out_p[j], p, atol=atol) and np.isclose(out_t[j], t, atol=atol):
+                out_f.append(all_f[i])
+                break 
+
+    if (len(out_p) != len(out_t)) or (len(out_p) != len(out_f)):
         raise Exception("Mapping failed!")
     
     # Get total size on disk (to warn user)
     size = 0.0
-    for f in sorted_f:
+    for f in out_f:
         size += os.path.getsize(f)
     size *= 1.0e-9
     
     # Result
-    print("    %d files mapped, totaling %g GB" % (len(sorted_p), size))
-    return np.array(sorted_p, dtype=float), np.array(sorted_t, dtype=float), sorted_f
+    print("    %d files mapped, totaling %g GB" % (out_n, size))
+    return np.array(out_p, dtype=float), np.array(out_t, dtype=float), out_f
 

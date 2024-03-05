@@ -29,6 +29,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - Executables have been added to your `PATH` variable using `. ./set_rad_env`
 * Python (version >=3.11) and its libraries
    - numpy
+   - scipy
    - matplotlib
    - netcdf4
    - glob

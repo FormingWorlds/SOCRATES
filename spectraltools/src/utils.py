@@ -64,10 +64,12 @@ def find_pt_close(arr_p, arr_t, target_p, target_t):
     target_t = max(1.0e-9, target_t)
     nvals = len(arr_p)
     dists = []
+
     for i in range(nvals):
         dists.append(100.0 * ( ( (arr_p[i]-target_p)/target_p)**2.0 + (  (arr_t[i]-target_t)/target_t  )**2.0   )**0.5)
     iclose = np.argmin(dists)
     dclose = dists[iclose]
+
     return iclose, dclose, arr_p[iclose], arr_t[iclose]
     
 # Check if output folder exists
