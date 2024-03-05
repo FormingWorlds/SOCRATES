@@ -198,9 +198,10 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     pt_lbl_file.close()
     
     T_grid_as_str = str(" ").join(["%.2f"%t for t in T_grid])
+    ref_pres_cia = P_grid[int( len(P_grid) * 0.5 )]
     pt_cia_file = open(pt_cia, "w+")
     pt_cia_file.write('*PTVAL' + '\n')
-    pt_cia_file.write(T_grid_as_str + '\n')
+    pt_cia_file.write("%.2e %s \n" % (ref_pres_cia, T_grid_as_str))
     pt_cia_file.write('*END' + '\n')
     pt_cia_file.close()
 
@@ -267,7 +268,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done")
+    print("    done writing to '%s'"%skel_path)
     return skel_path
 
 def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:bool=False):
@@ -345,6 +346,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
     f.write(" -lk")                     # A look-up table will be used for the pressure/temperature scaling
+    f.write(" -k")                      # Adjust for continuua
     f.write(" -o %s"%kcoeff_path)       # Output file, holding the correlated-k terms for each pressure/temperature
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
@@ -361,7 +363,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done")
+    print("    done writing to '%s'"%kcoeff_path)
     return kcoeff_path
 
 def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool=False):
@@ -394,7 +396,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
     # Parameters
     max_path = 1.0e4
     tol_type = 't' 
-    dnu = 0.1           # Frequency increment [m-1]
+    dnu = 1.0           # Frequency increment [m-1]
     nproc = 20          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
@@ -415,10 +417,11 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
     check_files = [skel_path, pt_cia]
     
     if both_water:
-        lbl_path   = os.path.join(utils.dirs["output"],"%s_H2O_lbl.sf_k"%alias)
-        mt_ckd_296 = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
-        mt_ckd_260 = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
-        check_files.extend([lbl_path, mt_ckd_260, mt_ckd_296])
+        lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
+        lbl_xsc_path  = os.path.join(utils.dirs["output"],"%s_H2O.nc"% alias)
+        mt_ckd_296    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
+        mt_ckd_260    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
+        check_files.extend([lbl_map_path, lbl_xsc_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
         check_files.extend([db_cia])
@@ -441,26 +444,36 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
     if both_water:
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
-        f.write(" -R 1 %d"%nband) 
+        f.write(" -R 2 %d"%nband) 
         f.write(" -c %.3f"%nu_cutoff)
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
         match tol_type:
             case 'n': f.write(" -n 4")          # Use this many k-terms
-            case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+            case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(" -b 5.0e-4")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
-        f.write(" -k")
+        # f.write(" -k")
         f.write(" -s %s"%skel_path)
         f.write(" +p")
         f.write(" -lk")
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
-        f.write(" -L %s"%mapping_path)
-        f.write(" -lw %s"%lbl_path) 
+        # f.write(" -L %s"%lbl_xsc_path)
+        f.write(" -L temp")
+        f.write(" -lw %s"%lbl_map_path) 
         f.write(" \n ")
+
+        #   Ccorr_k -F $CONT_PT_FILE \
+        # -R 1 400 -i 0.1 -ct 1 1 ${COL_H2OC} -t 5.0e-4 \
+        # -e $CONT_H2O_S296 $CONT_H2O_S260 \
+        # -s $skelfile +p -lk \
+        # -o $sp_dir/h2o-h2o_lw_c -m $sp_dir/h2o-h2o_lw_cm \
+        # -L $sp_dir/h2o-h2o_lw_clbl.nc \
+        # -lw $sp_dir/h2o_lwf_l_map.nc \
+        # > $sp_dir/h2o-h2o_lw_clog
 
     #    All other cases
     else:
@@ -497,7 +510,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int, dry:bool
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done")
+    print("    done writing to '%s'"%kcoeff_path)
     return kcoeff_path
 
 
@@ -633,6 +646,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done")
+    print("    done writing to '%s'"%spec_path)
     return spec_path
 

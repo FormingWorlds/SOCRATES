@@ -132,8 +132,6 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
         use_t = np.array(all_t, dtype=float)[best_i]
 
     use_n = len(use_p)
-    print("Use p: ", use_p)
-    print("Use t: ", use_t)
 
     # Sort points into the correct p,t order, dropping duplicates
     out_p = []

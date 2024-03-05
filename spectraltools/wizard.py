@@ -13,18 +13,18 @@ import numpy as np
 def main():
     print("Wizard says hello")
 
-    formula = "CO2"
+    formula = "H2O"
     source = "dace"
     vols = [formula]
     alias = "demo"
-    nband = 20
+    nband = 10
 
     formula_path = os.path.join(utils.dirs[source], formula.strip()+"/")
     if not os.path.exists(formula_path):
         raise Exception("Could not find folder '%s'" % formula_path)
 
     # Get P,T grid
-    arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.001, 10.0, 100.0, 1000.0] , [10.0, 100, 300, 500, 700, 1000, 1500, 2000.0])
+    arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.01, 10.0, 100.0, 1000.0] , [100, 800, 2000.0])
 
     # Get nu grid + write skeleton
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])
@@ -37,8 +37,10 @@ def main():
     netcdf.write_ncdf_from_grid(nc_path, formula, source, arr_p, arr_t, arr_f)
 
     # Calculate k-coefficients from netCDF 
-    spectral.calc_kcoeff_lbl(alias, formula, nc_path, nband)
-    spectral.calc_kcoeff_cia(alias, formula, formula, nband)
+    for i,f1 in enumerate(vols):
+        spectral.calc_kcoeff_lbl(alias, f1, nc_path, nband)
+        for f2 in vols[i:]:
+            spectral.calc_kcoeff_cia(alias, f1, f2, nband)
 
     # Assemble final spectral file
     spectral.assemble(alias, vols)
