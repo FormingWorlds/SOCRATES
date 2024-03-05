@@ -12,7 +12,7 @@ import os, glob
 def main():
     print("Wizard says hello")
 
-    formula = "H2O"
+    formula = "CO2"
     source = "dace"
     vols = [formula]
     alias = "demo"

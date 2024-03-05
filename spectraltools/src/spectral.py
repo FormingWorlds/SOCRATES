@@ -217,7 +217,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     f = open(exec_file_name, "w+")
 
     # Write skeleton spectral file using prep_spec utility
-    f.write('prep_spec <<EOF'+ '\n')
+    f.write('prep_spec <<EOF \n')
     f.write(skel_path + '\n')
 
     # Set number of bands
@@ -404,7 +404,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     # Parameters
     max_path = 1.0e4
     tol_type = 't' 
-    dnu = 1.0           # Frequency increment [m-1]
+    dnu = 0.01           # Frequency increment [m-1]
     nproc = 20          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
@@ -439,11 +439,10 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         
     # Band range
     nband = len(band_edges)-1
-    iband = [0, nband]
+    iband = [1, nband]
 
     # Setup file (write) paths
     kcoeff_path    = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str)); utils.rmsafe(kcoeff_path)
-    kcoeffnc_path  = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k.nc"%(alias,pair_str)); utils.rmsafe(kcoeffnc_path)
     monitor_path   = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias, pair_str)); utils.rmsafe(monitor_path)
     mapping_path   = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias, pair_str)); utils.rmsafe(mapping_path)
     logging_path   = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias, pair_str)); utils.rmsafe(logging_path)
@@ -456,10 +455,11 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     if both_water:
 
         # Limit band range for MT_CKD case
+        iband[1] = 1
         ckd_numax = 2.0e4 - 100.0  # cm-1
-        for i in range(1,nband):
+        for i in range(0,nband):
             if band_edges[i+1] < ckd_numax:
-                iband[1] = i
+                iband[1] = i+1
             else:
                 break 
         print("MT_CKD band limits: " + str(iband))
@@ -483,7 +483,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         f.write(" -lk")
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
-        f.write(" -L %s"%kcoeffnc_path)
+        f.write(" -L %s"%mapping_path)
         f.write(" -lw %s"%lbl_map_path) 
         f.write(" \n ")
 
