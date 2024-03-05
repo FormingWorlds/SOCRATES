@@ -83,7 +83,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # print("Best bands: " + utils.get_arr_as_str(bands_out))
     return bands_out
-    
+
+
 
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list):
     """Create skeleton spectral file.
@@ -162,7 +163,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     
     T_grid_as_str = str(" ").join(["%.2f"%t for t in T_grid])
     pt_cia_file = open(pt_cia, "w+")
-    pt_cia_file.write('*PTVAL' + '\n')  # CHECK THIS??
+    pt_cia_file.write('*PTVAL' + '\n')
     pt_cia_file.write(T_grid_as_str + '\n')
     pt_cia_file.write('*END' + '\n')
     pt_cia_file.close()
@@ -186,130 +187,24 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         abs_ids.append(absid)
         f.write(absid +" \n")
 
-    # Count total number of "continua"
-    # (count number of participating CIA pairs [self+foreign])
-    counter_continua = 0
-    if "H2O" in volatile_list:
-        counter_continua += 1
-    if "CO2" in volatile_list:
-        counter_continua += 1
-    if "CH4" in volatile_list:
-        counter_continua += 1
-    if "O2" in volatile_list:
-        counter_continua += 1
-    if "N2" in volatile_list:
-        counter_continua += 1
-    if "H2" in volatile_list:
-        counter_continua += 1
-    if ("CO2" in volatile_list) and ("CH4" in volatile_list):
-        counter_continua += 1
-    if ("CO2" in volatile_list) and ("H2" in volatile_list):
-        counter_continua += 1
-    if ("CO2" in volatile_list) and ("He" in volatile_list):
-        counter_continua += 1
-    if ("CH4" in volatile_list) and ("He" in volatile_list):
-        counter_continua += 1
-    if ("O2" in volatile_list) and ("CO2" in volatile_list):
-        counter_continua += 1
-    if ("O2" in volatile_list) and ("N2" in volatile_list):
-        counter_continua += 1
-    if ("N2" in volatile_list) and ("H2O" in volatile_list):
-        counter_continua += 1
-    if ("N2" in volatile_list) and ("CH4" in volatile_list):
-        counter_continua += 1
-    if ("N2" in volatile_list) and ("H2" in volatile_list):
-        counter_continua += 1
-    if ("N2" in volatile_list) and ("He" in volatile_list):
-        counter_continua += 1
-    if ("H2" in volatile_list) and ("CH4" in volatile_list):
-        counter_continua += 1
-    if ("H2" in volatile_list) and ("He" in volatile_list):
-        counter_continua += 1
-    f.write(str(counter_continua) + '\n')
-    print("    number of continua:", counter_continua)
+    # Count total number of continua (self and foreign)
+    active_pairs = []
+    for i,p in enumerate(utils.cia_pairs):
+        if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
+            active_pairs.append(i)
+    f.write("%d \n"%len(active_pairs))
+    print("    number of continua: %d"%len(active_pairs))
 
-    ### Set CIA pairs
-    ##   Self:
-    # H2O-H2O
-    if "H2O" in volatile_list:
-        f.write('1'  + ' ')  # H2O-
-        f.write('1'  + '\n')  # -H2O
-    # CO2-CO2
-    if "CO2" in volatile_list:
-        f.write('2'  + ' ')  # CO2-
-        f.write('2'  + '\n')  # -CO2
-    # CH4-CH4
-    if "CH4" in volatile_list:
-        f.write('6'  + ' ')  # CH4-
-        f.write('6'  + '\n')  # -CH4
-    # O2-O2
-    if "O2" in volatile_list:
-        f.write('7'  + ' ')  # O2-
-        f.write('7'  + '\n')  # -O2
-    # N2-N2
-    if "N2" in volatile_list:
-        f.write('13' + ' ')  # N2-
-        f.write('13' + '\n')  # -N2
-    # H2-H2
-    if "H2" in volatile_list:
-        f.write('23' + ' ')  # H2-
-        f.write('23' + '\n')  # -H2
-
-    ##   Foreign:
-    # CO2-CH4
-    if ("CO2" in volatile_list) and ("CH4" in volatile_list):
-        f.write('2'  + ' ')  # CO2-
-        f.write('6'  + '\n')  # -CH4
-    # CO2-H2
-    if ("CO2" in volatile_list) and ("H2" in volatile_list):
-        f.write('2'  + ' ')  # CO2-
-        f.write('23' + '\n')  # -H2
-    # CO2-He
-    if ("CO2" in volatile_list) and ("He" in volatile_list):
-        f.write('2'  + ' ')  # CO2-
-        f.write('24' + '\n')  # -He
-    # CH4-He
-    if ("CH4" in volatile_list) and ("He" in volatile_list):
-        f.write('6'  + ' ')  # CH4-
-        f.write('24' + '\n')  # -He
-    # O2-CO2
-    if ("O2" in volatile_list) and ("CO2" in volatile_list):
-        f.write('7'  + ' ')  # O2-
-        f.write('2'  + '\n')  # -CO2
-    # O2-N2
-    if ("O2" in volatile_list) and ("N2" in volatile_list):
-        f.write('7'  + ' ')  # O2-
-        f.write('13' + '\n')  # -N2
-    # N2-H2O
-    if ("N2" in volatile_list) and ("H2O" in volatile_list):
-        f.write('13' + ' ')  # N2-
-        f.write('1'  + '\n')  # -H2O
-    # N2-CH4
-    if ("N2" in volatile_list) and ("CH4" in volatile_list):
-        f.write('13' + ' ')  # N2-
-        f.write('6'  + '\n')  # -CH4
-    # N2-H2
-    if ("N2" in volatile_list) and ("H2" in volatile_list):
-        f.write('13' + ' ')  # N2-
-        f.write('23' + '\n')  # -H2
-    # N2-He
-    if ("N2" in volatile_list) and ("He" in volatile_list):
-        f.write('13' + ' ')  # N2-
-        f.write('24' + '\n')  # -He
-    # H2-CH4
-    if ("H2" in volatile_list) and ("CH4" in volatile_list):
-        f.write('23' + ' ')  # H2-
-        f.write('6'  + '\n')  # -CH4
-    # H2-He
-    if ("H2" in volatile_list) and ("He" in volatile_list):
-        f.write('23' + ' ')  # H2-
-        f.write('24' + '\n')  # -He
+    # Set CIA pairs
+    for i in active_pairs:
+        p = utils.cia_pairs[i]
+        f.write("%s %s \n"%(utils.absorber_id[p[0]],utils.absorber_id[p[1]]))
 
     # Set number of aerosols
-    f.write('0'+ '\n')
+    f.write("0 \n")
 
     # Set bands manually (in reverse order, since they'll be converted to wavelength)
-    f.write('c'+ '\n')
+    f.write("c \n")
     for i in range(nband,0,-1):
         f.write("%.2f %.2f \n"%(band_edges[i], band_edges[i-1]))
 
@@ -320,11 +215,12 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     f.write("0*%d\n"%nband)
 
     # Exclude no regions
-    f.write('n'+ '\n')
+    f.write("n \n")
 
     # Close prep_spec
-    f.write('-1'+ '\n')
-    f.write('EOF'+ '\n')
+    f.write("-1 \n")
+    f.write("EOF \n")
+    f.write(" \n ")
     f.close()
     os.chmod(exec_file_name,0o777)
 
@@ -413,6 +309,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
+    f.write(" \n ")
     
     f.close()
     os.chmod(exec_file_name,0o777)
@@ -426,10 +323,10 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int):
     print("    done")
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nband:int):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nband:int):
     """Calculate k-coefficients for continuum absorption
 
-    Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
+    Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
 
     Parameters
     ----------
@@ -446,26 +343,129 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, nc_xsc_path:str, nb
 
     """
 
-    print("Calculating k-coefficients for '%s-%s' CIA for '%s'..."%(formula_A, formula_B, alias))
+    # Parameters
+    max_path = 1.0e4
+    tol_type = 't' 
+    dnu = 0.1           # Frequency increment [m-1]
+    nproc = 20          # Number of processes
+    nu_cutoff = 2500.0  # Line cutoff [m-1]
 
-    # <EXAMPLE>
-    # 
-    # Ccorr_k -F $CONT_PT_FILE \
-    #     -R 1 400 -i 0.1 -ct 1 1 ${COL_H2OC} -t 5.0e-4 \
-    #     -e $CONT_H2O_S296 $CONT_H2O_S260 \
-    #     -s $skelfile +p -lk \
-    #     -o $sp_dir/h2o-h2o_lw_c -m $sp_dir/h2o-h2o_lw_cm \
-    #     -L $sp_dir/h2o-h2o_lw_clbl.nc \
-    #     -lw $sp_dir/h2o_lwf_l_map.nc \
-    #     > $sp_dir/h2o-h2o_lw_clog
-    # </EXAMPLE>
+    # Re-order pair and check if valid
+    p_in = [formula_A.strip(),formula_B.strip()]
+    is_valid = False
+    for p_check in utils.cia_pairs:
+        # Is valid
+        if p_in == p_check:
+            pair = p_in
+            is_valid = True
+            break 
+        # Is valid, but swapped
+        if [p_in[1], p_in[0]] == p_check:
+            pair = [p_in[1], p_in[0]]
+            is_valid = True
+            break
+    if not is_valid:
+        raise Exception("Invalid CIA pairing " + str(p_in))
+    
+    pair_ids = [utils.absorber_id[p] for p in pair]
+    pair_str = "%s-%s"%(pair[0],pair[1])
+    both_water = bool( (pair[0]=="H2O") and (pair[1]=="H2O"))
+    print("Calculating k-coefficients for '%s' CIA for '%s'..."%(pair_str, alias))
 
-    raise Exception("Not yet implemented")
+    # Setup file (read) paths
+    pt_cia       = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%alias)
+    skel_path    = os.path.join(utils.dirs["output"], alias+"_skel.sf")
+    check_files = [skel_path, pt_cia]
+    
+    if both_water:
+        lbl_path   = os.path.join(utils.dirs["output"],"%s_H2O_lbl.sf_k"%alias)
+        mt_ckd_296 = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
+        mt_ckd_260 = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
+        check_files.extend([lbl_path, mt_ckd_260, mt_ckd_296])
+    else:
+        db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
+        check_files.extend([db_cia])
+        
+    for f in check_files:
+        if not os.path.exists(f):
+            raise Exception("File not found: '%s'"%f)
+
+    # Setup file (write) paths
+    kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str)); utils.rmsafe(kcoeff_path)
+    monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias, pair_str)); utils.rmsafe(monitor_path)
+    mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias, pair_str)); utils.rmsafe(mapping_path)
+    logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias, pair_str)); utils.rmsafe(logging_path)
+ 
+    # Open executable file for writing
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,pair_str)); utils.rmsafe(exec_file_name)
+    f = open(exec_file_name, 'w+')
+
+    #    Handle water self-broadening as a special case
+    if both_water:
+        f.write("Ccorr_k")
+        f.write(" -F %s"%pt_cia)
+        f.write(" -R 1 %d"%nband) 
+        f.write(" -c %.3f"%nu_cutoff)
+        f.write(" -i %.3f"%dnu)
+        f.write(" -ct %d %d %.3e"%(pair_ids[0], pair_ids[1], max_path))
+
+        match tol_type:
+            case 'n': f.write(" -n 4")          # Use this many k-terms
+            case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+            case 'b': f.write(" -b 5.0e-4")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+
+        f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
+        f.write(" -k")
+        f.write(" -s %s"%skel_path)
+        f.write(" +p")
+        f.write(" -lk")
+        f.write(" -o %s"%kcoeff_path)
+        f.write(" -m %s"%monitor_path)
+        f.write(" -L %s"%mapping_path)
+        f.write(" -lw %s"%lbl_path) 
+        f.write(" \n ")
+
+    #    All other cases
+    else:
+        db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
+
+        f.write("Ccorr_k")
+        f.write(" -F %s"%pt_cia)
+        f.write(" -CIA %s"%db_cia)
+        f.write(" -R 1 %d"%nband)
+        f.write(" -i %.3f"%dnu)
+        f.write(" -ct %d %d %.3e"%(pair_ids[0], pair_ids[1], max_path))
+
+        match tol_type:
+            case 'n': f.write(" -n 4")       
+            case 't': f.write(" -t 1.0e-2")  
+            case 'b': f.write(" -b 5.0e-4")  
+
+        f.write(" -s %s"%skel_path)
+        f.write(" +p")
+        f.write(" -lk")
+        f.write(" -o %s"%kcoeff_path)
+        f.write(" -m %s"%monitor_path)
+        f.write(" -L %s"%mapping_path)
+        f.write(" -np %d"%nproc)
+        f.write(" \n ")
+
+    f.close()
+    os.chmod(exec_file_name,0o777)
+
+    print("    start")
+    with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+        sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+    sp.check_returncode()
+
+    time.sleep(1.0)
+    print("    done")
+    return kcoeff_path
 
 
 def assemble(alias:str, volatile_list:list):
 
-    
+
 
     # <EXAMPLE>
     # 

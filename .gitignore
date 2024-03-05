@@ -3,6 +3,7 @@
 .DS_Store
 nogit*
 __pycache__
+fort.20
 
 # Model files
 set_rad_env
@@ -14,4 +15,4 @@ sbin/Cscale_field
 
 # Outputs
 spectraltools/output/
-
+spectraltools/data/

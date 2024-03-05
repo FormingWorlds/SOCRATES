@@ -12,7 +12,7 @@ Step 1 is by far the slowest, so it is helpful to use pre-computed opacities. Th
 
 **You will need to download the source cross-sections manually**. For a given database (`db`) and absorber (`ab`), the files should be placed in the directory `data/db/ab/`. Output files will be written to `output/`. **You will need to create this directory yourself**, or create a symbolic link called `output` which points to another extant location.
 
-These tools all operate by storing the spectral absorption cross-section (versus wavenumber) of an absorber (at a given temperature and pressure) in an `xsec` Python object. This is defined in `common/cross.py`. The various sources can be loaded into this object, and then written as a netCDF, plotted, or otherwise manipulated as required.
+These tools all operate by storing the spectral absorption cross-section (versus wavenumber) of an absorber (at a given temperature and pressure) in an `xsec` Python object. This is defined in `src/cross.py`. The various sources can be loaded into this object, and then written as a netCDF, plotted, or otherwise manipulated as required.
 
 ### Content
 
@@ -26,7 +26,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
 
 * SOCRATES
    - Must have been compiled
-   - Executables have been added to your `PATH` using `set_rad_env`
+   - Executables have been added to your `PATH` variable using `. ./set_rad_env`
 * Python (version >=3.11) and its libraries
    - numpy
    - matplotlib
@@ -34,10 +34,12 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - glob
    - shutil
    - chemicals
+   - requests
 
 ### Online sources
-* ExoMol (https://exomol.com/data/data-types/xsec/)
 * DACE (https://dace.unige.ch/opacityDatabase/)
-* HITRAN (https://hitran.org/xsc/)
+* ExoMol (https://exomol.com/data/data-types/xsec/)
+* HITRAN cross-sections (https://hitran.org/xsc/)
+* HITRAN CIA (https://hitran.org/cia/)
 
 

@@ -14,6 +14,7 @@ dirs["data"] = os.path.join(dirs["tools"]   , "data/" )
 dirs["dace"] = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
+dirs["cia"] = os.path.join(dirs["data"]     , "cia/" )
 
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
@@ -107,3 +108,26 @@ absorber_id = {
     "He"  :'24', 
     "OCS" :'25'
 }
+
+# List of valid continuum combinations in SOCRATES/HITRAN
+cia_pairs = [
+    ["H2O","H2O"],
+    ["H2","CH4"],
+    ["H2","H2"],
+    ["H2","H"],
+    ["H2","He"],
+    ["He","H"],
+    ["N2","H2"],
+    ["N2","He"],
+    ["N2","N2"],
+    ["N2","H2O"],
+    ["O2","CO2"],
+    ["O2","N2"],
+    ["O2","O2"],
+    ["CO2","CO2"],
+    ["CO2","H2"],
+    ["CO2","He"],
+    ["CO2","CH4"],
+    ["CO2","Ar"],
+    ["CH4","He"]
+]
