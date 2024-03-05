@@ -85,7 +85,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # print("Best bands: " + utils.get_arr_as_str(bands_out))
     for i in range(nband):
-        print("    band %3d : %.2f - %.2f cm-1" % (i,bands_out[i], bands_out[i+1]))
+        print("    band %3d : %.2f - %.2f cm-1" % (i+1,bands_out[i], bands_out[i+1]))
     print("    done\n")
 
     return bands_out
@@ -387,8 +387,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         Formula of absorber A
     formula_B : str
         Formula of absorber B
-    nc_xsc_path : str
-        Input netCDF file containing cross-section data for range of p,t,nu
     band_edges : np.ndarray
         Band edges in [cm-1]. MUST MATCH SKELETON FILE.
 
@@ -402,9 +400,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     """
 
     # Parameters
-    max_path = 1.0e4
-    tol_type = 't' 
-    dnu = 0.01           # Frequency increment [m-1]
+    max_path = 1.0e2
+    tol_type = 'n' 
+    dnu = 1.0          # Frequency increment [m-1]
     nproc = 20          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
@@ -462,7 +460,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
                 iband[1] = i+1
             else:
                 break 
-        print("MT_CKD band limits: " + str(iband))
+
+        print("    MT_CKD band limits: " + str(iband))
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
@@ -484,7 +483,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
-        f.write(" -lw %s"%lbl_map_path) 
+        f.write(" -lm %s"%lbl_map_path) 
         f.write(" \n ")
 
         #   Ccorr_k -F $CONT_PT_FILE \

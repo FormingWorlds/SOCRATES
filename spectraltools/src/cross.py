@@ -115,6 +115,7 @@ class xsec():
 
         # Flag as loaded 
         self.loaded = True 
+        return
 
     # Read HITRAN xsc file
     def readxsc(self):
@@ -154,6 +155,7 @@ class xsec():
 
         # Flag as loaded 
         self.loaded = True 
+        return
 
     # Parse ExoMol sigma file name
     def parse_sigmaname(self):
@@ -170,6 +172,7 @@ class xsec():
         self.numin = float(splt_nu[0]) 
         self.numax = float(splt_nu[1]) 
         self.t     = float(splt[2][:-1])
+        return
 
 
     # Read ExoMol sigma file
@@ -192,6 +195,7 @@ class xsec():
 
         # Flag as loaded
         self.loaded = True
+        return
 
 
     # Read input variables instead of from a file (bar, K, cm-1, cm2/g)
@@ -211,6 +215,7 @@ class xsec():
         self.nbins = len(nu_arr)
         self.arr_k = np.array(k_arr)
         self.loaded = True
+        return
 
         
     # Read source file 
@@ -220,6 +225,72 @@ class xsec():
             case "hitran": self.readxsc()
             case "exomol": self.readsigma()
             case "direct": self.readdirect(p,t,nu_arr,k_arr)
+        return
+    
+    # Clip wavenumber range to required region
+    def clip(self, numin=0.0, numax=np.inf):
+        if not self.loaded:
+            raise Exception("Cannot clip data because xsec object is empty!")
+        
+        if numin > numax:
+            raise Exception("Cannot clip xsec range; numin must be less than numax")
+
+        len_old = self.nbins
+
+        # Clip
+        new_k  = []
+        new_nu = []
+        for i in range(len_old):
+            nu = self.arr_nu[i]
+            if numin <= nu <= numax:
+                k = self.arr_k[i]
+                new_nu.append(nu)
+                new_k.append(k)
+        print("Clipping to %g - %g" % (numin, numax))
+
+        # Save new in object
+        self.arr_nu = np.array(new_nu, dtype=float)
+        self.arr_k  = np.array(new_k, dtype=float)
+        self.numin = self.arr_nu[0]
+        self.numax = self.arr_nu[-1]
+        self.nbins = len(self.arr_nu)
+
+        print("length difference: %d -> %d"%(len_old, self.nbins))
+
+        return 
+
+    # Downsample to required resolution
+    def downsample(self, dnu):
+        if not self.loaded:
+            raise Exception("Cannot downsample data because xsec object is empty!")
+
+        len_old = self.nbins
+
+        # Downsample
+        new_k  = []
+        new_nu = []
+        last_nu = -999999.0
+        for i in range(len_old):
+            nu = self.arr_nu[i]
+            if nu >= last_nu + dnu:
+                k = self.arr_k[i]
+                new_nu.append(nu)
+                new_k.append(k)
+                last_nu = nu
+
+        if len(new_nu) < 3:
+            raise Exception("Too few wavenumber bins left after dowsampling!")
+
+        # Save new in object
+        self.arr_nu = np.array(new_nu, dtype=float)
+        self.arr_k  = np.array(new_k, dtype=float)
+        self.numin = self.arr_nu[0]
+        self.numax = self.arr_nu[-1]
+        self.nbins = len(self.arr_nu)
+
+        # print("Downsampled from %d to %d points" % (len_old, self.nbins))
+        return 
+
 
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):

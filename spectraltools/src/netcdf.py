@@ -7,7 +7,8 @@ import os
 import src.utils as utils
 import src.cross as cross
 
-def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list):
+def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list, 
+                         dnu:float=-1, numin:float=0.0, numax:float=np.inf):
     """Write netCDF file containing P, T, nu, and cross-section data.
 
     Parameters
@@ -24,6 +25,9 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
         Sorted temperature values [K]
     f_points : list
         List of file paths mapping to the p,t values 
+    dnu : float
+        Resolution to downsample to. Value of -1 results in no downsampling
+
 
     Returns
     -------
@@ -43,11 +47,15 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     # Open file
     print("Writing netCDF for '%s' from '%s'..."%(formula,source))
     utils.rmsafe(nc_path)
-    ds = Dataset(nc_path, "w", format="NETCDF4")
+    ds = Dataset(nc_path, "w", format="NETCDF4_CLASSIC")
 
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read()
+    if (x_first.numin < numin) or (x_first.numax > numax):
+        x_first.clip(numin=numin, numax=numax)
+    if dnu > 0.0:
+        x_first.downsample(dnu)
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
     print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
 
@@ -100,6 +108,10 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
         this_xsec.read()
+        if (this_xsec.numin < numin) or (this_xsec.numax > numax):
+            this_xsec.clip(numin=numin, numax=numax)
+        if dnu > 0.0:
+            this_xsec.downsample(dnu)
         var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
         del this_xsec
 
