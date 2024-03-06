@@ -17,7 +17,7 @@ def main():
     vols = [formula]
     alias = "demo"
     nband = 10
-    numax = 2e4   # clip to this maximum wavenumber [cm-1]
+    numax = 2e99   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
 

@@ -441,6 +441,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
             raise Exception("File not found: '%s'"%f)
         
     # Band range
+    band_edges_rev = band_edges[::-1]
     nband = len(band_edges)-1
     iband = [1, nband]
 
@@ -458,15 +459,17 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     if both_water:
 
         # Limit band range for MT_CKD case
-        iband[1] = 1
-        ckd_numax = 2.0e4 - 100.0  # cm-1
-        for i in range(1,nband):
-            if band_edges[i+1] < ckd_numax:
-                iband[1] = i
-            else:
-                break 
+        ckd_bands = []
+        ckd_nurange = [0.0, 2.0e4 - 10.0]
+        for i in range(0,nband):
+            b_up = band_edges_rev[i]
+            b_lo = band_edges_rev[i+1]
+            if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):
+                ckd_bands.append(i+1)
+        iband = [ min(ckd_bands) , max(ckd_bands)]  # note that these indices are reversed relative to band_edges
+        iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so the same as band_edges)
 
-        print("    MT_CKD band limits: " + str(iband))
+        print("    Using MT_CKD with band limits: " + str(iband_revrev))
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
@@ -504,6 +507,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     #    All other cases
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
+
+        print("    Using HITRAN CIA database")
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
