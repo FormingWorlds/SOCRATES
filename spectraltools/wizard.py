@@ -8,15 +8,16 @@ import src.dace as dace
 import src.cross as cross
 import src.netcdf as netcdf
 import os, glob
+import numpy as np
 
 def main():
-    print("Wizard says hello")
+    print("Wizard says hello\n")
 
     formula = "H2O"
     source = "dace"
     vols = [formula]
     alias = "demo"
-    nband = 10
+    nband = 360
     numax = 2e99   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
@@ -29,7 +30,9 @@ def main():
         os.remove(f)
 
     # Get P,T grid
-    arr_p, arr_t, arr_f = dace.get_pt(formula_path, [0.01, 10.0, 100.0, 1000.0] , [100, 800, 2000.0])
+    tgt_p = np.logspace(-5, 3, 15)
+    tgt_t = [100.0,  250.0,  500.0,  750.0,  900.0,  1000.0,  1200.0,  1400.0,  1600.0,  1800.0,  2000.0,  2250.0,  2500.0,  2750.0,  3000.0,  3500.0,  4000.0]
+    arr_p, arr_t, arr_f = dace.get_pt(formula_path, tgt_p , tgt_t)
 
     # Get nu grid + write skeleton
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])

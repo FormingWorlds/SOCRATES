@@ -68,32 +68,37 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     # Create variables
     print("    define variables")
-    var_p = ds.createVariable("p_calc","f4",("pt_pair",))
+    var_p = ds.createVariable("p_calc",np.float32,("pt_pair",))
     var_p.title = "pressure"
     var_p.long_name = "pressure"
     var_p.units = "Pa"
 
-    var_t = ds.createVariable("t_calc","f4",("pt_pair",))
+    var_t = ds.createVariable("t_calc",np.float32,("pt_pair",))
     var_t.title = "temperature"
     var_t.long_name = "temperature"
     var_t.units = "K"
 
-    var_nu = ds.createVariable("nu","f4",("nu",))
+    var_nu = ds.createVariable("nu",np.float64,("nu",))
     var_nu.title = "wavenumber"
     var_nu.long_name = "wavenumber"
     var_nu.units = "m-1"
     var_nu.step = step_dnu
 
-    var_xc = ds.createVariable("kabs","f4",("pt_pair","nu",))
+    var_xc = ds.createVariable("kabs",np.float32,("pt_pair","nu",))
     var_xc.title = "absorption"
     var_xc.long_name = "absorption"
     var_xc.units = "m2 kg-1"
 
-
+    # Round sig figs and convert units
+    # This is important because unreasonable precision will mean the values in the PT dat file
+    # won't match the values in the LbL netCDF file. It's better to round to ~2 dp instead.
+    p_write = np.round(p_points * 1.0e5, 2)  
+    t_write = np.round(t_points, 2)
+    
     # Write p,t,nu
     print("    write p, t, nu")
-    var_p[:]  = p_points * 1.0e5  # convert bar to Pa
-    var_t[:]  = t_points
+    var_p[:]  = p_write
+    var_t[:]  = t_write
     var_nu[:] = nu_arr
 
     # Read and write cross-sections (2D)
@@ -103,13 +108,13 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     for i in range(len_p):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:
-            print("    point %5d of %5d   (%5.1f%%)" % (counter,len_p, 100.0*(counter/len_p)))
+            print("    point %4d of %4d  (%5.1f%%)" % (counter,len_p, 100.0*(counter/len_p)))
 
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
         this_xsec.read(numin=numin, numax=numax, dnu=dnu)
         var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
-        del this_xsec
+        # del this_xsec
 
     # Finish up
     print("    done writing to '%s' \n" % nc_path)

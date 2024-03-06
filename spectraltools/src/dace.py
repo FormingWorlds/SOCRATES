@@ -150,8 +150,8 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
                     
                     # Add to output array (if not a duplicate)
                     if not duplicate:
-                        out_p.append(p)
-                        out_t.append(t)
+                        out_p.append(use_p[i])
+                        out_t.append(use_t[i])
                         break 
 
     # Warn on dropped values

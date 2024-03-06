@@ -65,6 +65,8 @@ class xsec():
             self.p = 10.0**(+1.0 * exp)  # bar 
         else:
             raise Exception("Cannot parse DACE filename pressure value")
+        
+        return self
 
     # Read DACE bin file
     def readbin(self, numin=0.0, numax=np.inf, dnu=0.0):
@@ -114,18 +116,20 @@ class xsec():
                 tmp_k.append(k_read[i])
                 nulast= nu
 
-        self.nbins = len(tmp_nu)
         self.arr_k = np.array(tmp_k, dtype=float)
         self.arr_nu = np.array(tmp_nu, dtype=float)
+        self.numin = self.arr_nu[0]
+        self.numax = self.arr_nu[-1]
+        self.nbins = len(self.arr_nu )
 
         # Check resolution 
-        eps = 1.0e-5  # numerical precision
+        eps = 1.0e-8  # numerical precision
         if (self.arr_nu[5] - self.arr_nu[4] - res) > eps:
             raise Exception("Wavenumber resolution mismatch. Either file size is wrong, or resolution is not %g cm-1" % res)
 
         # Flag as loaded 
         self.loaded = True 
-        return
+        return self
 
     # Read HITRAN xsc file
     def readxsc(self, numin=0, numax=np.inf, dnu=0.0):
@@ -165,7 +169,7 @@ class xsec():
 
         # Flag as loaded 
         self.loaded = True 
-        return
+        return self
 
     # Read ExoMol sigma file
     def readsigma(self, numin=0, numax=np.inf, dnu=0.0):
@@ -207,7 +211,7 @@ class xsec():
 
         # Flag as loaded
         self.loaded = True
-        return
+        return self
 
 
     # Read input variables instead of from a file (bar, K, cm-1, cm2/g)
@@ -236,7 +240,7 @@ class xsec():
         self.nbins = len(tmp_nu)
         self.arr_k = np.array(tmp_k)
         self.loaded = True
-        return
+        return self
 
         
     # Read source file 
@@ -246,7 +250,7 @@ class xsec():
             case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
             case "exomol": self.readsigma(numin=numin, numax=numax, dnu=dnu)
             case "direct": self.readdirect(p,t,nu_arr,k_arr,numin=numin, numax=numax, dnu=dnu)
-        return
+        return self
     
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):

@@ -1,6 +1,7 @@
 # Tools for handling socrates spectral files
 
 import numpy as np
+from scipy.spatial import KDTree
 import os, subprocess, time
 import src.utils as utils
 
@@ -53,11 +54,11 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         return [numin, numax]
     
     # Other cases ...
-
     vlong_cutoff = 100.0 # [cm-1] Value where the "very long wavelengths" region starts.
     if (numin > vlong_cutoff) and (method == 2):
         method = 1 
     
+    # Get target bands
     nedges = nband+1
     match method:
         case 0:
@@ -70,24 +71,31 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         case _:
             raise Exception("Invalid band selection method (%d)"%method)
 
-    # Ensure that the band edges exist in the nu_arr
+    # For each target band, find closest nu value
     bands_out = []
-    for be in bands:
-        bands_out.append(utils.get_closest(be, nu_arr))
+    dist_last = 9e99
+    set_band = 0
+    for i,nu in enumerate(nu_arr):      # iterate over all nu
+        dist = abs(nu-bands[set_band])  # distance between this nu and target band edge
+        if dist > dist_last:            # further from the edge than before => were closest to it during the previous iter
+            bands_out.append(nu_arr[i-1])  # store band edge
+            set_band += 1                  # target nu set to next edge
+            dist_last = 9e99
+            if set_band > 1:
+                print("    band %3d : %.2f - %.2f cm-1     %.2f - %.2f nm" 
+                      % (set_band-1, bands_out[-2], bands_out[-1], utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]))
+                      )
+        else:
+            dist_last = dist
     bands_out = np.array(bands_out)
 
+    suggest = "Try a different method, choose fewer bands, or increase the source resolution"
     if not utils.is_unique(bands_out):
-        print(utils.get_arr_as_str(bands_out))
-        raise Exception("Best band edges are not unique! Try a different method, or increase the resolution")
+        raise Exception("Best band edges are not unique! "+suggest)
     if not utils.is_ascending(bands_out):
-        print(utils.get_arr_as_str(bands_out))
-        raise Exception("Best band edges are ascending! Try a different method, or increase the resolution")
+        raise Exception("Best band edges are not ascending! "+suggest)
 
-    # print("Best bands: " + utils.get_arr_as_str(bands_out))
-    for i in range(nband):
-        print("    band %3d : %.2f - %.2f cm-1" % (i+1,bands_out[i], bands_out[i+1]))
     print("    done\n")
-
     return bands_out
 
 
@@ -111,19 +119,14 @@ def get_cia_pair(fA:str, fB:str):
     """
 
     p_in  = [fA,fB]
-    p_out = []
-
-    for p_check in utils.cia_pairs:
+    for p_check in utils.cia_pairs:  # For each possible pairing
         # Is valid
         if p_in == p_check:
-            p_out = p_in
-            break 
+            return p_in
         # Is valid, but swapped
         if [p_in[1], p_in[0]] == p_check:
-            p_out = [p_in[1], p_in[0]]
-            break
-        
-    return p_out
+            return [p_in[1], p_in[0]]
+    return []
 
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list, dry:bool=False):
     """Create skeleton spectral file.
@@ -184,31 +187,32 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
-    T_grid = t_points
-    P_grid = p_points * 1.0e5  # bar to Pa
+    p_write = np.round(p_points * 1.0e5, 2)  
+    t_write = np.round(t_points, 2)
     
-    print("    T_grid [K]  (n=%d): "%len(T_grid) + utils.get_arr_as_str(T_grid))
-    print("    P_grid [Pa] (n=%d): "%len(P_grid) + utils.get_arr_as_str(P_grid))
+    print("    number of p,t points: %d"%len(t_write))
+    print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
+    print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write)))
 
     # Generate P-T files to be read by Ccorr_k script
     pt_lbl_file = open(pt_lbl, "w+")
     pt_lbl_file.write('*PTVAL' + '\n')
-    for prs in np.unique(P_grid):
+    for prs in np.unique(p_write):
         line = ""
-        line += "%.5e"%prs 
-        for t in np.unique(T_grid):
-            line +=" %.5e"%t 
+        line += "%.2f"%prs 
+        for t in np.unique(t_write):
+            line +=" %.2f"%t 
         line += "\n" 
         pt_lbl_file.write(line)
     pt_lbl_file.write('*END' + '\n')
     pt_lbl_file.close()
     
-    ref_pres_cia = utils.get_closest(1.0e5, P_grid) # set reference pressure to ~1 bar
+    ref_pres_cia = utils.get_closest(1.0e5, p_write) # set reference pressure to ~1 bar
     pt_cia_file = open(pt_cia, "w+")
     pt_cia_file.write('*PTVAL \n')
-    line = "%.5e"%ref_pres_cia 
-    for t in np.unique(T_grid):
-        line +=" %.5e"%t 
+    line = "%.2f"%ref_pres_cia 
+    for t in np.unique(t_write):
+        line +=" %.2f"%t 
     pt_cia_file.write(line + " \n")
     pt_cia_file.write('*END \n')
     pt_cia_file.close()
@@ -251,7 +255,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     # Set bands manually (in reverse order, since they'll be converted to wavelength)
     f.write("c \n")
     for i in range(nband,0,-1):
-        f.write("%.2f %.2f \n"%(band_edges[i], band_edges[i-1]))
+        f.write("%.3f %.3f \n"%(band_edges[i], band_edges[i-1]))
+    # for i in range(nband):
+    #     f.write("%.3f %.3f \n"%(band_edges[i], band_edges[i+1]))
 
     # Set absorbers in each band to zero for now
     f.write("0*%d\n"%nband)
@@ -319,7 +325,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     print("Calculating k-coefficients for '%s' line absorption for '%s'..."%(formula, alias))
 
     # Parameters
-    max_path = 1.0e4
+    max_path = 1.0e1
     tol_type = 'b'
     nproc = 20
 
@@ -350,7 +356,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     match tol_type:
         case 'n': f.write(" -n 4")          # Use this many k-terms
         case 't': f.write(" -t 1.0e-2")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-        case 'b': f.write(" -b 5.0e-4")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -360,7 +366,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
-    f.write(" -np %s"%nproc) 
+    f.write(" -np %s"%nproc)            # Doesn't seem to work for LbL calculation
     f.write(" \n ")
     
     f.close()
@@ -369,6 +375,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     print("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+            print("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
@@ -404,9 +411,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     """
 
     # Parameters
-    max_path = 1.0e2
-    tol_type = 't' 
-    nproc = 20          # Number of processes
+    max_path = 1.0e1
+    tol_type = 'b' 
+    nproc = 30          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
     # Re-order pair and check if valid
@@ -441,7 +448,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
             raise Exception("File not found: '%s'"%f)
         
     # Band range
-    band_edges_rev = band_edges[::-1]
+    band_edges_rev = band_edges[::-1]   # reverse band_edges, since they're in reverse order in the spectral file
     nband = len(band_edges)-1
     iband = [1, nband]
 
@@ -459,13 +466,20 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     if both_water:
 
         # Limit band range for MT_CKD case
-        ckd_bands = []
-        ckd_nurange = [0.0, 2.0e4 - 10.0]
+        ckd_bands = []  # list of allowed bands
+        ckd_nurange = [0.0, 2.0e4 - 5.0]  # This is the maximum domain for MT_CKD, in cm-1
         for i in range(0,nband):
             b_up = band_edges_rev[i]
             b_lo = band_edges_rev[i+1]
-            if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):
+            if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):  # if this band is entirely within MT_CKD's domain
                 ckd_bands.append(i+1)
+
+        # for i in range(1,nband):
+        #     b_lo = band_edges[i]
+        #     b_up = band_edges[i+1]
+        #     if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):  # if this band is entirely within MT_CKD's domain
+        #         ckd_bands.append(i+1)
+
         iband = [ min(ckd_bands) , max(ckd_bands)]  # note that these indices are reversed relative to band_edges
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so the same as band_edges)
 
@@ -481,7 +495,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         match tol_type:
             case 'n': f.write(" -n 4")          # Use this many k-terms
             case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-            case 'b': f.write(" -b 5.0e-4")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+            case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
         # f.write(" -k")
@@ -537,6 +551,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     print("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+            print("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
@@ -604,6 +619,8 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     #
     # </EXAMPLE>
 
+    success = True
+
     # Parameters
     planck_npoints = 2000
     planck_range   = (200.0, 4000.0)
@@ -616,7 +633,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
     # Write script
     print("Assembling final spectral file for '%s'..."%alias)
-    spec_path = os.path.join(utils.dirs["output"], alias+"_final.sf"); utils.rmsafe(spec_path)
+    spec_path = os.path.join(utils.dirs["output"], alias); utils.rmsafe(spec_path)
     logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
     f = open(exec_file_name,'w+')
@@ -628,14 +645,17 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f.write("%s \n" % spec_path)
 
     #    add thermal emission
-    f.write("6 \n")
-    f.write("n      \n")
-    f.write("t      \n")
-    f.write("%.3f %.3f \n"%planck_range)
-    f.write("%d    \n"%planck_npoints)
+    # print("    thermal source function")
+    # f.write("6 \n")
+    # f.write("n      \n")
+    # f.write("t      \n")
+    # f.write("%.3f %.3f \n"%planck_range)
+    # f.write("%d    \n"%planck_npoints)
 
     #    add line absorption
+    print("    line absorption: ")
     for i,v in enumerate(volatile_list):
+        print("        "+v)
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
         f.write("5 \n")
         if i > 0:
@@ -643,15 +663,17 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
         f.write("%s \n"%lbl_path)
 
     #    add CIA 
+    print("    CIA: ")
     cia_count = 0
     for i,p in enumerate(utils.cia_pairs):
         if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
+            pair_str = p[0]+"-"+p[1]
+            print("        "+pair_str)
 
             f.write("19 \n")
             if cia_count > 0:
                 f.write("y \n")
 
-            pair_str = p[0]+"-"+p[1]
             cia_path = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str))
             f.write("%s \n"%cia_path)
 
@@ -674,18 +696,25 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     print("    start")
     if not dry:
         with open(logging_path,'w') as hdl:
+            print("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done writing to '%s'\n"%spec_path)
+    print("    done writing to '%s'"%spec_path)
 
 
     # Check for NaN values
     with open(spec_path,'r') as hdl:
         if "NaN" in hdl.read():
+            success = False
             print("-------------------------------------------")
             print("WARNING: Spectral file contains NaN values!")
-            print("-------------------------------------------\n")
+            print("-------------------------------------------")
+
+    if success:
+        print("    success!\n")
+    else:
+        print(" ")
 
     return spec_path
 
