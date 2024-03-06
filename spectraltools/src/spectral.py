@@ -217,7 +217,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     f = open(exec_file_name, "w+")
 
     # Write skeleton spectral file using prep_spec utility
-    f.write('prep_spec <<EOF \n')
+    f.write('prep_spec << EOF \n')
     f.write(skel_path + '\n')
 
     # Set number of bands
@@ -321,6 +321,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     # Parameters
     max_path = 1.0e4
     tol_type = 'b'
+    nproc = 20
 
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -359,6 +360,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
+    f.write(" -np %s"%nproc) 
     f.write(" \n ")
     
     f.close()
@@ -374,7 +376,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     print("    done writing to '%s'\n"%kcoeff_path)
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarray, dry:bool=False):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarray, dnu:float, dry:bool=False):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -389,6 +391,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         Formula of absorber B
     band_edges : np.ndarray
         Band edges in [cm-1]. MUST MATCH SKELETON FILE.
+    dnu : float
+        Wavenumber integration step [m-1]. MUST MATCH LBL FILE.
 
     dry : bool
         Dry run?
@@ -401,8 +405,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
     # Parameters
     max_path = 1.0e2
-    tol_type = 'n' 
-    dnu = 1.0          # Frequency increment [m-1]
+    tol_type = 't' 
     nproc = 20          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
@@ -424,8 +427,10 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        mt_ckd_296    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
-        mt_ckd_260    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
+        # mt_ckd_296    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
+        # mt_ckd_260    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
+        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s296")
+        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s260")
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
@@ -455,9 +460,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         # Limit band range for MT_CKD case
         iband[1] = 1
         ckd_numax = 2.0e4 - 100.0  # cm-1
-        for i in range(0,nband):
+        for i in range(1,nband):
             if band_edges[i+1] < ckd_numax:
-                iband[1] = i+1
+                iband[1] = i
             else:
                 break 
 
@@ -484,6 +489,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
         f.write(" -lm %s"%lbl_map_path) 
+        f.write(" -np %s"%nproc) 
         f.write(" \n ")
 
         #   Ccorr_k -F $CONT_PT_FILE \
@@ -611,7 +617,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f = open(exec_file_name,'w+')
 
     #    point to input/output spectral files
-    f.write("prep_spec <<EOF  \n")
+    f.write("prep_spec << EOF  \n")
     f.write(skel_path + "\n")
     f.write("n \n")
     f.write("%s \n" % spec_path)
@@ -667,5 +673,14 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
         sp.check_returncode()
 
     print("    done writing to '%s'\n"%spec_path)
+
+
+    # Check for NaN values
+    with open(spec_path,'r') as hdl:
+        if "NaN" in hdl.read():
+            print("-------------------------------------------")
+            print("WARNING: Spectral file contains NaN values!")
+            print("-------------------------------------------\n")
+
     return spec_path
 

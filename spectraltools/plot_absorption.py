@@ -18,12 +18,12 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
     match safe:
         case "dace":
             import src.dace as dace
-            close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))[0]
+            close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))
         case "hitran":
             import src.hitran as hitran
-            close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))[0]
-        case "exomol":
-            close_path = ""
+            close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
+        case _:
+            raise Exception("Unsupported source")
 
     yunits = yunits.strip().lower()
     match yunits:

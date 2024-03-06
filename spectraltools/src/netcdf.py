@@ -33,6 +33,8 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     -------
     str
         Path to resultant netCDF file.
+    float 
+        Wavenumber spacing [m-1]
     """
 
     # Check input is valid 
@@ -51,13 +53,11 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
-    x_first.read()
-    if (x_first.numin < numin) or (x_first.numax > numax):
-        x_first.clip(numin=numin, numax=numax)
-    if dnu > 0.0:
-        x_first.downsample(dnu)
+    x_first.read(numin=numin, numax=numax, dnu=dnu)
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
     print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
+
+    step_dnu = float(nu_arr[1]-nu_arr[0])
 
     # Create dimensions
     print("    define dimensions")
@@ -82,7 +82,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     var_nu.title = "wavenumber"
     var_nu.long_name = "wavenumber"
     var_nu.units = "m-1"
-    var_nu.step = float(nu_arr[1]-nu_arr[0])
+    var_nu.step = step_dnu
 
     var_xc = ds.createVariable("kabs","f4",("pt_pair","nu",))
     var_xc.title = "absorption"
@@ -107,18 +107,14 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
-        this_xsec.read()
-        if (this_xsec.numin < numin) or (this_xsec.numax > numax):
-            this_xsec.clip(numin=numin, numax=numax)
-        if dnu > 0.0:
-            this_xsec.downsample(dnu)
+        this_xsec.read(numin=numin, numax=numax, dnu=dnu)
         var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
         del this_xsec
 
-    print("    done writing to '%s' \n" % nc_path)
     # Finish up
+    print("    done writing to '%s' \n" % nc_path)
     ds.close()
-    return nc_path
+    return nc_path, step_dnu
 
 def read_netcdf_pt(fpath:str):
     """Read p,t values from netCDF file

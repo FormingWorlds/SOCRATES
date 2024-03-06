@@ -17,7 +17,7 @@ def main():
     vols = [formula]
     alias = "demo"
     nband = 10
-    numax = 1.9e4   # clip to this maximum wavenumber [cm-1]
+    numax = 2e4   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
 
@@ -33,21 +33,19 @@ def main():
 
     # Get nu grid + write skeleton
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])
-    temp_xc.read()
-    temp_xc.clip(numin=numin, numax=numax)
-    temp_xc.downsample(dnu)
+    temp_xc.read(numin=numin, numax=numax, dnu=dnu)
     band_edges = spectral.best_bands(temp_xc.get_nu(), 2, nband)
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
 
     # Write netCDF containing absorption spectra
     nc_path = os.path.join(utils.dirs["output"] , alias+"_"+formula+".nc")
-    netcdf.write_ncdf_from_grid(nc_path, formula, source, arr_p, arr_t, arr_f, dnu=dnu, numin=numin, numax=numax)
+    _, dnu = netcdf.write_ncdf_from_grid(nc_path, formula, source, arr_p, arr_t, arr_f, dnu=dnu, numin=numin, numax=numax)
 
     # Calculate k-coefficients from netCDF 
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_path, nband)
         for f2 in vols[i:]:
-            spectral.calc_kcoeff_cia(alias, f1, f2, band_edges)
+            spectral.calc_kcoeff_cia(alias, f1, f2, band_edges, dnu)
 
     # Assemble final spectral file
     spectral.assemble(alias, vols)

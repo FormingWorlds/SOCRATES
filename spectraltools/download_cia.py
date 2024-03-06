@@ -32,9 +32,6 @@ def main():
     if not os.path.exists(utils.dirs["cia"]):
         print("CIA folder does not exist! Please create it before attempting to download files.")
         return 1
-    if len(glob.glob(utils.dirs["cia"]+"/*")) > 0:
-        print("CIA folder is not empty! Will not overwrite files.")
-        return 1
 
     # Download the files
     flag:int = 0
@@ -49,6 +46,7 @@ def main():
         
         # Download file if request is ok
         if response.status_code == 200:
+            utils.rmsafe(out)
             with open(out, 'wb') as file:
                 file.write(response.content)
         else:

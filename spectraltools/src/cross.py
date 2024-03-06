@@ -67,7 +67,7 @@ class xsec():
             raise Exception("Cannot parse DACE filename pressure value")
 
     # Read DACE bin file
-    def readbin(self):
+    def readbin(self, numin=0.0, numax=np.inf, dnu=0.0):
 
         if not (self.source == "dace"):
             print("WARNING: Cannot execute readbin because source (%s) is not DACE" % self.source)
@@ -86,19 +86,17 @@ class xsec():
 
         # check value is reasonable 
         if (nbins < 100) or (nbins > 1e12):
-            raise Exception("Error reading DACE file. Too many bins?")
+            raise Exception("Error reading DACE file; too many/few bins.")
         self.nbins = nbins
-        
+
         # Get cross-sections for each bin
         k_read = []
         with open(self.fname, "rb") as hdl:
             for _ in range(nbins):
                 K = struct.unpack('f', hdl.read(4))[0]  # 4 bytes at a time (Float32)
                 k_read.append(K)
-        self.arr_k = np.array(k_read, dtype=float)
-
         # Check lengths
-        if len(self.arr_k) != self.nbins:
+        if len(k_read) != self.nbins:
             raise Exception("Invalid array length when reading DACE bin file")
 
         # Read filename info
@@ -106,7 +104,19 @@ class xsec():
 
         # Set nu array
         res = 0.01    # expected resolution [cm-1]
-        self.arr_nu = np.linspace(self.numin, self.numax, self.nbins)
+
+        tmp_nu = []
+        tmp_k  = []
+        nulast = -999999999.0
+        for i,nu in enumerate(np.arange(self.numin, self.numax, res)):
+            if (numin <= nu <= numax) and (nu + dnu > nulast):
+                tmp_nu.append(nu)
+                tmp_k.append(k_read[i])
+                nulast= nu
+
+        self.nbins = len(tmp_nu)
+        self.arr_k = np.array(tmp_k, dtype=float)
+        self.arr_nu = np.array(tmp_nu, dtype=float)
 
         # Check resolution 
         eps = 1.0e-5  # numerical precision
@@ -118,7 +128,7 @@ class xsec():
         return
 
     # Read HITRAN xsc file
-    def readxsc(self):
+    def readxsc(self, numin=0, numax=np.inf, dnu=0.0):
         if not (self.source == "hitran"):
             print("WARNING: Cannot execute readxsc because source (%s) is not HITRAN" % self.source)
 
@@ -157,26 +167,8 @@ class xsec():
         self.loaded = True 
         return
 
-    # Parse ExoMol sigma file name
-    def parse_sigmaname(self):
-        if not (self.source == "exomol"):
-            print("WARNING: Cannot execute parse_sigmaname because source (%s) is not ExoMol" % self.source)
-        
-        # Exomol values are always at zero pressure
-        self.p = 0.0
-
-        # Process filename
-        splt = self.fname[:-6].split("_")
-        splt_nu = splt[1].split("-")
-
-        self.numin = float(splt_nu[0]) 
-        self.numax = float(splt_nu[1]) 
-        self.t     = float(splt[2][:-1])
-        return
-
-
     # Read ExoMol sigma file
-    def readsigma(self):
+    def readsigma(self, numin=0, numax=np.inf, dnu=0.0):
         if not (self.source == "exomol"):
             print("WARNING: Cannot execute readsigma because source (%s) is not ExoMol" % self.source)
 
@@ -186,12 +178,32 @@ class xsec():
         if not os.access(self.fname, os.R_OK):
             raise Exception("Cannot read file '%s'" % self.fname)
     
-        self.parse_sigmaname()
+        # Exomol values are always at zero pressure
+        self.p = 0.0
+
+        # Process filename
+        splt = self.fname[:-6].split("_")
+        self.t = float(splt[2][:-1])
 
         data = np.loadtxt(self.fname).T 
         self.arr_nu = data[0]
         self.arr_k  = data[1] * phys.N_av / (self.mmw * 1000.0) 
         self.nbins  = len(data[0])
+
+        tmp_nu = []
+        tmp_k  = []
+        nulast = -999999999.0
+        for i,nu in enumerate(self.arr_nu):
+            if (numin <= nu <= numax) and (nu + dnu > nulast):
+                tmp_nu.append(nu)
+                tmp_k.append(self.arr_k[i])
+                nulast= nu
+
+        self.arr_nu = np.array(tmp_nu)
+        self.arr_k = np.array(tmp_k)
+        self.numin = self.arr_nu[0]
+        self.numax = self.arr_nu[-1]
+        self.nbins = len(self.arr_nu)
 
         # Flag as loaded
         self.loaded = True
@@ -199,99 +211,43 @@ class xsec():
 
 
     # Read input variables instead of from a file (bar, K, cm-1, cm2/g)
-    def readdirect(self, p, t, nu_arr, k_arr):
+    def readdirect(self, p, t, nu_arr, k_arr, numin=0, numax=np.inf, dnu=0.0):
         # check conflicts
         if self.loaded:
             raise Exception("This xsec object already contains data")
 
         if len(nu_arr) != len(k_arr):
             raise Exception("nu and k arrays have different lengths")
+        
+        tmp_nu = []
+        tmp_k  = []
+        nulast = -999999999.0
+        for i,nu in enumerate(nu_arr):
+            if (numin <= nu <= numax) and (nu + dnu > nulast):
+                tmp_nu.append(nu)
+                tmp_k.append(k_arr[i])
+                nulast= nu
 
         self.p = p 
         self.t = t
-        self.arr_nu = np.array(nu_arr)
-        self.numin = nu_arr[0]
-        self.numax = nu_arr[1]
-        self.nbins = len(nu_arr)
-        self.arr_k = np.array(k_arr)
+        self.arr_nu = np.array(tmp_nu)
+        self.numin = tmp_nu[0]
+        self.numax = tmp_nu[1]
+        self.nbins = len(tmp_nu)
+        self.arr_k = np.array(tmp_k)
         self.loaded = True
         return
 
         
     # Read source file 
-    def read(self, p=None, t=None, nu_arr=None, k_arr=None):
+    def read(self, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
         match self.source:
-            case "dace":   self.readbin()
-            case "hitran": self.readxsc()
-            case "exomol": self.readsigma()
-            case "direct": self.readdirect(p,t,nu_arr,k_arr)
+            case "dace":   self.readbin(numin=numin, numax=numax, dnu=dnu)
+            case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
+            case "exomol": self.readsigma(numin=numin, numax=numax, dnu=dnu)
+            case "direct": self.readdirect(p,t,nu_arr,k_arr,numin=numin, numax=numax, dnu=dnu)
         return
     
-    # Clip wavenumber range to required region
-    def clip(self, numin=0.0, numax=np.inf):
-        if not self.loaded:
-            raise Exception("Cannot clip data because xsec object is empty!")
-        
-        if numin > numax:
-            raise Exception("Cannot clip xsec range; numin must be less than numax")
-
-        len_old = self.nbins
-
-        # Clip
-        new_k  = []
-        new_nu = []
-        for i in range(len_old):
-            nu = self.arr_nu[i]
-            if numin <= nu <= numax:
-                k = self.arr_k[i]
-                new_nu.append(nu)
-                new_k.append(k)
-        print("Clipping to %g - %g" % (numin, numax))
-
-        # Save new in object
-        self.arr_nu = np.array(new_nu, dtype=float)
-        self.arr_k  = np.array(new_k, dtype=float)
-        self.numin = self.arr_nu[0]
-        self.numax = self.arr_nu[-1]
-        self.nbins = len(self.arr_nu)
-
-        print("length difference: %d -> %d"%(len_old, self.nbins))
-
-        return 
-
-    # Downsample to required resolution
-    def downsample(self, dnu):
-        if not self.loaded:
-            raise Exception("Cannot downsample data because xsec object is empty!")
-
-        len_old = self.nbins
-
-        # Downsample
-        new_k  = []
-        new_nu = []
-        last_nu = -999999.0
-        for i in range(len_old):
-            nu = self.arr_nu[i]
-            if nu >= last_nu + dnu:
-                k = self.arr_k[i]
-                new_nu.append(nu)
-                new_k.append(k)
-                last_nu = nu
-
-        if len(new_nu) < 3:
-            raise Exception("Too few wavenumber bins left after dowsampling!")
-
-        # Save new in object
-        self.arr_nu = np.array(new_nu, dtype=float)
-        self.arr_k  = np.array(new_k, dtype=float)
-        self.numin = self.arr_nu[0]
-        self.numax = self.arr_nu[-1]
-        self.nbins = len(self.arr_nu)
-
-        # print("Downsampled from %d to %d points" % (len_old, self.nbins))
-        return 
-
-
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):
         if self.dummy: print("WARNING: Accessing kabs of dummy xsec object!")
