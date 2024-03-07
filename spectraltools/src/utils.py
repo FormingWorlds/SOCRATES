@@ -2,10 +2,11 @@
 
 import os
 import numpy as np
+import hashlib
 
 # Check that SOCRATES is setup
 if os.environ["RAD_DIR"] == None:
-    raise Exception("Cannot find SOCRATES")
+    raise Exception("Cannot find SOCRATES! Refer to README.md")
 
 # Named directories
 dirs = {"socrates":os.path.abspath(os.environ["RAD_DIR"])}
@@ -95,6 +96,16 @@ def rmsafe(file:str):
         return
     if os.path.exists(file):
         os.remove(file)
+
+# Calculate the checksum of a file using the BLAKE2b algorithm
+def checksum(filename:str):
+    # Adapted from https://stackoverflow.com/a/1131238
+    with open(filename, "rb") as f:
+        file_hash = hashlib.blake2b()
+        while chunk := f.read(8192):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
+    
 
 # Map absorber names to their IDs (see SOCRATES user guide p.71)
 absorber_id = {

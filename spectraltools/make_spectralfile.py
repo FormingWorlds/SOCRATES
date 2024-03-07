@@ -19,8 +19,8 @@ def main():
     source = "dace"
     vols = [formula]
     alias = "demo"
-    nband = 318
-    method = 9     # band selection method
+    nband = 400
+    method = 4     # band selection method
     numax = 3e4+2   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]

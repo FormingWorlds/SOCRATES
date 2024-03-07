@@ -60,6 +60,22 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
 
     return files[i]
 
+# List the p,t values across all BIN files (f) in the directory
+def list_all_ptf(directory:str):
+    files = list_files(directory)
+
+    all_p = []
+    all_t = []
+    all_f = []
+    for f in files:
+        x = cross.xsec("", "dace", f)
+        x.parse_binname()
+        all_p.append(x.p)
+        all_t.append(x.t)
+        all_f.append(f)
+    return all_p, all_t, all_f
+
+
 def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     """Get p,t points covered by DACE bin files within a given directory.
 
@@ -83,18 +99,7 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
 
     print("Mapping p,t points")
 
-    files = list_files(directory)
-
-    # Record all P,T points
-    all_p = []
-    all_t = []
-    all_f = []
-    for f in files:
-        x = cross.xsec("", "dace", f)
-        x.parse_binname()
-        all_p.append(x.p)
-        all_t.append(x.t)
-        all_f.append(f)
+    all_p, all_t, all_f = list_all_ptf(directory)
     all_n = len(all_f)
 
     # Unique P,T values

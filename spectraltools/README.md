@@ -1,4 +1,4 @@
-# Python SpectralFile tools
+# SpectralFile tools
 
 This subdirectory is not part of the original SOCRATES repository. It is distributed under the 3-Clause BSD License.
 
@@ -20,8 +20,9 @@ These tools all operate by storing the spectral absorption cross-section (versus
 |-------------------------|---------------|
 | `make_spectralfile.py`  | Generate a spectral file for the specified absorbers and wavenumber/pressure/temperature range |
 | `convert_dace.py`       | Convert DACE binary files into the netCDF format for the specified absorber   | 
-| `download_cia.py`       | Download CIA databases from the HITRAN website |
+| `download_cia.py`       | Download CIA databases from the HITRAN website into the output folder |
 | `plot_absorption.py`    | Plot absorption cross-section versus wavenumber  |
+| `calc_checksum.py`      | Calculate the BLAKE2b checksum of a file in order to verify its integrity  |
 
 
 ### Requirements
@@ -31,12 +32,13 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - Executables have been added to your `PATH` variable using `. ./set_rad_env`
 * Python (version >= 3.11) and the following libraries
    - numpy
-   - matplotlib
    - netcdf4
    - glob
    - shutil
    - chemicals
    - requests
+   - hashlib
+   - matplotlib (optionally)
 
 ### Online sources
 * DACE (https://dace.unige.ch/opacityDatabase/)

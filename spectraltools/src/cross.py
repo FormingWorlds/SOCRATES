@@ -3,7 +3,6 @@
 # Libraries
 import numpy as np
 import struct, os, io
-import matplotlib.pyplot as plt
 
 # Files 
 import src.phys as phys
@@ -327,6 +326,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
     def plot(self, yunits=1, fig=None, ax=None, show=True, saveout="", xmin=None, xmax=1e4):
+        import matplotlib.pyplot as plt
 
         if not self.loaded:
             raise Exception("Cannot plot data because xsec object is empty!")

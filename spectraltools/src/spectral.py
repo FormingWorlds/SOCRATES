@@ -11,7 +11,9 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     Methods:    
         0 = linspace   \n 
         1 = logspace   \n
-        2 = logspace, but using a single band to cover the longest wavelengths \n
+        2 = logspace, using a single band to cover long WL \n
+        3 = logspace, using a few linear-spaced bands to cover long WL \n
+        4 = piecewise band density (linspace - logspace - logspace) \n
         9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
 
     Parameters
@@ -43,7 +45,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     if nband > len(nu_arr)-2:
         raise Exception("Too many bands! (%d requested)"%nband)
     if (method == 9) and (nband != 318):
-        raise Exception("When method=9 (legacy), you must set nband=318.")
+        raise Exception("When method=9 (legacy), you must set nband=318")
     
     # Check range
     numin = max(nu_arr[1], floor)
@@ -56,8 +58,12 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         return [numin, numax]
     
     # Other cases ...
-    vlong_cutoff = 100.0 # [cm-1] Value where the "very long wavelengths" region starts.
-    if (numin > vlong_cutoff) and (method == 2):
+    shrt_cutoff = 2e4  # [cm-1] Value where the "short wavelength" region starts.
+    if (numax < shrt_cutoff) and (method == 4):
+        method = 3
+    
+    long_cutoff = 200.0 # [cm-1] Value where the "long wavelength" region starts.
+    if (numin > long_cutoff) and (method in [2,3]):
         method = 1 
     
     # Get target bands
@@ -68,8 +74,20 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         case 1: 
             bands = np.logspace(lognumin, lognumax, nedges)
         case 2:
-            bands = np.array([numin, vlong_cutoff])
-            bands = np.append(bands, np.logspace(np.log10(vlong_cutoff) , lognumax , nedges-1 )[1:])
+            bands = np.array([numin, long_cutoff])
+            bands = np.append(bands, np.logspace(np.log10(long_cutoff) , lognumax , nedges-1 )[1:])
+        case 3: 
+            len_lin = int(nedges*0.15)
+            bands = np.linspace(numin, long_cutoff, len_lin+1)[:-1]
+            bands = np.append(bands, np.logspace(np.log10(long_cutoff), lognumax, nedges-len_lin))
+        case 4:
+            len1 = int(nedges*0.15)
+            len3 = int(nedges*0.07)
+            len2 = nedges-len1-len3
+            bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
+            bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
+            bands = np.append(bands, np.logspace(np.log10(shrt_cutoff), lognumax, len3))
+        
         case 9:
             bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500))) 
             bands[0] = 1.0
@@ -196,8 +214,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
-    p_write = np.round(p_points * 1.0e5, 4)  
-    t_write = np.round(t_points, 4)
+    p_write = np.round(p_points * 1.0e5, 5)  
+    t_write = np.round(t_points, 5)
     
     print("    number of p,t points: %d"%len(t_write))
     print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
@@ -335,7 +353,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     # Parameters
     max_path = 1.0e1
-    tol_type = 'b'
+    tol_type = 't'
     nproc = 20
 
     # Check that files exist
@@ -364,7 +382,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     match tol_type:
         case 'n': f.write(" -n 20")         # Use this many k-terms
-        case 't': f.write(" -t 1.0e-2")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+        case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
         case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
@@ -516,7 +534,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
             case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
-        # f.write(" -k")
         f.write(" -s %s"%skel_path)
         f.write(" +p")
         f.write(" -lk")
@@ -575,6 +592,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
     time.sleep(1.0)
     print("    done writing to '%s'\n"%kcoeff_path)
+
+    # Check logfile
+    with open(logging_path,'r') as hdl:
+        if "Execution ends" not in str(hdl.read()):
+            print("-------------------------------------------")
+            print("WARNING: An error may have occurred! Check logfile.")
+            print("-------------------------------------------")
+
     return kcoeff_path
 
 
@@ -734,7 +759,18 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             print("WARNING: Spectral file contains NaN values!")
             print("-------------------------------------------")
 
+    # Calculate checksum
     if success:
+        # spectral file
+        chk_path = os.path.join(utils.dirs["output"], alias+".ck"); utils.rmsafe(chk_path)
+        with open(chk_path,'w') as hdl:
+            hdl.write("%s \n" % utils.checksum(spec_path))
+
+        # lookup table
+        chk_path = os.path.join(utils.dirs["output"], alias+".ck_k"); utils.rmsafe(chk_path)
+        with open(chk_path,'w') as hdl:
+            hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
+
         print("    success!\n")
     else:
         print(" ")
