@@ -59,7 +59,10 @@ def get_arr_as_str(arr):
 def get_closest(value, arr):
     return arr[np.argmin(np.abs(np.array(arr)-value))]
 
-    
+# Get index of item in 'arr' that is numerically closest to 'value'
+def get_closest_idx(value, arr):
+    return np.argmin(np.abs(np.array(arr)-value))
+
 # Find the closest point in a p,t grid, returning its index, distance, p, t.
 def find_pt_close(arr_p, arr_t, target_p, target_t):
     target_p = max(1.0e-9, target_p)

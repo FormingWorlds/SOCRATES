@@ -17,8 +17,9 @@ def main():
     source = "dace"
     vols = [formula]
     alias = "demo"
-    nband = 360
-    numax = 2e99   # clip to this maximum wavenumber [cm-1]
+    nband = 318
+    method = 9     # band selection method
+    numax = 3e4+1   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
 
@@ -30,14 +31,14 @@ def main():
         os.remove(f)
 
     # Get P,T grid
-    tgt_p = np.logspace(-5, 3, 15)
-    tgt_t = [100.0,  250.0,  500.0,  750.0,  900.0,  1000.0,  1200.0,  1400.0,  1600.0,  1800.0,  2000.0,  2250.0,  2500.0,  2750.0,  3000.0,  3500.0,  4000.0]
+    tgt_p = np.logspace(-7, 3, 15)
+    tgt_t = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0, 1200.0, 1400.0, 1600.0, 1800.0, 2000.0, 2250.0, 2500.0, 2750.0, 3000.0]
     arr_p, arr_t, arr_f = dace.get_pt(formula_path, tgt_p , tgt_t)
 
     # Get nu grid + write skeleton
     temp_xc = cross.xsec(formula, source, dace.list_files(formula_path)[0])
     temp_xc.read(numin=numin, numax=numax, dnu=dnu)
-    band_edges = spectral.best_bands(temp_xc.get_nu(), 2, nband)
+    band_edges = spectral.best_bands(temp_xc.get_nu(), method, nband)
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
 
     # Write netCDF containing absorption spectra

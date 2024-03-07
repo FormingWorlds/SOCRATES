@@ -18,8 +18,10 @@ These tools all operate by storing the spectral absorption cross-section (versus
 
 | Tool    | Description |
 |-----------------------|-------------|
-| `dace2netcdf.py`      | Convert DACE binary files into the netCDF format   | 
 | `wizard.py`           | Interactive wizard for generating spectral files |
+| `dace2netcdf.py`      | Convert DACE binary files into the netCDF format   | 
+| `download_cia.py`     | Download CIA databases from the HITRAN website |
+| `plot_absorption.py`  | Plot absorption cross-section versus wavenumber  |
 
 
 ### Requirements
@@ -27,9 +29,8 @@ These tools all operate by storing the spectral absorption cross-section (versus
 * SOCRATES
    - Must have been compiled
    - Executables have been added to your `PATH` variable using `. ./set_rad_env`
-* Python (version >=3.11) and its libraries
+* Python (version >= 3.11) and the following libraries
    - numpy
-   - scipy
    - matplotlib
    - netcdf4
    - glob
@@ -40,7 +41,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
 ### Online sources
 * DACE (https://dace.unige.ch/opacityDatabase/)
 * ExoMol (https://exomol.com/data/data-types/xsec/)
-* HITRAN cross-sections (https://hitran.org/xsc/)
+* HITRAN (https://hitran.org/xsc/)
 * HITRAN CIA (https://hitran.org/cia/)
-
+* MT_CKD H2O (https://github.com/AER-RC/MT_CKD_H2O)
 

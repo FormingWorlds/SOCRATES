@@ -1,7 +1,6 @@
 # Tools for handling socrates spectral files
 
 import numpy as np
-from scipy.spatial import KDTree
 import os, subprocess, time
 import src.utils as utils
 
@@ -13,6 +12,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         0 = linspace   \n 
         1 = logspace   \n
         2 = logspace, but using a single band to cover the longest wavelengths \n
+        9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
 
     Parameters
     ----------
@@ -42,10 +42,12 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         raise Exception("There must be at least one band")
     if nband > len(nu_arr)-2:
         raise Exception("Too many bands! (%d requested)"%nband)
+    if (method == 9) and (nband != 318):
+        raise Exception("When method=9 (legacy), you must set nband=318.")
     
     # Check range
     numin = max(nu_arr[1], floor)
-    numax = nu_arr[-2]
+    numax = nu_arr[-1]
     lognumin = np.log10(numin)
     lognumax = np.log10(numax)
 
@@ -68,6 +70,11 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         case 2:
             bands = np.array([numin, vlong_cutoff])
             bands = np.append(bands, np.logspace(np.log10(vlong_cutoff) , lognumax , nedges-1 )[1:])
+        case 9:
+            bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500))) 
+            bands[0] = 1.0
+            numin = bands[0]
+            numax = bands[-1]
         case _:
             raise Exception("Invalid band selection method (%d)"%method)
 
@@ -87,6 +94,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
                       )
         else:
             dist_last = dist
+        if set_band == nband+1:
+            break
     bands_out = np.array(bands_out)
 
     suggest = "Try a different method, choose fewer bands, or increase the source resolution"
@@ -187,8 +196,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
-    p_write = np.round(p_points * 1.0e5, 2)  
-    t_write = np.round(t_points, 2)
+    p_write = np.round(p_points * 1.0e5, 4)  
+    t_write = np.round(t_points, 4)
     
     print("    number of p,t points: %d"%len(t_write))
     print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
@@ -199,9 +208,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     pt_lbl_file.write('*PTVAL' + '\n')
     for prs in np.unique(p_write):
         line = ""
-        line += "%.2f"%prs 
+        line += "%.4f"%prs 
         for t in np.unique(t_write):
-            line +=" %.2f"%t 
+            line +=" %.4f"%t 
         line += "\n" 
         pt_lbl_file.write(line)
     pt_lbl_file.write('*END' + '\n')
@@ -210,9 +219,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     ref_pres_cia = utils.get_closest(1.0e5, p_write) # set reference pressure to ~1 bar
     pt_cia_file = open(pt_cia, "w+")
     pt_cia_file.write('*PTVAL \n')
-    line = "%.2f"%ref_pres_cia 
+    line = "%.4f"%ref_pres_cia 
     for t in np.unique(t_write):
-        line +=" %.2f"%t 
+        line +=" %.4f"%t 
     pt_cia_file.write(line + " \n")
     pt_cia_file.write('*END \n')
     pt_cia_file.close()
@@ -633,7 +642,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
     # Write script
     print("Assembling final spectral file for '%s'..."%alias)
-    spec_path = os.path.join(utils.dirs["output"], alias); utils.rmsafe(spec_path)
+    spec_path = os.path.join(utils.dirs["output"], alias+".sf"); utils.rmsafe(spec_path)
     logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
     f = open(exec_file_name,'w+')
