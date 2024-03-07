@@ -16,12 +16,12 @@ These tools all operate by storing the spectral absorption cross-section (versus
 
 ### Content
 
-| Tool    | Description |
-|-----------------------|-------------|
-| `wizard.py`           | Interactive wizard for generating spectral files |
-| `dace2netcdf.py`      | Convert DACE binary files into the netCDF format   | 
-| `download_cia.py`     | Download CIA databases from the HITRAN website |
-| `plot_absorption.py`  | Plot absorption cross-section versus wavenumber  |
+| Tool                    | Description   |   
+|-------------------------|---------------|
+| `make_spectralfile.py`  | Generate a spectral file for the specified absorbers and wavenumber/pressure/temperature range |
+| `convert_dace.py`       | Convert DACE binary files into the netCDF format for the specified absorber   | 
+| `download_cia.py`       | Download CIA databases from the HITRAN website |
+| `plot_absorption.py`    | Plot absorption cross-section versus wavenumber  |
 
 
 ### Requirements

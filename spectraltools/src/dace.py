@@ -4,7 +4,6 @@
 from glob import glob
 import numpy as np
 import os
-# from scipy.spatial import KDTree
 
 # Import files
 import src.cross as cross
@@ -86,9 +85,6 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
 
     files = list_files(directory)
 
-    # Targets?
-    use_all = (len(p_targets) == 0) or (len(t_targets) == 0)
-
     # Record all P,T points
     all_p = []
     all_t = []
@@ -105,66 +101,40 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     unique_p = sorted(list(set(all_p)))
     unique_t = sorted(list(set(all_t)))
 
-    if use_all:
-        print("    use_all = True")
-        # Store all points
-        use_p = all_p[:] 
-        use_t = all_t[:] 
+    # Find best temperatures
+    selected_t = []
+    if (len(t_targets) >= len(unique_t)) or (len(t_targets) == 0):
+        selected_t = unique_t[:]
     else:
-        print("    use_all = False")
-
-        # Find best temperatures
-        selected_t = []
-        if len(t_targets) >= len(unique_t):
-            selected_t = unique_t[:]
-        else:
-            use_t = []
-            search_t = unique_t[:]
-            for t in t_targets:
-                i = utils.get_closest_idx(t, search_t)
-                selected_t.append(search_t[i])
-                search_t.pop(i)
-
-        # Find best pressures
-        selected_p = []
-        if len(p_targets) >= len(unique_p):
-            use_p = unique_p[:]
-        else:
-            use_p = []
-            search_p = unique_p[:]
-            for p in p_targets:
-                i = utils.get_closest_idx(p, search_p)
-                selected_p.append(search_p[i])
-                search_p.pop(i)
-        
-        # Flatten p,t points
         use_t = []
+        search_t = unique_t[:]
+        for t in t_targets:
+            i = utils.get_closest_idx(t, search_t)
+            selected_t.append(search_t[i])
+            search_t.pop(i)
+
+    # Find best pressures
+    selected_p = []
+    if (len(p_targets) >= len(unique_p)) or (len(p_targets) == 0):
+        selected_p = unique_p[:]
+    else:
         use_p = []
-        for p in selected_p:
-            for t in selected_t:
-                use_t.append(t)
-                use_p.append(p)
+        search_p = unique_p[:]
+        for p in p_targets:
+            i = utils.get_closest_idx(p, search_p)
+            selected_p.append(search_p[i])
+            search_p.pop(i)
+    
+    # Flatten p,t points
+    use_t = []
+    use_p = []
+    for p in selected_p:
+        for t in selected_t:
+            use_t.append(t)
+            use_p.append(p)
 
-        use_t = np.array(use_t, dtype=float)
-        use_p = np.array(use_p, dtype=float)
-
-        # Setup KD tree for search
-        # X = np.array([np.log10(all_p), all_t]).T
-        # tree = KDTree(X, leafsize=100, copy_data=True)
-
-        # # Setup points to search by
-        # tgt_p = []
-        # tgt_t = []
-        # for p in p_targets:
-        #     for t in t_targets:
-        #         tgt_p.append(p)
-        #         tgt_t.append(t)
-
-        # # Perform search
-        # Q = np.array([np.log10(tgt_p), tgt_t]).T
-        # best_d, best_i = tree.query(Q)
-        # use_p = np.array(all_p, dtype=float)[best_i]
-        # use_t = np.array(all_t, dtype=float)[best_i]
+    use_t = np.array(use_t, dtype=float)
+    use_p = np.array(use_p, dtype=float)
 
     use_n = len(use_p)
 

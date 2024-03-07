@@ -47,7 +47,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     
     # Check range
     numin = max(nu_arr[1], floor)
-    numax = nu_arr[-1]
+    numax = nu_arr[-2]
     lognumin = np.log10(numin)
     lognumax = np.log10(numax)
 
@@ -94,7 +94,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
                       )
         else:
             dist_last = dist
-        if set_band == nband+1:
+        if (method==9) and (set_band == nband+1):
             break
     bands_out = np.array(bands_out)
 
@@ -230,7 +230,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     f = open(exec_file_name, "w+")
 
     # Write skeleton spectral file using prep_spec utility
-    f.write('prep_spec << EOF \n')
+    f.write('prep_spec <<EOF\n')
     f.write(skel_path + '\n')
 
     # Set number of bands
@@ -279,7 +279,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
 
     # Close prep_spec
     f.write("-1 \n")
-    f.write("EOF \n")
+    f.write("EOF\n")
     f.write(" \n ")
     f.close()
     os.chmod(exec_file_name,0o777)
@@ -363,9 +363,9 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
 
     match tol_type:
-        case 'n': f.write(" -n 4")          # Use this many k-terms
+        case 'n': f.write(" -n 20")         # Use this many k-terms
         case 't': f.write(" -t 1.0e-2")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-        case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -381,6 +381,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     f.close()
     os.chmod(exec_file_name,0o777)
 
+    # Run
     print("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
@@ -390,6 +391,14 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     time.sleep(1.0)
     print("    done writing to '%s'\n"%kcoeff_path)
+
+    # Check logfile
+    with open(logging_path,'r') as hdl:
+        if "Execution ends" not in str(hdl.read()):
+            print("-------------------------------------------")
+            print("WARNING: An error may have occurred! Check logfile.")
+            print("-------------------------------------------")
+
     return kcoeff_path
 
 def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarray, dnu:float, dry:bool=False):
@@ -429,7 +438,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     p_in = [formula_A.strip(),formula_B.strip()]
     pair = get_cia_pair(p_in[0], p_in[1])
     if len(pair) == 0:
-        raise Exception("Invalid CIA pair " + str(pair))
+        return
     
     pair_ids = [utils.absorber_id[p] for p in pair]
     pair_str = "%s-%s"%(pair[0],pair[1])
@@ -502,7 +511,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
         match tol_type:
-            case 'n': f.write(" -n 4")          # Use this many k-terms
+            case 'n': f.write(" -n 10")         # Use this many k-terms
             case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
@@ -648,7 +657,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f = open(exec_file_name,'w+')
 
     #    point to input/output spectral files
-    f.write("prep_spec << EOF  \n")
+    f.write("prep_spec <<EOF\n")
     f.write(skel_path + "\n")
     f.write("n \n")
     f.write("%s \n" % spec_path)
@@ -662,22 +671,23 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # f.write("%d    \n"%planck_npoints)
 
     #    add line absorption
-    print("    line absorption: ")
+    print("    line absorption: ", end='')
     for i,v in enumerate(volatile_list):
-        print("        "+v)
+        print(v+" ", end='')
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
         f.write("5 \n")
         if i > 0:
             f.write("y \n")
         f.write("%s \n"%lbl_path)
+    print("")
 
     #    add CIA 
-    print("    CIA: ")
+    print("    CIA: ", end='')
     cia_count = 0
     for i,p in enumerate(utils.cia_pairs):
         if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
             pair_str = p[0]+"-"+p[1]
-            print("        "+pair_str)
+            print(pair_str+" ", end='')
 
             f.write("19 \n")
             if cia_count > 0:
@@ -687,6 +697,10 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             f.write("%s \n"%cia_path)
 
             cia_count += 1
+    if cia_count == 0:
+        print("(none)")
+    else:
+        print("")
 
     #    add droplets
         
@@ -696,7 +710,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
     #    done
     f.write("-1 \n")
-    f.write("EOF \n")
+    f.write("EOF\n")
     f.write(" \n ")
     f.close()
     os.chmod(exec_file_name,0o777)

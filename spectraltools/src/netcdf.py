@@ -31,8 +31,6 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     Returns
     -------
-    str
-        Path to resultant netCDF file.
     float 
         Wavenumber spacing [m-1]
     """
@@ -49,7 +47,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     # Open file
     print("Writing netCDF for '%s' from '%s'..."%(formula,source))
     utils.rmsafe(nc_path)
-    ds = Dataset(nc_path, "w", format="NETCDF4_CLASSIC")
+    ds = Dataset(nc_path, "w", format="NETCDF4")
 
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
@@ -120,7 +118,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     # Finish up
     print("    done writing to '%s' \n" % nc_path)
     ds.close()
-    return nc_path, step_dnu
+    return step_dnu
 
 def read_netcdf_pt(fpath:str):
     """Read p,t values from netCDF file
