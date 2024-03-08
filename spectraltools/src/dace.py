@@ -10,7 +10,7 @@ import src.cross as cross
 import src.utils as utils
 
 # Download interpolated file from dace
-def download(isotopologue:str, linelist:str, linelist_version:float, p:float, t:float):
+def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_arr, outdir:str):
 
     from dace_query.opacity import Molecule
     import h5py, struct, subprocess, glob
@@ -22,64 +22,77 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p:float, t:
         for f in glob.glob(tmpdir+"*."+e):
             utils.rmsafe(f)
 
-    tarnme = "temp.tar"
-    tarpath = os.path.join(tmpdir, tarnme)
+    # Flatten array
+    t_req = []
+    p_req = []
+    for p in sorted(p_arr):
+        for t in sorted(t_arr):
+            t_req.append(t)
+            p_req.append(p)
+    npts = len(t_req)
+    print("Requesting %d points"%npts)
 
     # Download file
-    Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), [t], [p], output_directory=tmpdir, output_filename=tarnme)
+    tarnme = "temp.tar"
+    tarpath = os.path.join(tmpdir, tarnme)
+    Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), t_req, p_req, output_directory=tmpdir, output_filename=tarnme)
     
     # Untar the file
+    print("Untarring file")
     oldcwd = os.getcwd()
     os.chdir(tmpdir)
     sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"])
     os.chdir(oldcwd)
     
     # Read hdf5 file 
+    print("Converting to bin files")
     hdf5path = glob.glob(tmpdir+"/*.hdf5")[0]
     with h5py.File(hdf5path,'r+') as hf:
         # Get the dataset
-        ds = hf["opacity"]
-        key = list(ds.keys())[0]
-        ds = ds[key]
+        dso = hf["opacity"]
+        for i,key in enumerate(list(dso.keys())):
+            j = i+1
+            print("    point %4d of %4d  (%5.2f%%)"%(j, npts, 100.0*j/npts))
+            ds = dso[key]
 
-        # Read k
-        k_arr = ds[:]
-        numax = len(k_arr) * 100.0
-        numin = 0.0
+            # Read k
+            k_arr = ds[:]
+            numax = len(k_arr) * 100.0
+            numin = 0.0
 
-        # Read p,t
-        p = ds.attrs["pressure"]
-        t = ds.attrs["temperature"]
+            # Read p,t
+            p = ds.attrs["pressure"]
+            t = ds.attrs["temperature"]
 
-    # Write pressure as string 
-    pstr = ""
-    logp = np.log10(p) * 100.0
-    if logp < 0.0:
-        pstr += "n"
-    else:
-        pstr += "p"
-    pstr += "%03d"%logp
+            # Write pressure as string 
+            pstr = ""
+            logp = np.log10(p) * 100.0
+            if logp < 0.0:
+                pstr += "n"
+            else:
+                pstr += "p"
+            pstr += "%03d"%abs(logp)
 
-    # Write bin file
-    binnme  = "Out"
-    binnme += "_%05d" % numin 
-    binnme += "_%05d" % (numax/1e4)
-    binnme += "_%05d" % t
-    binnme += "_%s"   % pstr
-    binnme += ".bin"
-    binpath = os.path.join(tmpdir, binnme)
-    utils.rmsafe(binpath)
-    with open(binpath, "wb") as hdl:
-        for i in range(0,len(k_arr),4):
-            vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
-            hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
+            # Write bin file
+            binnme  = "Itp"
+            binnme += "_%05d" % numin 
+            binnme += "_%05d" % (numax/1e4)
+            binnme += "_%05d" % t
+            binnme += "_%s"   % pstr
+            binnme += ".bin"
+            binpath = os.path.join(outdir, binnme)
+            with open(binpath, "wb") as hdl:
+                for i in range(0,len(k_arr),4):
+                    vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
+                    hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
 
-    return binpath
+    return outdir
 
 
-# List DACE bin files in directory
+# List DACE bin and itp files in directory
 def list_files(directory:str) -> list:
-    files = glob(directory+"/"+"Out*.bin")
+    files = list(glob(directory+"/"+"Out*.bin"))
+    files.extend(list(glob(directory+"/"+"Itp*.bin")))
     if len(files) == 0:
         print("WARNING: No bin files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
