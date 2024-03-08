@@ -6,6 +6,7 @@ import src.dace as dace
 import numpy as np
 
 def main():
+    # --- PARAMETERS
     isotopologue = '1H2-16O'
     linelist = 'POKAZATEL'
     linelist_version = 2.0
@@ -18,10 +19,12 @@ def main():
 
     outdir = utils.dirs["data"] + "/itp/"
 
+    # --- EXECUTION
     dace.download(isotopologue, linelist, linelist_version, p_arr, t_arr, outdir)
-            
-
+    return 
 
 if __name__ == "__main__":
+    print("Hello")
     main()
+    print("Goodbye")
     exit(0)

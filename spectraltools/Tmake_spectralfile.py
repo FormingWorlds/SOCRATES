@@ -11,8 +11,6 @@ import os, glob
 import numpy as np
 
 def main():
-    print("Hello\n")
-
 
     # ------------ PARAMETERS ------------
     formula = "H2O"
@@ -82,9 +80,11 @@ def main():
     # Assemble final spectral file
     spectral.assemble(alias, vols)
     # ------------------------------------
-
-    print("Goodbye")
+    return 
+    
 
 if __name__ == "__main__":
+    print("Hello\n")
     main()
+    print("Goodbye")
     exit(0)

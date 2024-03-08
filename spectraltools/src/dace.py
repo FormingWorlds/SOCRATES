@@ -1,27 +1,21 @@
 # Tools for processing DACE files
 
 # Import system libraries
-from glob import glob
 import numpy as np
-import os, sys
+import os, glob
 
 # Import files
 import src.cross as cross
 import src.utils as utils
+import src.phys as phys
 
 # Download interpolated file from dace
 def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_arr, outdir:str):
 
     from dace_query.opacity import Molecule
-    import h5py, struct, subprocess, glob
+    import h5py, struct, subprocess
 
-    tmpdir = "/tmp/dace/"
-    if not os.path.exists(tmpdir):
-        os.mkdir(tmpdir)
-    for e in ["tar", "hdf5", "bin", "ref"]:
-        for f in glob.glob(tmpdir+"*."+e):
-            utils.rmsafe(f)
-
+    # Validate p,t
     len_p = len(p_arr)
     max_p = 1.0e3
     min_p = 1.0e-8
@@ -31,7 +25,22 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
     min_t = 50.0
     if (np.amax(t_arr) > max_t) or (np.amin(t_arr) < min_t):
         raise Exception("Temperature target exceeds the valid range of (%g,%g)"%(min_t,max_t))
+    
+    # Validate name
+    formula = phys.iso_to_formula(isotopologue)
+    phys.chemsafe(formula)  # will raise error if formula is invalid
 
+    # Tidy files
+    tmpdir = "/tmp/dace/"
+    if not os.path.exists(tmpdir):
+        os.mkdir(tmpdir)
+    for e in ["tar", "hdf5", "bin", "ref"]:
+        for f in glob.glob(tmpdir+"*."+e):
+            utils.rmsafe(f)
+
+    print("")
+    print("Downloading %s (%s) from DACE"%(formula,isotopologue))
+    print("Linelist: %s (v%.1f)"%(linelist,linelist_version))
     print("Total requests: %d" % (len(p_arr)*len(t_arr)))
 
     # For all p,t
@@ -45,10 +54,14 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
         print("\np[%d/%d] : requesting %d points"%(ip,len_p,npts))
 
         # Download file
-        tarnme = "temp.tar"
+        tarnme = formula+".tar"
         tarpath = os.path.join(tmpdir, tarnme)
         utils.rmsafe(tarpath)
         Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), t_req, p_req, output_directory=tmpdir, output_filename=tarnme)
+
+        # Check file
+        if not os.path.exists(tarpath):
+            raise Exception("File not found at '%s'"%tarpath)
         
         # Untar the file
         print("Untarring file")
@@ -106,8 +119,8 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
 
 # List DACE bin and itp files in directory
 def list_files(directory:str) -> list:
-    files = list(glob(directory+"/"+"Out*.bin"))
-    files.extend(list(glob(directory+"/"+"Itp*.bin")))
+    files = list(glob.glob(directory+"/"+"Out*.bin"))
+    files.extend(list(glob.glob(directory+"/"+"Itp*.bin")))
     if len(files) == 0:
         print("WARNING: No bin files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
@@ -138,7 +151,7 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
     files = list_files(directory)
     count = len(files)
     if count == 0:
-        raise Exception("Could not find any bin files in '%s'" % directory)
+        return []
     
     # Read all files
     p_arr = []  # pressure

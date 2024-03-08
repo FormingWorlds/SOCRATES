@@ -23,8 +23,23 @@ m_electron = 9.1093837015e-31
 # Rydberg constant (hydrogen) [m-1]
 Ryd_H = Ryd_inf * m_proton / (m_proton + m_electron)
 
+# Convert isotopologue to formuka
+def iso_to_formula(iso:str):
+    f = ""
+    atoms = iso.split("-") # Split atoms
+    for a in atoms: # for each atom
+        amu = True
+        for c in str(a):  # for each char
+            if amu: # skip AMU
+                if c.isdigit():
+                    continue 
+                else:
+                    amu=False 
+            f += c
+    return f
+
 # Get chemical's safe name
-def chemsafe(name):
+def chemsafe(name:str):
     return str(search_chemical(name).formula)
 
 # Get chemical's mean molecular weight [kg mol-1]
