@@ -170,13 +170,15 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
     return files[i]
 
 # List the p,t values across all BIN files (f) in the directory
-def list_all_ptf(directory:str):
+def list_all_ptf(directory:str, allow_itp:bool=True):
     files = list_files(directory)
 
     all_p = []
     all_t = []
     all_f = []
     for f in files:
+        if ("Itp" in f) and (not allow_itp):
+            continue
         x = cross.xsec("", "dace", f)
         x.parse_binname()
         all_p.append(x.p)
@@ -214,32 +216,40 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=T
 
     print("Mapping p,t points")
 
-    all_p, all_t, all_f = list_all_ptf(directory)
+    all_p, all_t, all_f = list_all_ptf(directory, allow_itp=allow_itp)
     all_n = len(all_f)
+    print("    found %d files"%all_n)
+    print("    want  %d files"% (len(p_targets)*len(t_targets)))
 
     # Unique P,T values
-    unique_p = sorted(list(set(all_p)))
-    unique_t = sorted(list(set(all_t)))
+    unique_p = np.unique(all_p)
+    unique_t = np.unique(all_t)
+    
+
+    if len(unique_p) * len(unique_t) != all_n:
+        raise Exception("Files are not unique or the p,t grid is not rectilinear")
 
     # Find best temperatures
+    print("    finding best temperatures")
     selected_t = []
     if (len(t_targets) >= len(unique_t)) or (len(t_targets) == 0):
         selected_t = unique_t[:]
     else:
         use_t = []
-        search_t = unique_t[:]
+        search_t = list(unique_t[:])
         for t in t_targets:
             i = utils.get_closest_idx(t, search_t)
             selected_t.append(search_t[i])
             search_t.pop(i)
 
     # Find best pressures
+    print("    finding best pressures")
     selected_p = []
     if (len(p_targets) >= len(unique_p)) or (len(p_targets) == 0):
         selected_p = unique_p[:]
     else:
         use_p = []
-        search_p = unique_p[:]
+        search_p = list(unique_p[:])
         for p in p_targets:
             i = utils.get_closest_idx(p, search_p)
             selected_p.append(search_p[i])
@@ -258,56 +268,63 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=T
 
     use_n = len(use_p)
 
-    # Sort points into the correct p,t order, dropping duplicates
-    out_p = []
-    out_t = []
-    for p in unique_p:     #  for all unique p
-        for t in unique_t: #  for all unique t
-            for i in range(use_n):  # for all selected points
-                if np.isclose(use_p[i], p) and np.isclose(use_t[i], t): # select this point?
+    # Drop duplicates
+    print("    sorting and dropping duplicates")
+    # out_p = []
+    # out_t = []
+    # for p in unique_p:     #  for all unique p
+    #     for t in unique_t: #  for all unique t
+    #         for i in range(use_n):  # for all selected points
+    #             if np.isclose(use_p[i], p) and np.isclose(use_t[i], t): # select this point?
 
-                    # Check if duplicate
-                    duplicate = False 
-                    for j in range(len(out_p)):
-                        if (p == out_p[j]) and (t == out_t[j]):
-                            duplicate = True
-                            break
+    #                 # Check if duplicate
+    #                 duplicate = False 
+    #                 for j in range(len(out_p)):
+    #                     if (p == out_p[j]) and (t == out_t[j]):
+    #                         duplicate = True
+    #                         break
                     
-                    # Add to output array (if not a duplicate)
-                    if not duplicate:
-                        out_p.append(use_p[i])
-                        out_t.append(use_t[i])
-                        break 
-
-    # Warn on dropped values
-    out_n = len(out_p)
-    lost = abs(out_n - use_n)
-    if lost > 0:
-        print("WARNING: Duplicate values dropped from p,t grid (dropped count = %d)"%lost)
+    #                 # Add to output array (if not a duplicate)
+    #                 if not duplicate:
+    #                     out_p.append(use_p[i])
+    #                     out_t.append(use_t[i])
+    #                     break 
 
     # Map to files
-    atol = 1.0e-8
-    out_f = []
+    print("    mapping to files")
+    atol = 1.0e-5
+    use_n = len(use_p)
+    modprint = int(use_n * 0.1)
     
-    for i in range(all_n):
-        p = all_p[i]
-        t = all_t[i]
-        for j in range(out_n):
-            if np.isclose(out_p[j], p, atol=atol) and np.isclose(out_t[j], t, atol=atol):
-                out_f.append(all_f[i])
-                break 
+    print("     %: ", end='')
+    use_f = []
+    for j in range(use_n):
+        if (j+1)%modprint == 0:
+            print("%d " %( (j+1)/use_n *100.0), end='', flush=True)
 
-    if (len(out_p) != len(out_t)) or (len(out_p) != len(out_f)):
-        raise Exception("Mapping failed!")
+        for i in range(all_n):
+            p = all_p[i]
+            t = all_t[i]
+            if np.isclose(use_p[j], p, atol=atol) and np.isclose(use_t[j], t, atol=atol):
+                use_f.append(all_f[i])
+                break 
+    print(" ")
+    use_f = np.array(use_f, dtype=str)
+
+    # Check if things don't line up
+    if (len(use_p) != len(use_t)):
+        raise Exception("Mapping failed (p vs t), (%d vs %d)"%(len(use_p), len(use_t)))
+    if (len(use_p) != len(use_f)):
+        raise Exception("Mapping failed (p/t vs f) , (%d vs %d)"%(len(use_p), len(use_f)))
     
     # Get total size on disk (to warn user)
     size = 0.0
-    for f in out_f:
+    for f in use_f:
         size += os.path.getsize(f)
     size *= 1.0e-9
     
     # Result
-    print("    %d files mapped, totalling %g GB" % (out_n, size))
+    print("    %d files mapped, totalling %g GB" % (use_n, size))
     print("    done\n")
-    return np.array(out_p, dtype=float), np.array(out_t, dtype=float), out_f
+    return use_p, use_t, use_f
 

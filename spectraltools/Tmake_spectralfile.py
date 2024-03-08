@@ -16,18 +16,17 @@ def main():
     formula = "H2O"
     source = "dace"
     vols = [formula]
-    alias = "demo"
+    alias = "Falkreath"
     nband = 400
     method = 4     # band selection method
-    numax = 3e4+2   # clip to this maximum wavenumber [cm-1]
+    numax = 2e99   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
 
-    # tgt_p = np.logspace(-7, 3, 26)
+    # tgt_p = np.logspace(-7, 3, 3)
     # tgt_t = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0, 1200.0, 1400.0, 1600.0, 1800.0, 2000.0, 2250.0, 2500.0, 2750.0, 3000.0]
 
     tgt_p = tgt_t = []
-
     # ------------------------------------
 
 

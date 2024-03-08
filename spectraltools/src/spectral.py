@@ -214,8 +214,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
-    p_write = np.round(p_points * 1.0e5, 5)  
-    t_write = np.round(t_points, 5)
+    p_write = np.round(p_points * 1.0e5, 3)  
+    t_write = np.round(t_points, 3)
     
     print("    number of p,t points: %d"%len(t_write))
     print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))

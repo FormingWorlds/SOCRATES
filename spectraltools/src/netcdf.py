@@ -89,9 +89,9 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     # Round sig figs and convert units
     # This is important because unreasonable precision will mean the values in the PT dat file
-    # won't match the values in the LbL netCDF file. It's better to round to ~5 dp instead.
-    p_write = np.round(p_points * 1.0e5, 5)  
-    t_write = np.round(t_points, 5)
+    # won't match the values in the LbL netCDF file. It's better to round to ~3 dp instead.
+    p_write = np.round(p_points * 1.0e5, 3)  
+    t_write = np.round(t_points, 3)
     
     # Write p,t,nu
     print("    write p, t, nu")
@@ -103,7 +103,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     print("    write cross-section data")
     print("    point %4d of %4d  (%5.1f%%)" % (0,len_p, 0))
     counter = 0
-    modprint = max(int(len_p*0.1), 1)
+    modprint = max(int(len_p*0.05), 1)
     for i in range(len_p):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:

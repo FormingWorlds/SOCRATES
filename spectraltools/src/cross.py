@@ -94,8 +94,8 @@ class xsec():
         k_read = []
         with open(self.fname, "rb") as hdl:
             for _ in range(nbins):
-                K = struct.unpack('f', hdl.read(4))[0]  # 4 bytes at a time (Float32)
-                k_read.append(K)
+                k_read.append(struct.unpack('f', hdl.read(4))[0])  # 4 bytes at a time (Float32)
+                
         # Check lengths
         if len(k_read) != self.nbins:
             raise Exception("Invalid array length when reading DACE bin file")
