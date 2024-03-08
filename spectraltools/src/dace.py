@@ -9,6 +9,74 @@ import os
 import src.cross as cross
 import src.utils as utils
 
+# Download interpolated file from dace
+def download(isotopologue:str, linelist:str, linelist_version:float, p:float, t:float):
+
+    from dace_query.opacity import Molecule
+    import h5py, struct, subprocess, glob
+
+    tmpdir = "/tmp/dace/"
+    if not os.path.exists(tmpdir):
+        os.mkdir(tmpdir)
+    for e in ["tar", "hdf5", "bin", "ref"]:
+        for f in glob.glob(tmpdir+"*."+e):
+            utils.rmsafe(f)
+
+    tarnme = "temp.tar"
+    tarpath = os.path.join(tmpdir, tarnme)
+
+    # Download file
+    Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), [t], [p], output_directory=tmpdir, output_filename=tarnme)
+    
+    # Untar the file
+    oldcwd = os.getcwd()
+    os.chdir(tmpdir)
+    sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"])
+    os.chdir(oldcwd)
+    
+    # Read hdf5 file 
+    hdf5path = glob.glob(tmpdir+"/*.hdf5")[0]
+    with h5py.File(hdf5path,'r+') as hf:
+        # Get the dataset
+        ds = hf["opacity"]
+        key = list(ds.keys())[0]
+        ds = ds[key]
+
+        # Read k
+        k_arr = ds[:]
+        numax = len(k_arr) * 100.0
+        numin = 0.0
+
+        # Read p,t
+        p = ds.attrs["pressure"]
+        t = ds.attrs["temperature"]
+
+    # Write pressure as string 
+    pstr = ""
+    logp = np.log10(p) * 100.0
+    if logp < 0.0:
+        pstr += "n"
+    else:
+        pstr += "p"
+    pstr += "%03d"%logp
+
+    # Write bin file
+    binnme  = "Out"
+    binnme += "_%05d" % numin 
+    binnme += "_%05d" % (numax/1e4)
+    binnme += "_%05d" % t
+    binnme += "_%s"   % pstr
+    binnme += ".bin"
+    binpath = os.path.join(tmpdir, binnme)
+    utils.rmsafe(binpath)
+    with open(binpath, "wb") as hdl:
+        for i in range(0,len(k_arr),4):
+            vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
+            hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
+
+    return binpath
+
+
 # List DACE bin files in directory
 def list_files(directory:str) -> list:
     files = glob(directory+"/"+"Out*.bin")
@@ -74,7 +142,6 @@ def list_all_ptf(directory:str):
         all_t.append(x.t)
         all_f.append(f)
     return all_p, all_t, all_f
-
 
 def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
     """Get p,t points covered by DACE bin files within a given directory.

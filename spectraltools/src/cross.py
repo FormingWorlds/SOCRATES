@@ -325,7 +325,7 @@ class xsec():
 
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
-    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout="", xmin=None, xmax=1e4):
+    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout="", xmin=None, xmax=1e4, label=""):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
@@ -369,7 +369,7 @@ class xsec():
         xarr = self.get_nu()[xmin_idx:xmax_idx]
         yarr = yarr[xmin_idx:xmax_idx]
         
-        ax.plot(xarr, yarr, lw=lw, color=col)
+        ax.plot(xarr, yarr, lw=lw, color=col, label=label)
 
         ax.set_ylabel(ylbl)
         ax.set_xlabel("Wavenumber [cm$^{-1}$]")
