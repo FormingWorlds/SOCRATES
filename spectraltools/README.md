@@ -10,19 +10,20 @@ Computing k-coefficients from a line-list is very expensive, because there can b
 
 Step 1 is by far the slowest, so it is helpful to use pre-computed opacities. These tools aim to generalise the creation of SpectralFiles from pre-computed opacity tables by converting them into a common netCDF format. These netCDF files can then be read by SOCRATES when generating SpectralFiles with the required properties.
 
-**You will need to download the source cross-sections manually**. For a given database (`db`) and absorber (`ab`), the files should be placed in the directory `data/db/ab/`. Output files will be written to `output/`. **You will need to create this directory yourself**, or create a symbolic link called `output` which points to another extant location.
+**You will need to download the source cross-sections manually**. For a given database (`db`) and absorber (`ab`), the files should be placed in the directory `data/db/ab/`. Output files will be written to `output/`. **You will need to create this directory yourself**, or create a symbolic link called `output` which points to another extant location. The tools are primarily targeted at parsing cross-sections from DACE, with other databases partially supported for comparison purposes.
 
 These tools all operate by storing the spectral absorption cross-section (versus wavenumber) of an absorber (at a given temperature and pressure) in an `xsec` Python object. This is defined in `src/cross.py`. The various sources can be loaded into this object, and then written as a netCDF, plotted, or otherwise manipulated as required.
 
 ### Content
 
-| Tool                    | Description   |   
-|-------------------------|---------------|
-| `make_spectralfile.py`  | Generate a spectral file for the specified absorbers and wavenumber/pressure/temperature range |
-| `convert_dace.py`       | Convert DACE binary files into the netCDF format for the specified absorber   | 
-| `download_cia.py`       | Download CIA databases from the HITRAN website into the output folder |
-| `plot_absorption.py`    | Plot absorption cross-section versus wavenumber  |
-| `calc_checksum.py`      | Calculate the BLAKE2b checksum of a file in order to verify its integrity  |
+| Tool                     | Description   |   
+|--------------------------|---------------|
+| `Tmake_spectralfile.py`  | Generate a spectral file for the specified absorbers and wavenumber/pressure/temperature range |
+| `Tconvert_dace.py`       | Convert DACE binary files into the netCDF format for the specified absorber   | 
+| `Tdownload_cia.py`       | Download CIA databases from the HITRAN website into `data/cia/` |
+| `Tplot_absorption.py`    | Plot absorption cross-section versus wavenumber  |
+| `Tcalc_checksum.py`      | Calculate the BLAKE2b checksum of a file in order to verify its integrity  |
+| `Tinterpolate_dace.py`   | Download interpolated cross-sections from DACE at the requested pressure/temperature values  |
 
 
 ### Requirements
@@ -30,7 +31,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
 * SOCRATES
    - Must have been compiled
    - Executables have been added to your `PATH` variable using `. ./set_rad_env`
-* Python (version >= 3.11) and the following libraries
+* Python (version >= 3.11) and the following libraries (optional libraries are italicised)
    - numpy
    - netcdf4
    - glob
@@ -38,7 +39,9 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - chemicals
    - requests
    - hashlib
-   - matplotlib (optionally)
+   - *matplotlib*
+   - *dace_query*
+   - *h5py*
 
 ### Online sources
 * DACE (https://dace.unige.ch/opacityDatabase/)

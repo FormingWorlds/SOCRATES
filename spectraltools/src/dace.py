@@ -3,7 +3,7 @@
 # Import system libraries
 from glob import glob
 import numpy as np
-import os
+import os, sys
 
 # Import files
 import src.cross as cross
@@ -22,69 +22,84 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
         for f in glob.glob(tmpdir+"*."+e):
             utils.rmsafe(f)
 
-    # Flatten array
-    t_req = []
-    p_req = []
-    for p in sorted(p_arr):
+    len_p = len(p_arr)
+    max_p = 1.0e3
+    min_p = 1.0e-8
+    if (np.amax(p_arr) > max_p) or (np.amin(p_arr) < min_p):
+        raise Exception("Pressure target exceeds the valid range of (%g,%g)"%(min_p,max_p))
+    max_t = np.inf
+    min_t = 50.0
+    if (np.amax(t_arr) > max_t) or (np.amin(t_arr) < min_t):
+        raise Exception("Temperature target exceeds the valid range of (%g,%g)"%(min_t,max_t))
+
+    print("Total requests: %d" % (len(p_arr)*len(t_arr)))
+
+    # For all p,t
+    for ip,p in enumerate(sorted(p_arr)):
+        t_req = []
+        p_req = []
         for t in sorted(t_arr):
             t_req.append(t)
             p_req.append(p)
-    npts = len(t_req)
-    print("Requesting %d points"%npts)
+        npts = len(t_req)
+        print("\np[%d/%d] : requesting %d points"%(ip,len_p,npts))
 
-    # Download file
-    tarnme = "temp.tar"
-    tarpath = os.path.join(tmpdir, tarnme)
-    Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), t_req, p_req, output_directory=tmpdir, output_filename=tarnme)
-    
-    # Untar the file
-    print("Untarring file")
-    oldcwd = os.getcwd()
-    os.chdir(tmpdir)
-    sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"])
-    os.chdir(oldcwd)
-    
-    # Read hdf5 file 
-    print("Converting to bin files")
-    hdf5path = glob.glob(tmpdir+"/*.hdf5")[0]
-    with h5py.File(hdf5path,'r+') as hf:
-        # Get the dataset
-        dso = hf["opacity"]
-        for i,key in enumerate(list(dso.keys())):
-            j = i+1
-            print("    point %4d of %4d  (%5.2f%%)"%(j, npts, 100.0*j/npts))
-            ds = dso[key]
+        # Download file
+        tarnme = "temp.tar"
+        tarpath = os.path.join(tmpdir, tarnme)
+        utils.rmsafe(tarpath)
+        Molecule.interpolate(isotopologue, linelist, round(linelist_version,1), t_req, p_req, output_directory=tmpdir, output_filename=tarnme)
+        
+        # Untar the file
+        print("Untarring file")
+        oldcwd = os.getcwd()
+        os.chdir(tmpdir)
+        sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"], stdout=subprocess.DEVNULL)
+        os.chdir(oldcwd)
+        
+        # Read hdf5 file 
+        print("Converting to bin files")
+        hdf5path = glob.glob(tmpdir+"/*.hdf5")[0]
+        with h5py.File(hdf5path,'r+') as hf:
+            # Get the dataset
+            dso = hf["opacity"]
+            for i,key in enumerate(list(dso.keys())):
+                j = i+1
+                print("    point %4d of %4d  (%5.2f%%)"%(j, npts, 100.0*j/npts))
+                ds = dso[key]
 
-            # Read k
-            k_arr = ds[:]
-            numax = len(k_arr) * 100.0
-            numin = 0.0
+                # Read k
+                k_arr = ds[:]
+                numax = len(k_arr) * 100.0
+                numin = 0.0
 
-            # Read p,t
-            p = ds.attrs["pressure"]
-            t = ds.attrs["temperature"]
+                # Read p,t
+                p = ds.attrs["pressure"]
+                t = ds.attrs["temperature"]
 
-            # Write pressure as string 
-            pstr = ""
-            logp = np.log10(p) * 100.0
-            if logp < 0.0:
-                pstr += "n"
-            else:
-                pstr += "p"
-            pstr += "%03d"%abs(logp)
+                # Write pressure as string 
+                pstr = ""
+                logp = np.log10(p) * 100.0
+                if logp < 0.0:
+                    pstr += "n"
+                else:
+                    pstr += "p"
+                pstr += "%03d"%abs(logp)
 
-            # Write bin file
-            binnme  = "Itp"
-            binnme += "_%05d" % numin 
-            binnme += "_%05d" % (numax/1e4)
-            binnme += "_%05d" % t
-            binnme += "_%s"   % pstr
-            binnme += ".bin"
-            binpath = os.path.join(outdir, binnme)
-            with open(binpath, "wb") as hdl:
-                for i in range(0,len(k_arr),4):
-                    vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
-                    hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
+                # Write bin file
+                binnme  = "Itp"
+                binnme += "_%05d" % numin 
+                binnme += "_%05d" % (numax/1e4)
+                binnme += "_%05d" % t
+                binnme += "_%s"   % pstr
+                binnme += ".bin"
+                binpath = os.path.join(outdir, binnme)
+                utils.rmsafe(binpath)
+                with open(binpath, "wb") as hdl:
+                    for i in range(0,len(k_arr),4):
+                        vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
+                        hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
+        print("\n")
 
     return outdir
 
@@ -156,16 +171,23 @@ def list_all_ptf(directory:str):
         all_f.append(f)
     return all_p, all_t, all_f
 
-def get_pt(directory:str, p_targets:list=[], t_targets:list=[]):
+def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=True):
     """Get p,t points covered by DACE bin files within a given directory.
 
-    The p,t arrays will be sorted in ascending order, pressure first.
+    The p,t arrays will be sorted in ascending order, pressure first. 
+    They do not need to have the same length, but must be 1D.
     Also returns the file paths, for them to be read fully later.
 
     Parameters
     ----------
     directory : str
         Directory containing bin files
+    p_targets : list
+        Target pressure values [bar]
+    t_targets : list
+        Target temperature values [K]
+    allow_itp : bool
+        Use bin files which were generated by interpolation?
 
     Returns
     -------
