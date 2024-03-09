@@ -4,6 +4,7 @@
 nogit*
 __pycache__
 fort.20
+screenlog.0
 
 # Model files
 set_rad_env
@@ -14,5 +15,7 @@ sbin/Cinc_field
 sbin/Cscale_field
 
 # Outputs
+spectraltools/output
 spectraltools/output/
+spectraltools/data
 spectraltools/data/

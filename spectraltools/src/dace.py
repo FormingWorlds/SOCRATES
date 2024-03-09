@@ -265,11 +265,8 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=T
 
     use_t = np.array(use_t, dtype=float)
     use_p = np.array(use_p, dtype=float)
-
     use_n = len(use_p)
 
-    # Drop duplicates
-    print("    sorting and dropping duplicates")
     # out_p = []
     # out_t = []
     # for p in unique_p:     #  for all unique p
