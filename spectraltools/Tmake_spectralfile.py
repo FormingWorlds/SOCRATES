@@ -89,7 +89,7 @@ def main():
         ncp = os.path.join(utils.dirs["output"] , alias+"_"+v+".nc")
         nc_paths[v] = ncp
         if os.path.exists(ncp) and preNC:
-            print("WARNING: Using pre-existing netCDF file for lbl absorption. Any configuration mismatch here will lead to issues.")
+            print("WARNING: Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues."%v)
             continue 
 
         # Get files for this volatile using the p,t,f map from vols[0]
@@ -133,9 +133,7 @@ def main():
             
     # Calculate k-coefficients from netCDF 
     for i,f1 in enumerate(vols):
-        # Get path of lbl netCDF file
-        ncp = nc_paths[f1]
-        spectral.calc_kcoeff_lbl(alias, f1, ncp, nband)
+        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1], nband)
         for f2 in vols[i:]: 
             spectral.calc_kcoeff_cia(alias, f1, f2, band_edges, dnu_last)
 

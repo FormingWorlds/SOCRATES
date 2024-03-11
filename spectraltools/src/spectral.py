@@ -504,18 +504,12 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
         # Limit band range for MT_CKD case
         ckd_bands = []  # list of allowed bands
-        ckd_nurange = [0.0, 2.0e4 - 5.0]  # This is the maximum domain for MT_CKD, in cm-1
+        ckd_nurange = [1.5, 1.9e4 - 5.0]  # This is the maximum domain for MT_CKD, in cm-1
         for i in range(0,nband):
             b_up = band_edges_rev[i]
             b_lo = band_edges_rev[i+1]
             if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):  # if this band is entirely within MT_CKD's domain
                 ckd_bands.append(i+1)
-
-        # for i in range(1,nband):
-        #     b_lo = band_edges[i]
-        #     b_up = band_edges[i+1]
-        #     if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):  # if this band is entirely within MT_CKD's domain
-        #         ckd_bands.append(i+1)
 
         iband = [ min(ckd_bands) , max(ckd_bands)]  # note that these indices are reversed relative to band_edges
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so the same as band_edges)
