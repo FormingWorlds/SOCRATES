@@ -31,7 +31,7 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
     phys.chemsafe(formula)  # will raise error if formula is invalid
 
     # Tidy files
-    tmpdir = "/tmp/dace/"
+    tmpdir = "/tmp/dacedownload_%s/"%formula
     if not os.path.exists(tmpdir):
         os.mkdir(tmpdir)
     for e in ["tar", "hdf5", "bin", "ref"]:
@@ -43,6 +43,10 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
     print("Linelist: %s (v%.1f)"%(linelist,linelist_version))
     print("Total requests: %d" % (len(p_arr)*len(t_arr)))
 
+    # Output folder
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
     # For all p,t
     for ip,p in enumerate(sorted(p_arr)):
         t_req = []
@@ -51,7 +55,7 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
             t_req.append(t)
             p_req.append(p)
         npts = len(t_req)
-        print("\np[%d/%d] : requesting %d points"%(ip,len_p,npts))
+        print("\np[%d/%d] : requesting %d points"%(ip+1,len_p,npts))
 
         # Download file
         tarnme = formula+".tar"
@@ -69,6 +73,28 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
         os.chdir(tmpdir)
         sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"], stdout=subprocess.DEVNULL)
         os.chdir(oldcwd)
+
+        # Copy ref file
+        if ip == 0:
+            refpath = glob.glob(tmpdir+"/*.ref")[0]
+            infpath = os.path.join(outdir, "info.txt")
+            utils.rmsafe(infpath)
+            if os.path.exists(refpath):
+                with open(refpath, 'r') as hdl:
+                    reflines = hdl.readlines()
+            else:
+                reflines = "[No literature references found]\n"
+            with open(infpath, 'w') as hdl:
+                hdl.write(isotopologue + "\n")
+                hdl.write(formula + "\n")
+                hdl.write(linelist + " version " +  str(linelist_version) + "\n\n")
+
+                hdl.write("Requested pressures [bar]: " + utils.get_arr_as_str(p_arr) + "\n")
+                hdl.write("Requested tempreatures [K]: " + utils.get_arr_as_str(t_arr) + "\n\n")
+
+                for l in reflines:
+                    hdl.write(l)
+                hdl.write("\n")
         
         # Read hdf5 file 
         print("Converting to bin files")
@@ -78,7 +104,7 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
             dso = hf["opacity"]
             for i,key in enumerate(list(dso.keys())):
                 j = i+1
-                print("    point %4d of %4d  (%5.2f%%)"%(j, npts, 100.0*j/npts))
+                print("    point %4d of %4d  (%5.1f%%)"%(j, npts, 100.0*j/npts))
                 ds = dso[key]
 
                 # Read k
@@ -186,8 +212,8 @@ def list_all_ptf(directory:str, allow_itp:bool=True):
         all_f.append(f)
     return all_p, all_t, all_f
 
-def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=True):
-    """Get p,t points covered by DACE bin files within a given directory.
+def map_ptf(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=True):
+    """Map p,t points covered by DACE bin files within a given directory.
 
     The p,t arrays will be sorted in ascending order, pressure first. 
     They do not need to have the same length, but must be 1D.
@@ -219,7 +245,12 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=T
     all_p, all_t, all_f = list_all_ptf(directory, allow_itp=allow_itp)
     all_n = len(all_f)
     print("    found %d files"%all_n)
-    print("    want  %d files"% (len(p_targets)*len(t_targets)))
+    
+    want_n = len(p_targets) * len(t_targets)
+    if want_n > 0:
+        print("    want  %d files"%want_n)
+    else:
+        print("    want all files")
 
     # Unique P,T values
     unique_p = np.unique(all_p)
@@ -266,26 +297,6 @@ def get_pt(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=T
     use_t = np.array(use_t, dtype=float)
     use_p = np.array(use_p, dtype=float)
     use_n = len(use_p)
-
-    # out_p = []
-    # out_t = []
-    # for p in unique_p:     #  for all unique p
-    #     for t in unique_t: #  for all unique t
-    #         for i in range(use_n):  # for all selected points
-    #             if np.isclose(use_p[i], p) and np.isclose(use_t[i], t): # select this point?
-
-    #                 # Check if duplicate
-    #                 duplicate = False 
-    #                 for j in range(len(out_p)):
-    #                     if (p == out_p[j]) and (t == out_t[j]):
-    #                         duplicate = True
-    #                         break
-                    
-    #                 # Add to output array (if not a duplicate)
-    #                 if not duplicate:
-    #                     out_p.append(use_p[i])
-    #                     out_t.append(use_t[i])
-    #                     break 
 
     # Map to files
     print("    mapping to files")

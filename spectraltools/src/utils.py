@@ -5,7 +5,7 @@ import numpy as np
 import hashlib
 
 # Check that SOCRATES is setup
-if os.environ["RAD_DIR"] == None:
+if not ("RAD_DIR" in os.environ.keys()) or (os.environ["RAD_DIR"] == None):
     raise Exception("Cannot find SOCRATES! Refer to README.md")
 
 # Named directories

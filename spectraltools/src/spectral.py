@@ -58,7 +58,10 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         return [numin, numax]
     
     # Other cases ...
-    shrt_cutoff = 2e4  # [cm-1] Value where the "short wavelength" region starts.
+    if (nband == 2) and (method > 2):
+        method = 2
+
+    shrt_cutoff = 1.7e4  # [cm-1] Value where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
         method = 3
     
@@ -81,8 +84,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             bands = np.linspace(numin, long_cutoff, len_lin+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), lognumax, nedges-len_lin))
         case 4:
-            len1 = int(nedges*0.15)
-            len3 = int(nedges*0.07)
+            len1 = int( max(nedges*0.15, 2) )
+            len3 = int( max(nedges*0.07, 2) )
             len2 = nedges-len1-len3
             bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
@@ -470,8 +473,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        # mt_ckd_296    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s296")
-        # mt_ckd_260    = os.path.join( utils.dirs["cia"] , "mt_ckd_v3.0_s260")
         mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s296")
         mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s260")
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
@@ -603,6 +604,71 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     return kcoeff_path
 
 
+def calc_waterdroplets(alias:str, dry:bool=False):
+    """Calculate water droplet scattering properties.
+
+    Adapted from the SOCRATES tutorial and other code written by Ryan Boukrouche.
+
+    Parameters
+    ----------
+    alias : str
+        Alias of spectral file
+    dry : bool
+        Dry run?
+
+    Returns 
+    ----------
+    str
+        Path to scattering properties fit
+    """
+
+    # Parameters
+    weighting_temperature = 250.0
+
+    # Check that input files exist
+    skel_path    = os.path.join(utils.dirs["output"], alias+"_skel.sf")
+    drop_data    = os.path.join(utils.dirs["socrates"], "data", "cloud", "scatter_drop_type5")
+    check_files = [skel_path]
+    for f in check_files:
+        if not os.path.exists(f):
+            raise Exception("File not found: '%s'"%f)
+        
+    print("Calculating water droplet optical properties for '%s'..."%alias)
+        
+    # Output paths
+    fit_path       = os.path.join(utils.dirs["output"],"%s_droplet.sct"%     alias); utils.rmsafe(fit_path)
+    monitor_path   = os.path.join(utils.dirs["output"],"%s_droplet_mon.log"% alias); utils.rmsafe(monitor_path)
+    logging_path   = os.path.join(utils.dirs["output"],"%s_droplet.log"%     alias); utils.rmsafe(logging_path)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_droplet.sh"% alias); utils.rmsafe(exec_file_name)
+
+    # Write command
+    f = open(exec_file_name, 'w+')
+
+    f.write("Cscatter_average ")
+    f.write(" -s %s"%skel_path) # Skeleton spectral file
+    f.write(" -P 1")            # Moments to be calculated
+    f.write(" -t")              # Method for thick averaging
+    f.write(" -p %.2f"%weighting_temperature)               # Planckian weighting, temperature [K]
+    f.write(" -f 5 %s %s 1.e3"%(fit_path,monitor_path))     # Fit type (pade=5), output fit file, monitor file, density of material [kg m-3]
+    f.write(" %s"%drop_data)    # (Input) Droplet scattering data
+    f.write(" \n")
+
+    f.close()
+    os.chmod(exec_file_name,0o777)
+
+    print("    start")
+    if not dry:
+        with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
+            print("    please wait...")
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+        sp.check_returncode()
+
+    time.sleep(1.0)
+    print("    done writing to '%s'\n"%fit_path)
+
+    return fit_path
+
+
 def assemble(alias:str, volatile_list:list, dry:bool=False):
     """Assemble final spectral file.
 
@@ -649,9 +715,9 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # y                         #     append
     # $sp_dir/co2-co2_lw_c      #     path to esft data
     # 10                        # add droplet parameters in each band.
-    # 5                         #     ?
-    # $sp_dir/fit_lw_drop5      #     ?
-    # 1.50000E-06 5.00000E-05   #     ?
+    # 5                         #     droplet type
+    # $sp_dir/fit_lw_drop5      #     path to fit file
+    # 1.50000E-06 5.00000E-05   #     droplet parameters
     # 11                        # add aerosol parameters in each band
     # $sp_dir/sulphuric_lw.avg  #     ?
     # 12                        # add ice crystal parameters in each band
@@ -663,10 +729,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # </EXAMPLE>
 
     success = True
-
-    # Parameters
-    planck_npoints = 2000
-    planck_range   = (200.0, 4000.0)
 
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -686,14 +748,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f.write(skel_path + "\n")
     f.write("n \n")
     f.write("%s \n" % spec_path)
-
-    #    add thermal emission
-    # print("    thermal source function")
-    # f.write("6 \n")
-    # f.write("n      \n")
-    # f.write("t      \n")
-    # f.write("%.3f %.3f \n"%planck_range)
-    # f.write("%d    \n"%planck_npoints)
 
     #    add line absorption
     print("    line absorption: ", end='')
@@ -727,11 +781,27 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     else:
         print("")
 
-    #    add droplets
+    #    add water droplets
+    print("    water droplets: ", end='')
+    droplet_path = os.path.join(utils.dirs["output"],"%s_droplet.sct"%alias)
+    if os.path.exists(droplet_path):
+        
+        f.write("10 \n")                        # Block 10
+        f.write("5 \n")                         # Droplet type
+        f.write("%s \n"%droplet_path)           # Fit data  
+        f.write("1.50000E-06 5.00000E-05 \n")   # Pade fits
+
+        print("scattering properties included")
+    else:
+        print("(none)")
         
     #    add aerosols
+    print("    aerosols: ", end='')
+    print("(none)")
         
     #    add ice
+    print("    ice: ", end='')
+    print("(none)")
 
     #    done
     f.write("-1 \n")
@@ -762,18 +832,14 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # Calculate checksum
     if success:
         # spectral file
-        chk_path = os.path.join(utils.dirs["output"], alias+".ck"); utils.rmsafe(chk_path)
+        chk_path = os.path.join(utils.dirs["output"], alias+".chk"); utils.rmsafe(chk_path)
         with open(chk_path,'w') as hdl:
             hdl.write("%s \n" % utils.checksum(spec_path))
 
         # lookup table
-        chk_path = os.path.join(utils.dirs["output"], alias+".ck_k"); utils.rmsafe(chk_path)
+        chk_path = os.path.join(utils.dirs["output"], alias+".chk_k"); utils.rmsafe(chk_path)
         with open(chk_path,'w') as hdl:
             hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
-
-        print("    success!\n")
-    else:
-        print(" ")
 
     return spec_path
 

@@ -55,7 +55,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
     print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
 
-    step_dnu = float(nu_arr[1]-nu_arr[0])
+    step_dnu = float(nu_arr[1]-nu_arr[0])  # in [m-1]
 
     # Create dimensions
     print("    define dimensions")
