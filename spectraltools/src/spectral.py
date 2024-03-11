@@ -422,7 +422,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarray, dnu:float, dry:bool=False):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool=False):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -435,8 +435,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
         Formula of absorber A
     formula_B : str
         Formula of absorber B
-    band_edges : np.ndarray
-        Band edges in [cm-1]. MUST MATCH SKELETON FILE.
     dnu : float
         Wavenumber integration step [m-1]. MUST MATCH LBL FILE.
 
@@ -483,10 +481,33 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
     for f in check_files:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
+    
+    # Read skeleton file for bands...
+    with open(skel_path,'r') as hdl:
+        lines = hdl.readlines()
+    nband = int(  str(lines[2]).split("=")[1].strip()  )
+    band_edgesm = []
+    block_idx:int = -999999999
+    for l in lines:
+        # We want block 1 data
+        if "Band        Lower limit         Upper limit" in l:
+            block_idx = 0 
+        if (block_idx > 0) and ("*END" in l):
+            break 
         
+        # Read bands
+        if (block_idx > 0):
+            s = [float(ss.strip()) for ss in l.split()[1:]]
+            # First edge
+            if block_idx == 1:
+                band_edgesm.append(s[0])  # Note that these are in units of [metres]
+            # Upper edges
+            band_edgesm.append(s[1])  # [metres]
+
+        # Block index 
+        block_idx += 1
+
     # Band range
-    band_edges_rev = band_edges[::-1]   # reverse band_edges, since they're in reverse order in the spectral file
-    nband = len(band_edges)-1
     iband = [1, nband]
 
     # Setup file (write) paths
@@ -504,15 +525,15 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
         # Limit band range for MT_CKD case
         ckd_bands = []  # list of allowed bands
-        ckd_nurange = [1.5, 1.9e4 - 5.0]  # This is the maximum domain for MT_CKD, in cm-1
+        ckd_wlrange = [ 500.50e-9 , 0.01 ]  # Domain for MT_CKD, in metres
         for i in range(0,nband):
-            b_up = band_edges_rev[i]
-            b_lo = band_edges_rev[i+1]
-            if (b_up < ckd_nurange[1]) and (b_lo >= ckd_nurange[0]):  # if this band is entirely within MT_CKD's domain
+            b_lo = band_edgesm[i]      # short WL edge
+            b_hi = band_edgesm[i+1]    # long WL edge
+            if (ckd_wlrange[0] < b_lo) and (ckd_wlrange[1] > b_hi):  # if this band is entirely within MT_CKD's domain
                 ckd_bands.append(i+1)
 
-        iband = [ min(ckd_bands) , max(ckd_bands)]  # note that these indices are reversed relative to band_edges
-        iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so the same as band_edges)
+        iband = [ min(ckd_bands) , max(ckd_bands)] 
+        iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so it is printed the same as best_bands)
 
         print("    Using MT_CKD with band limits: " + str(iband_revrev))
 
@@ -525,7 +546,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
         match tol_type:
             case 'n': f.write(" -n 10")         # Use this many k-terms
-            case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+            case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
@@ -563,8 +584,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, band_edges:np.ndarr
 
         match tol_type:
             case 'n': f.write(" -n 4")       
-            case 't': f.write(" -t 1.0e-2")  
-            case 'b': f.write(" -b 5.0e-4")  
+            case 't': f.write(" -t 1.0e-3")  
+            case 'b': f.write(" -b 1.0e-3")  
 
         f.write(" -s %s"%skel_path)
         f.write(" +p")

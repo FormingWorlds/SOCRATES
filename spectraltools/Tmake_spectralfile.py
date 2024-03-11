@@ -17,17 +17,22 @@ def main():
     source = "dace"             # Source database
     vols = ["H2O"]              # List of volatile absorbers
     alias = "Falkreath"         # Alias for this spectral file
-    nband = 300                 # Number of wavenumber bands
+    nband = 200                 # Number of wavenumber bands
+    drops = False  # include water droplet scattering?
     method = 3     # band selection method
-    numax = 2e4   # clip to this maximum wavenumber [cm-1]
+    numax = 2e99    # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
-    preNC = True   # instead of generating them again, use pre-existing netCDF files in output/ if they are found
+    preNC = True   # use pre-existing netCDF files in output/ if they are found
 
-    tgt_p = np.logspace(-7, 3, 5)
-    tgt_t = np.linspace(60.0, 2900.0, 3) - 5.0
+    tgt_p = np.logspace(-7, 3, 4)
+    tgt_t = np.linspace(60.0, 2900.0, 4) - 5.0
 
     # tgt_p = tgt_t = []
+
+    # tgt_p = np.logspace(-7, 3, 60)
+    # tgt_t = np.array([1500.0])
+
     # ------------------------------------
 
 
@@ -128,14 +133,14 @@ def main():
             dnu_last = dnu_this
 
     # Calculate water droplet properties
-    if "H2O" in vols:
+    if drops and ("H2O" in vols):
         spectral.calc_waterdroplets(alias)
             
     # Calculate k-coefficients from netCDF 
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1], nband)
         for f2 in vols[i:]: 
-            spectral.calc_kcoeff_cia(alias, f1, f2, band_edges, dnu_last)
+            spectral.calc_kcoeff_cia(alias, f1, f2, dnu_last)
 
     # Assemble final spectral file
     spectral.assemble(alias, vols)
