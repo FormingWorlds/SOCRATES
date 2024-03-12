@@ -17,21 +17,21 @@ def main():
     source = "dace"             # Source database
     vols = ["H2O"]              # List of volatile absorbers
     alias = "Falkreath"         # Alias for this spectral file
-    nband = 200                 # Number of wavenumber bands
+    nband = 300                 # Number of wavenumber bands
     drops = False  # include water droplet scattering?
     method = 3     # band selection method
-    numax = 2e99    # clip to this maximum wavenumber [cm-1]
+    numax = 4.1e4   # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
-    preNC = True   # use pre-existing netCDF files in output/ if they are found
+    preNC = False   # use pre-existing netCDF files in output/ if they are found
 
-    tgt_p = np.logspace(-7, 3, 4)
-    tgt_t = np.linspace(60.0, 2900.0, 4) - 5.0
+    # tgt_p = np.logspace(-7, 3, 4)
+    # tgt_t = np.linspace(60.0, 2900.0, 4) - 5.0
 
     # tgt_p = tgt_t = []
 
-    # tgt_p = np.logspace(-7, 3, 60)
-    # tgt_t = np.array([1500.0])
+    tgt_p = np.logspace(-6, 3, 80)
+    tgt_t = np.array([1300.0, 1500.0, 1600.0, 1800.0])
 
     # ------------------------------------
 
@@ -52,27 +52,40 @@ def main():
         
     # Remove content of output folder under this alias (except netCDFs)
     for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
-        for p in [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl"]:
+        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl"]
+        if not preNC:
+            remove.append(".nc")
+        for p in remove:
             if p in f:
                 utils.rmsafe(f)
+
+    # Print params
+    print("Parameters")
+    print("    source: %s"%source)
+    print("    alias:  %s"%alias)
+    print("    vols:   %s"%utils.get_arr_as_str(vols))  
+    print("    nband:  %d"%nband)
+    print("    numin, numax, dnu = %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
+    print(" ")
 
     # Determine p,t grid using one of the absorbers
     arr_p, arr_t, arr_f = dace.map_ptf(formula_path, tgt_p , tgt_t)
 
     # Test each volatile for its numin, numax
+    # Set the nu limits to encompass all volatile nus 
     print("Verifying wavenumber limits")
-    max_numin, min_numax = numin, numax
+    dat_numin, dat_numax = np.inf, -np.inf
     for v in vols:
         # Read first file
         formula_path = os.path.join(utils.dirs[source], v.strip()+"/")
         temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
         temp_xc.read(numin=numin, numax=numax, dnu=dnu)
         # Get numin, numax
-        max_numin = max(max_numin, np.amin(temp_xc.get_nu()))
-        min_numax = min(min_numax, np.amax(temp_xc.get_nu()))
-    if (max_numin != numin) or (min_numax != numax):
-        print("WARNING: numin, numax adjusted to %.1f, %.1f cm-1"%(max_numin, min_numax))
-    numin, numax = max_numin, min_numax
+        dat_numin = min(dat_numin, np.amin(temp_xc.get_nu()))
+        dat_numax = max(dat_numax, np.amax(temp_xc.get_nu()))
+    numin = max(numin, dat_numin)
+    numax = min(numax, dat_numax)
+    print("    numin, numax set to %.1f, %.1f cm-1"%(numin, numax))
 
     # Get nu array at required range and resolution
     formula_path = os.path.join(utils.dirs[source], vols[0].strip()+"/")

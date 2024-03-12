@@ -833,7 +833,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done writing to '%s'"%spec_path)
+    print("    done writing to '%s' \n"%spec_path)
 
 
     # Check for NaN values

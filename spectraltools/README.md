@@ -31,7 +31,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
 * SOCRATES
    - Must have been compiled
    - Executables have been added to your `PATH` variable using `. ./set_rad_env`
-* Python (version >= 3.11) and the following libraries (optional libraries are italicised)
+* Python (version >= 3.11) and the following libraries 
    - numpy
    - netcdf4
    - glob
@@ -41,7 +41,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - hashlib
    - matplotlib
    - dace_query
-   - h5py*
+   - h5py
 
 ### Online sources
 * DACE (https://dace.unige.ch/opacityDatabase/)
