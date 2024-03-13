@@ -5,6 +5,7 @@ nogit*
 __pycache__
 fort.20
 screenlog.0
+*.log
 
 # Model files
 set_rad_env

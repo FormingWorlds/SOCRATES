@@ -17,7 +17,7 @@ def main():
     source = "dace"             # Source database (DO NOT CHANGE)
     vols = ["H2O"]              # List of volatile absorbers
     alias = "Falkreath"         # Alias for this spectral file
-    nband = 300                 # Number of wavenumber bands
+    nband = 400                 # Number of wavenumber bands
     drops = False  # include water droplet scattering?
     method = 3     # band selection method
     numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
@@ -28,7 +28,7 @@ def main():
     # tgt_p = tgt_t = []
 
     tgt_p = np.logspace(-6, 3, 80)
-    tgt_t = np.linspace(70.0, 2900.0, 24) - 5.0
+    tgt_t = np.append( [60.0, 100.0, 150.0, 200.0] , np.linspace(250.0, 2900.0, 20)  ) - 5.0
 
     # ------------------------------------
 

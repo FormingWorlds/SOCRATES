@@ -115,7 +115,7 @@ class xsec():
                 tmp_k.append(k_read[i])
                 nulast= nu
 
-        self.arr_k = np.array(tmp_k, dtype=float)
+        self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=1.0e-45, a_max=None)
         self.arr_nu = np.array(tmp_nu, dtype=float)
         self.numin = self.arr_nu[0]
         self.numax = self.arr_nu[-1]
