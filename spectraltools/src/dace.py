@@ -242,20 +242,22 @@ def map_ptf(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=
 
     print("Mapping p,t points")
 
+    # Get all points
     all_p, all_t, all_f = list_all_ptf(directory, allow_itp=allow_itp)
     all_n = len(all_f)
     print("    found %d files"%all_n)
     
+    # Check limits
     want_n = len(p_targets) * len(t_targets)
-    if want_n > 0:
-        print("    want  %d files"%want_n)
-    else:
-        print("    want all files")
+    if want_n == 0:
+        want_n = all_n
+    print("    want %d files"%want_n)
+    if want_n >= 2000:
+        raise Exception("SOCRATES does not support more than 2000 PT points")
 
     # Unique P,T values
     unique_p = np.unique(all_p)
     unique_t = np.unique(all_t)
-    
 
     if len(unique_p) * len(unique_t) != all_n:
         raise Exception("Files are not unique or the p,t grid is not rectilinear")

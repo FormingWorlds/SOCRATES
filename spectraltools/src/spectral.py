@@ -40,16 +40,16 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         raise Exception("Wavenumber array is too short")
     if not utils.is_ascending(nu_arr):
         raise Exception("Wavenumber array is not strictly ascending")
-    if nband < 1:
-        raise Exception("There must be at least one band")
-    if nband > len(nu_arr)-2:
+    if nband <= 1:
+        raise Exception("There must be at least two bands")
+    if (nband > len(nu_arr)-2) or (nband >= 9998):
         raise Exception("Too many bands! (%d requested)"%nband)
     if (method == 9) and (nband != 318):
         raise Exception("When method=9 (legacy), you must set nband=318")
     
     # Check range
     numin = max(nu_arr[1], floor)
-    numax = nu_arr[-2]
+    numax = nu_arr[-2] 
     lognumin = np.log10(numin)
     lognumax = np.log10(numax)
 
@@ -766,31 +766,37 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
     #    add line absorption
     print("    line absorption: ", end='')
+    lblcount = 0
     for i,v in enumerate(volatile_list):
-        print(v+" ", end='')
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
-        f.write("5 \n")
-        if i > 0:
-            f.write("y \n")
-        f.write("%s \n"%lbl_path)
+        if os.path.exists(lbl_path):
+            print(v+" ", end='')
+            f.write("5 \n")
+            if lblcount > 0:
+                f.write("y \n")
+            f.write("%s \n"%lbl_path)
+            lblcount += 1
     print("")
 
     #    add CIA 
     print("    CIA: ", end='')
     cia_count = 0
     for i,p in enumerate(utils.cia_pairs):
-        if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
+        if ((p[0] in volatile_list) and (p[1] in volatile_list)):
+            
             pair_str = p[0]+"-"+p[1]
-            print(pair_str+" ", end='')
-
-            f.write("19 \n")
-            if cia_count > 0:
-                f.write("y \n")
-
             cia_path = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str))
-            f.write("%s \n"%cia_path)
 
-            cia_count += 1
+            if os.path.exists(cia_path):
+            
+                print(pair_str+" ", end='')
+
+                f.write("19 \n")
+                if cia_count > 0:
+                    f.write("y \n")
+                f.write("%s \n"%cia_path)
+
+                cia_count += 1
     if cia_count == 0:
         print("(none)")
     else:
@@ -806,9 +812,9 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
         f.write("%s \n"%droplet_path)           # Fit data  
         f.write("1.50000E-06 5.00000E-05 \n")   # Pade fits
 
-        print("scattering properties included")
+        print("yes")
     else:
-        print("(none)")
+        print("no")
         
     #    add aerosols
     print("    aerosols: ", end='')

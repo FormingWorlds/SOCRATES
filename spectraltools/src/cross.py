@@ -38,13 +38,13 @@ class xsec():
         self.arr_nu = np.array([])  # Wavenumbers [cm-1]
 
     # Get nu
-    def get_nu(self):
+    def get_nu(self) -> np.ndarray:
         if not self.loaded:
             raise Exception("Cannot get nu values from unloaded xsec object")
         return self.arr_nu
     
     # Get k
-    def get_k(self):
+    def get_k(self) -> np.ndarray:
         if not self.loaded:
             raise Exception("Cannot get k values from unloaded xsec object")
         return self.arr_k
