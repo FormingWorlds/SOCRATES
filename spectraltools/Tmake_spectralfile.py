@@ -20,18 +20,15 @@ def main():
     nband = 300                 # Number of wavenumber bands
     drops = False  # include water droplet scattering?
     method = 3     # band selection method
-    numax = 4.1e4   # clip to this maximum wavenumber [cm-1]
+    numax = 2.9e4  # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
-    preNC = False   # use pre-existing netCDF files in output/ if they are found
-
-    # tgt_p = np.logspace(-7, 3, 4)
-    # tgt_t = np.linspace(60.0, 2900.0, 4) - 5.0
+    preNC = True   # use pre-existing netCDF files in output/ if they are found
 
     # tgt_p = tgt_t = []
 
     tgt_p = np.logspace(-6, 3, 80)
-    tgt_t = np.array([1300.0, 1500.0, 1600.0, 1800.0])
+    tgt_t = np.linspace(80.0, 2900.0, 30) - 5.0
 
     # ------------------------------------
 
