@@ -14,6 +14,9 @@ class xsec():
     # Set up class
     def __init__(self, formula:str, source:str, fname:str) -> None:
 
+        # Constants
+        self.k_clip = 1.0e-45
+
         # Meta parameters
         self.dummy  = bool(len(formula) == 0)
         if not self.dummy:
@@ -115,7 +118,7 @@ class xsec():
                 tmp_k.append(k_read[i])
                 nulast= nu
 
-        self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=1.0e-45, a_max=None)
+        self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=self.k_clip, a_max=None)
         self.arr_nu = np.array(tmp_nu, dtype=float)
         self.numin = self.arr_nu[0]
         self.numax = self.arr_nu[-1]
@@ -161,6 +164,7 @@ class xsec():
         for b in body:
             raw_data = np.append(raw_data, [float(v) for v in b.split()])
         self.arr_k = raw_data * phys.N_av / (self.mmw * 1000.0)  # cm2/molec -> cm2/gram
+        self.arr_k = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
 
         # Generate wavenumber grid
         self.nbins = len(self.arr_k)
@@ -191,6 +195,7 @@ class xsec():
         data = np.loadtxt(self.fname).T 
         self.arr_nu = data[0]
         self.arr_k  = data[1] * phys.N_av / (self.mmw * 1000.0) 
+        self.arr_k  = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
         self.nbins  = len(data[0])
 
         tmp_nu = []
@@ -238,6 +243,7 @@ class xsec():
         self.numax = tmp_nu[1]
         self.nbins = len(tmp_nu)
         self.arr_k = np.array(tmp_k)
+        self.arr_k = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
         self.loaded = True
         return self
 

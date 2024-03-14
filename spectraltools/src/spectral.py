@@ -158,6 +158,51 @@ def get_cia_pair(fA:str, fB:str):
             return [p_in[1], p_in[0]]
     return []
 
+
+def read_band_edges(sfpath:str) -> list:
+    """Read the band edges from a spectral file
+
+    Parameters
+    ----------
+    sfpath : str
+        Path to file
+
+    Returns
+    -------
+    list
+        Band edges, ascending in units of [metres]
+    """
+
+    with open(sfpath,'r') as hdl:
+        lines = hdl.readlines()
+    nband = int(  str(lines[2]).split("=")[1].strip()  )
+    band_edgesm = []
+    block_idx:int = -999999999
+    for l in lines:
+        # We want block 1 data
+        if "Band        Lower limit         Upper limit" in l:
+            block_idx = 0 
+        if (block_idx > 0) and ("*END" in l):
+            break 
+        
+        # Read bands
+        if (block_idx > 0):
+            s = [float(ss.strip()) for ss in l.split()[1:]]
+            # First edge
+            if block_idx == 1:
+                band_edgesm.append(s[0])  # Note that these are in units of [metres]
+            # Upper edges
+            band_edgesm.append(s[1])  # [metres]
+
+        # Block index 
+        block_idx += 1
+
+    if len(band_edgesm)-1 != nband:
+        raise Exception("Band edges could not be read from spectral file")
+    
+    return band_edgesm
+
+
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list, dry:bool=False):
     """Create skeleton spectral file.
 
@@ -286,8 +331,6 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     f.write("c \n")
     for i in range(nband,0,-1):
         f.write("%.3f %.3f \n"%(band_edges[i], band_edges[i-1]))
-    # for i in range(nband):
-    #     f.write("%.3f %.3f \n"%(band_edges[i], band_edges[i+1]))
 
     # Set absorbers in each band to zero for now
     f.write("0*%d\n"%nband)
@@ -385,7 +428,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     match tol_type:
         case 'n': f.write(" -n 20")         # Use this many k-terms
-        case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+        case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
         case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
@@ -415,10 +458,11 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
 
     # Check logfile
     with open(logging_path,'r') as hdl:
-        if "Execution ends" not in str(hdl.read()):
-            print("-------------------------------------------")
-            print("WARNING: An error may have occurred! Check logfile.")
-            print("-------------------------------------------")
+        logstr = str(hdl.read())
+    if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
+        print("-------------------------------------------")
+        print("WARNING: An error may have occurred! Check logfile.")
+        print("-------------------------------------------")
 
     return kcoeff_path
 
@@ -483,29 +527,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
             raise Exception("File not found: '%s'"%f)
     
     # Read skeleton file for bands...
-    with open(skel_path,'r') as hdl:
-        lines = hdl.readlines()
-    nband = int(  str(lines[2]).split("=")[1].strip()  )
-    band_edgesm = []
-    block_idx:int = -999999999
-    for l in lines:
-        # We want block 1 data
-        if "Band        Lower limit         Upper limit" in l:
-            block_idx = 0 
-        if (block_idx > 0) and ("*END" in l):
-            break 
-        
-        # Read bands
-        if (block_idx > 0):
-            s = [float(ss.strip()) for ss in l.split()[1:]]
-            # First edge
-            if block_idx == 1:
-                band_edgesm.append(s[0])  # Note that these are in units of [metres]
-            # Upper edges
-            band_edgesm.append(s[1])  # [metres]
-
-        # Block index 
-        block_idx += 1
+    band_edgesm = read_band_edges(skel_path)
+    nband = len(band_edgesm)-1
 
     # Band range
     iband = [1, nband]
