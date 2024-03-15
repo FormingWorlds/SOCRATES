@@ -3,6 +3,7 @@
 import numpy as np
 import os, subprocess, time
 import src.utils as utils
+from netCDF4 import Dataset
 
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
@@ -358,7 +359,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     print("    done writing to '%s' \n"%skel_path)
     return skel_path
 
-def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:bool=False):
+def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     """Calculate k-coefficients for line absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
@@ -371,8 +372,6 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
         Formula of absorber
     nc_xsc_path : str
         Input netCDF file containing cross-section data for range of p,t,nu
-    nband : int
-        Number of bands (THIS MUST MATCH THE SKELETON FILE)
 
     dry : bool
         Dry run?
@@ -417,13 +416,34 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, nband:int,  dry:boo
     mapping_path = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias,formula)); utils.rmsafe(mapping_path)
     logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias,formula)); utils.rmsafe(logging_path)
 
+    # Check wavelength range for this volatile
+    nc_ds = Dataset(nc_xsc_path,'r')
+    nc_nu = np.array(nc_ds.variables['nu'][:], dtype=float) / 100.0 # convert m-1 to cm-1
+    vol_wlmin = utils.wn2wl(nc_nu[-1]) * 1.0e-9 # convert nm to m
+    vol_wlmax = utils.wn2wl(nc_nu[0])  * 1.0e-9 # convert nm to m
+
+    # Read band edges [m]
+    band_edgesm = read_band_edges(skel_path)
+    nband = len(band_edgesm)-1
+
+    # Get band range for this volatile
+    vol_bands = []  # list of allowed bands
+    for i in range(0,nband):
+        b_lo = band_edgesm[i]      # short WL edge
+        b_hi = band_edgesm[i+1]    # long WL edge
+        if (vol_wlmin <= b_lo) and (vol_wlmax >= b_hi):  # if this band is entirely within volatile's domain
+            vol_bands.append(i+1)
+    iband = [ min(vol_bands) , max(vol_bands)] 
+    iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]
+    print("    band limits: " + str(iband_revrev))
+
     # Open executable file for writing
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
     f = open(exec_file_name, 'w+')
 
     f.write("Ccorr_k")
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients. 
-    f.write(" -R 1 %d"%nband)                 # The range of spectral bands to be used 
+    f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used 
     f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
 
     match tol_type:

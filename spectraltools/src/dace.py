@@ -243,6 +243,7 @@ def map_ptf(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=
     """
 
     print("Mapping p,t points")
+    print("    searching in '%s'"%directory)
 
     # Get all points
     all_p, all_t, all_f = list_all_ptf(directory, allow_itp=allow_itp)

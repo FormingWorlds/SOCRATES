@@ -71,7 +71,7 @@ def main():
     print("    alias:  %s"%alias)
     print("    vols:   %s"%utils.get_arr_as_str(vols))  
     print("    nband:  %d"%nband)
-    print("    numin, numax, dnu = %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
+    print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
     print(" ")
 
 
@@ -161,6 +161,7 @@ def main():
         str_numax = "%05d"%int(temp_xc.numax)
 
         # Get files for this volatile using the pt->f map from vols[-1]
+        # This is for performance reasons, but is also critical for ensuring that the volatiles all use the same p,t points
         files = []
         print("Using pt->f map from %s for %s"%(vols[-1],v))
         for f in arr_f: 
@@ -201,7 +202,7 @@ def main():
     # ===========
     # Calculate k-coefficients from netCDF 
     for i,f1 in enumerate(vols):
-        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1], nband)
+        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
         for f2 in vols[i:]: 
             spectral.calc_kcoeff_cia(alias, f1, f2, dnu_last)
 
