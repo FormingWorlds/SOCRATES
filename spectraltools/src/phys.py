@@ -40,7 +40,7 @@ def iso_to_formula(iso:str):
 
 # Get chemical's safe name
 def chemsafe(name:str):
-    return str(search_chemical(name).formula)
+    return str(search_chemical(name).formula).strip()
 
 # Get chemical's mean molecular weight [kg mol-1]
 def mmw(form):

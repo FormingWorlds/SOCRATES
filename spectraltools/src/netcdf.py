@@ -112,7 +112,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
         this_xsec.read(numin=numin, numax=numax, dnu=dnu)
-        var_xc[i,:] = this_xsec.arr_k / 10.0  # convert cm2/g to m2/kg
+        var_xc[i,:] = this_xsec.cross_cm2_per_gram() / 10.0  # convert cm2/g to m2/kg
         # del this_xsec
 
     # Finish up

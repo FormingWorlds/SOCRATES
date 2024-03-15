@@ -15,21 +15,23 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["H2O"]              # List of volatile absorbers
-    alias = "Falkreath"         # Alias for this spectral file
-    nband = 100                 # Number of wavenumber bands
-    drops = False  # include water droplet scattering?
+    vols = ["Water", "Dihydrogen", "Carbon dioxide", "Carbon monoxide", "Methane", "Dinitrogen"]              # List of volatile absorbers
+    alias = "Dayspring"         # Alias for this spectral file
+    nband = 256                 # Number of wavenumber bands
+    drops = True  # include water droplet scattering?
     method = 3     # band selection method
     numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
     preNC = True   # use pre-existing netCDF files in output/ if they are found
 
-    # tgt_p = tgt_t = []
-
     tgt_p = np.logspace(-6, 3, 80)
-    # tgt_t = np.append( [60.0, 100.0, 150.0, 200.0] , np.linspace(250.0, 2900.0, 20)  ) - 5.0
-    tgt_t = np.linspace(105.0, 2900.0, 20) - 5.0
+    tgt_t = np.linspace(105.0, 3000.0, 19) - 5.0
+
+    # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
+    # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
+    # tgt_p      = np.concatenate((P_grid_low, P_grid_high), axis=0)
+    # tgt_t = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0, 1200.0, 1400.0, 1600.0, 1800.0, 2000.0, 2250.0, 2500.0, 2750.0, 2900.0]
 
     # ------------------------------------
 
@@ -88,13 +90,16 @@ def main():
     for v in vols:
         print("    checking %s"%v)
         #     read first file
-        formula_path = os.path.join(utils.dirs[source], v.strip()+"/")
+        formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
         temp_xc.read(numin=numin, numax=numax, dnu=dnu)
 
         #     get numin, numax
-        dat_numin = min(dat_numin, np.amin(temp_xc.get_nu()))
-        dat_numax = max(dat_numax, np.amax(temp_xc.get_nu()))
+        vol_numin = np.amin(temp_xc.get_nu())
+        vol_numax = np.amax(temp_xc.get_nu())
+        dat_numin = min(dat_numin, vol_numin)
+        dat_numax = max(dat_numax, vol_numax)
+        print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
 
         #     get tmin, tmax 
         _,at,_ = dace.list_all_ptf(formula_path)
@@ -114,14 +119,14 @@ def main():
 
 
     # ===========
-    # Determine p,t grid using one of the absorbers
+    # Determine p,t grid using last of the absorbers
+    formula_path = os.path.join(utils.dirs[source], vols[-1]+"/")
     arr_p, arr_t, arr_f = dace.map_ptf(formula_path, tgt_p , tgt_t)
 
 
     # ===========
-    # Get nu array for required range and resolution
-    formula_path = os.path.join(utils.dirs[source], vols[0].strip()+"/")
-    nu_arr = cross.xsec(vols[0], source, dace.list_files(formula_path)[0]).read(numin=numin, numax=numax, dnu=dnu).get_nu()
+    # Get nu array for required range and resolution (also using last absorber)
+    nu_arr = cross.xsec(vols[-1], source, dace.list_files(formula_path)[0]).read(numin=numin, numax=numax, dnu=dnu).get_nu()
 
 
     # ===========
@@ -148,31 +153,40 @@ def main():
             print("WARNING: Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues."%v)
             continue 
 
-        # Get files for this volatile using the p,t,f map from vols[0]
+        # Get numin, numax for this volatile
+        formula_path = os.path.join(utils.dirs[source], v+"/")
+        temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
+        temp_xc.parse_binname()
+        str_numin = "%05d"%int(temp_xc.numin)
+        str_numax = "%05d"%int(temp_xc.numax)
+
+        # Get files for this volatile using the pt->f map from vols[-1]
         files = []
-        if iv > 0:
-            for f in arr_f: 
-                # Try simply substituting volatile name
-                ftry = str(f).replace(vols[0], v)
-                if os.path.exists(ftry):
-                    files.append(ftry)
-                    continue 
+        print("Using pt->f map from %s for %s"%(vols[-1],v))
+        for f in arr_f: 
+            # Try simply substituting volatile name and wavenumber range
+            ftry = list(str(f).replace(vols[-1], v))
+            ftry[-26:-21] = str_numin[:]
+            ftry[-20:-15] = str_numax[:]
+            ftry = "".join(ftry)
 
-                # Try also substituting "out"<->"itp" 
-                if "Itp" in ftry:
-                    ftry = ftry.replace("Itp", "Out")
-                else:
-                    ftry = ftry.replace("Out", "Itp")
-                if os.path.exists(ftry):
-                    files.append(ftry)
-                    continue 
+            if os.path.exists(ftry):
+                files.append(ftry)
+                continue 
 
-                raise Exception("Could not find bin file for '%s' corresponding to '%s'"%(v,f))
+            # Try also substituting "out"<->"itp" 
+            if "Itp" in ftry:
+                ftry = ftry.replace("Itp", "Out")
+            else:
+                ftry = ftry.replace("Out", "Itp")
+            if os.path.exists(ftry):
+                files.append(ftry)
+                continue 
 
-            if (len(files) != len(arr_f)):
-                raise Exception("Could not map '%s' files to '%s' files" % (v, vols[0]))
-        else:
-            files = arr_f
+            raise Exception("Could not find bin file for '%s' corresponding to '%s'"%(v,f))
+
+        if (len(files) != len(arr_f)):
+            raise Exception("Could not map '%s' files to '%s' files" % (v, vols[-1]))
 
         # Write netCDF from BIN files
         dnu_this = netcdf.write_ncdf_from_grid(ncp, v, source, arr_p, arr_t, files, dnu=dnu, numin=numin, numax=numax)
