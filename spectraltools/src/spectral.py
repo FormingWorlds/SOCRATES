@@ -14,7 +14,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         1 = logspace   \n
         2 = logspace, using a single band to cover long WL \n
         3 = logspace, using a few linear-spaced bands to cover long WL \n
-        4 = piecewise band density (linspace - logspace - logspace) \n
+        4 = piecewise density (linspace - logspace - logspace) \n
         9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
 
     Parameters
