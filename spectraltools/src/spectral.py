@@ -66,7 +66,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     if (numax < shrt_cutoff) and (method == 4):
         method = 3
     
-    long_cutoff = 200.0 # [cm-1] Value where the "long wavelength" region starts.
+    long_cutoff = 300.0 # [cm-1] Value where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
         method = 1 
     

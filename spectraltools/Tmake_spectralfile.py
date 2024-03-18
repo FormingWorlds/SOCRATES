@@ -16,8 +16,8 @@ def main():
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
     vols = ["Water"]#, "Dihydrogen", "Carbon dioxide", "Carbon monoxide", "Methane", "Dinitrogen"]              # List of volatile absorbers
-    alias = "Anu"         # Alias for this spectral file
-    nband = 4000                 # Number of wavenumber bands
+    alias = "Frostflow"         # Alias for this spectral file
+    nband = 256                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
     method = 3     # band selection method
     numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
@@ -25,11 +25,11 @@ def main():
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
     preNC = True   # use pre-existing netCDF files in output/ if they are found
 
-    tgt_p = np.logspace(-6, 3, 80)
-    tgt_t = [100.0, 150.0, 200.0, 250.0, 300.0, 350.0]
+    # tgt_p = np.logspace(-6, 1, 60)
+    # tgt_t = [100.0, 150.0, 200.0, 250.0, 300.0, 350.0]
 
-    # tgt_p = np.logspace(-6, 3, 80)
-    # tgt_t = np.linspace(105.0, 3000.0, 19) - 5.0
+    tgt_p = np.logspace(-6, 3, 80)
+    tgt_t = np.linspace(100.0, 2895.0, 18)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
     # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
