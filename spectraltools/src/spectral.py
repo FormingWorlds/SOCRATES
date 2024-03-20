@@ -448,7 +448,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     match tol_type:
         case 'n': f.write(" -n 20")         # Use this many k-terms
-        case 't': f.write(" -t 5.0e-4")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+        case 't': f.write(" -t 5.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
         case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)

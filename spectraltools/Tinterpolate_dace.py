@@ -14,10 +14,10 @@ def main():
 
     # Uncomment one of the blocks below or write your own
 
-    # isotopologue = '1H2-16O'
-    # linelist = 'POKAZATEL'
-    # linelist_version = 2.0
-    # outdir = utils.dirs["dace"] + "/H2O_INTERP/"
+    isotopologue = '1H2-16O'
+    linelist = 'POKAZATEL'
+    linelist_version = 2.0
+    outdir = utils.dirs["dace"] + "/H2O_INTERP/"
 
     # isotopologue = '1H2'
     # linelist = 'RACPPK'
@@ -44,10 +44,10 @@ def main():
     # linelist_version = 1.0
     # outdir = utils.dirs["dace"] + "/N2_INTERP/"
 
-    isotopologue = '16O2'
-    linelist = 'HITRAN2020'
-    linelist_version = 1.0
-    outdir = utils.dirs["dace"] + "/O2_INTERP/"
+    # isotopologue = '16O2'
+    # linelist = 'HITRAN2020'
+    # linelist_version = 1.0
+    # outdir = utils.dirs["dace"] + "/O2_INTERP/"
 
     # -------------------
 
