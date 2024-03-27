@@ -8,10 +8,10 @@ import numpy as np
 def main():
     # --- PARAMETERS ---
 
-    # Ideal target pressures [bar]
+    # Intended target pressures [bar]
     p_arr = np.logspace(-6, 3, 80)
 
-    # Ideal target temperatures [K]
+    # Intended target temperatures [K]
     t_arr = np.linspace(60.0, 2900.0, 40) - 5.0
     t_arr = np.append(t_arr, [75.0, 100.0])
 
@@ -64,17 +64,22 @@ def main():
     # t_lims = (50.0, 4500.0)
     # outdir = utils.dirs["dace"] + "/O3_INTERP/"
 
-    isotopologue = '16O3'
-    linelist = 'HITRAN2020'
-    linelist_version = 1.0
-    t_lims = (50.0, 3500.0)
-    outdir = utils.dirs["dace"] + "/O3_INTERP/"
+    isotopologue = '32S-16O2'
+    linelist = 'ExoAmes'
+    linelist_version = 2.0
+    t_lims = (50.0, 1900.0)
+    outdir = utils.dirs["dace"] + "/SO2_INTERP/"
 
     # -------------------
 
 
 
     # --- EXECUTION ---
+
+    # Print 
+    print("Target pressures [K]:      " + str(p_arr))
+    print("Target temperatures [bar]: " + str(t_arr))
+    print(" ")
 
     # Check requests against database temperature limits
     t_req = []; t_drp = []

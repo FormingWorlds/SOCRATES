@@ -386,7 +386,7 @@ def extend(outdir:str, t_extend):
         for i in range(len(t_src)):
             # get path 
             path_src = os.path.abspath(f_src[i])
-            part_fol = path_src.split("/")[:-2]  # folders
+            part_fol = path_src.split("/")[:-1]  # folders
             part_nme = path_src.split("/")[-1]   # file 
 
             # change temperature
