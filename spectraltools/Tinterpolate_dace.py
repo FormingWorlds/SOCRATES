@@ -64,11 +64,11 @@ def main():
     # t_lims = (50.0, 4500.0)
     # outdir = utils.dirs["dace"] + "/O3_INTERP/"
 
-    isotopologue = '32S-16O2'
-    linelist = 'ExoAmes'
-    linelist_version = 2.0
-    t_lims = (50.0, 1900.0)
-    outdir = utils.dirs["dace"] + "/SO2_INTERP/"
+    isotopologue = '14N2-16O'
+    linelist = 'HITEMP2019'
+    linelist_version = 1.0
+    t_lims = (50.0, 4500.0)
+    outdir = utils.dirs["dace"] + "/N2O_INTERP/"
 
     # -------------------
 

@@ -245,15 +245,19 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     print("    numin , numax: %.2f , %.2f cm-1"%(numin, numax))
 
     # Sanitise volatiles 
-    volatile_list_unique = list(set(volatile_list))
+    volatile_list_inp = [str(v) for v in volatile_list]
     volatile_list = []
-    for v in volatile_list_unique:
+    for v in volatile_list_inp:
         v = str(v).strip()
         if v not in list(utils.absorber_id.keys()):
             raise Exception("Volatile %s is not supported by SOCRATES"%v)
-        volatile_list.append(v)
+        if v in volatile_list:
+            print("    WARNING: duplicate volatile %s"%v)
+        else:
+            volatile_list.append(v)
     nvols = len(volatile_list)
     print("    included volatiles (n=%d): "%len(volatile_list) + utils.get_arr_as_str(volatile_list))
+    print("    most significant absorber: %s"%volatile_list[0])
 
     # P-T grids for LbL and CIA data
     pt_lbl = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias); utils.rmsafe(pt_lbl)

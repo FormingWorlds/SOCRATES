@@ -15,9 +15,9 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["Water"]#, "Dihydrogen", "Carbon dioxide", "Carbon monoxide", "Methane", "Dinitrogen"]              # List of volatile absorbers
-    alias = "Frostflow"         # Alias for this spectral file
-    nband = 4096                 # Number of wavenumber bands
+    vols = ["Water", "Dihydrogen", "Carbon dioxide", "Carbon monoxide", "Methane", "Dinitrogen"]              # List of volatile absorbers
+    alias = "Dayspring"         # Alias for this spectral file
+    nband = 48                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
     method = 3     # band selection method
     numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
@@ -140,7 +140,6 @@ def main():
     # ===========
     # Write skeleton file and PT grids
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
-
 
     # ===========
     # Write netCDFs containing absorption spectra
