@@ -36,7 +36,6 @@ These tools all operate by storing the spectral absorption cross-section (versus
    - netcdf4
    - glob
    - shutil
-   - chemicals
    - requests
    - hashlib
    - matplotlib

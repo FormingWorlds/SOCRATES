@@ -61,14 +61,32 @@ def main():
     # isotopologue = '16O3'
     # linelist = 'HITRAN2020'
     # linelist_version = 1.0
-    # t_lims = (50.0, 4500.0)
+    # t_lims = (50.0, 3500.0)
     # outdir = utils.dirs["dace"] + "/O3_INTERP/"
 
-    isotopologue = '14N2-16O'
-    linelist = 'HITEMP2019'
-    linelist_version = 1.0
-    t_lims = (50.0, 4500.0)
-    outdir = utils.dirs["dace"] + "/N2O_INTERP/"
+    # isotopologue = '14N2-16O'
+    # linelist = 'HITEMP2019'
+    # linelist_version = 1.0
+    # t_lims = (50.0, 4500.0)
+    # outdir = utils.dirs["dace"] + "/N2O_INTERP/"
+
+    # isotopologue = '14N-1H3'
+    # linelist = 'CoYuTe'
+    # linelist_version = 2.0
+    # t_lims = (50.0, 1900.0)
+    # outdir = utils.dirs["dace"] + "/NH3_INTERP/"
+
+    # isotopologue = '16O-1H'
+    # linelist = 'HITEMP2020'
+    # linelist_version = 1.0
+    # t_lims = (50.0, 8900.0)
+    # outdir = utils.dirs["dace"] + "/OH_INTERP/"
+
+    isotopologue = '1H2-32S'
+    linelist = 'AYT2'
+    linelist_version = 2.0
+    t_lims = (50.0, 2900.0)
+    outdir = utils.dirs["dace"] + "/H2S_INTERP/"
 
     # -------------------
 

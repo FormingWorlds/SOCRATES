@@ -15,8 +15,8 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["Water", "Dihydrogen", "Carbon dioxide", "Carbon monoxide", "Methane", "Dinitrogen"]              # List of volatile absorbers
-    alias = "Dayspring"         # Alias for this spectral file
+    vols = ["H2O", "N2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "O2", "H2S"]   # List of gases
+    alias = "Honeyside"         # Alias for this spectral file
     nband = 48                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
     method = 3     # band selection method
@@ -28,7 +28,7 @@ def main():
     # tgt_p = np.logspace(-6, 1, 60)
     # tgt_t = [100.0, 150.0, 200.0, 250.0, 300.0, 350.0]
 
-    tgt_p = np.logspace(-6, 3, 80)
+    tgt_p = np.logspace(-6, 3, 80)[10:]
     tgt_t = np.linspace(100.0, 2895.0, 18)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
@@ -45,8 +45,10 @@ def main():
     # ------------ EXECUTION -------------
     # Check volatile names
     for i in range(len(vols)):
-        vols[i] = phys.chemsafe(vols[i])
-
+        safe = phys.chemsafe(vols[i])
+        if safe == None:
+            raise Exception("Invalid gas '%s'"%vols[i])
+        vols[i] = safe
 
     # ===========
     # Check paths
@@ -73,6 +75,7 @@ def main():
     print("    source: %s"%source)
     print("    alias:  %s"%alias)
     print("    vols:   %s"%utils.get_arr_as_str(vols))  
+    print("    nvols:  %d"%len(vols))
     print("    nband:  %d"%nband)
     print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
     print(" ")
