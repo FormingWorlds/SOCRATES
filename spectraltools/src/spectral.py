@@ -356,7 +356,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     logfile = os.path.join(utils.dirs["output"], "%s_skel.log"%alias); utils.rmsafe(logfile)
     if not dry:
         with open(logfile,'w') as hdl:
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl, timeout=10.0)
         sp.check_returncode()
 
     time.sleep(1.0)

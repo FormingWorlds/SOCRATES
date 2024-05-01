@@ -107,25 +107,11 @@ def checksum(filename:str):
     return file_hash.hexdigest()
     
 
-# Map absorber names to their IDs (see SOCRATES user guide p.71)
-absorber_id = {
-    "H2O" :'1' ,  
-    "CO2" :'2' ,  
-    "O3"  :'3' , 
-    "N2O" :'4' ,  
-    "CO"  :'5' , 
-    "CH4" :'6' ,  
-    "O2"  :'7' , 
-    "NO"  :'8' , 
-    "SO2" :'9' ,  
-    "NO2" :'10',  
-    "NH3" :'11',  
-    "HNO3":'12',  
-    "N2"  :'13', 
-    "H2"  :'23', 
-    "He"  :'24', 
-    "OCS" :'25'
-}
+# Map absorber names to their IDs (see radiance_core/gas_list_pcf.f90)
+gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3", "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a", "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb", "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5", "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF", "cis-OSSO", "trans-OSSO", "OSO-S"]
+absorber_id = {}
+for i,g in enumerate(gas_list):
+    absorber_id[g] = "%d"%(i+1)
 
 # List of valid continuum combinations in SOCRATES/HITRAN
 cia_pairs = [

@@ -15,7 +15,7 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["H2O", "N2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "O2", "H2S"]   # List of gases
+    vols = ["H2O", "H2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "O2", "H2S"]   # List of gases
     alias = "Honeyside"         # Alias for this spectral file
     nband = 48                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
@@ -28,7 +28,7 @@ def main():
     # tgt_p = np.logspace(-6, 1, 60)
     # tgt_t = [100.0, 150.0, 200.0, 250.0, 300.0, 350.0]
 
-    tgt_p = np.logspace(-6, 3, 80)[10:]
+    tgt_p = np.logspace(-5, 3, 70)
     tgt_t = np.linspace(100.0, 2895.0, 18)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
@@ -86,9 +86,9 @@ def main():
     print("Verifying domain of input data")
     #     pressure grids are always the same
     if np.amin(tgt_p) < 1.0e-8:
-        raise Exception("Requested pressures exceed data domain (p < 1.0e-8 bar)")
+        raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
     if np.amax(tgt_p) > 1.0e3:
-        raise Exception("Requested pressures exceed data domain (p > 1.0e3 bar)")
+        raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
 
     #     check files directly
     dat_numin, dat_numax = np.inf, -np.inf

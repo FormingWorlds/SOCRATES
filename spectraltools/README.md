@@ -24,6 +24,7 @@ These tools all operate by storing the spectral absorption cross-section (versus
 | `Tplot_absorption.py`    | Plot absorption cross-section versus wavenumber  |
 | `Tcalc_checksum.py`      | Calculate the BLAKE2b checksum of a file in order to verify its integrity  |
 | `Tinterpolate_dace.py`   | Download interpolated cross-sections from DACE at the requested pressure/temperature values  |
+| `Tclean_output.py`       | Clean output directory, retaining netCDF files for future use (use --help for info)  |
 
 
 ### Requirements
