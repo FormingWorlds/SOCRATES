@@ -28,8 +28,8 @@ def main():
     # tgt_p = np.logspace(-6, 1, 60)
     # tgt_t = [100.0, 150.0, 200.0, 250.0, 300.0, 350.0]
 
-    tgt_p = np.logspace(-5, 3, 70)
-    tgt_t = np.linspace(100.0, 2895.0, 18)
+    tgt_p = np.logspace(-3, 3, 55)
+    tgt_t = np.linspace(100.0, 2895.0, 20)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
     # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
@@ -143,6 +143,7 @@ def main():
     # ===========
     # Write skeleton file and PT grids
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
+
 
     # ===========
     # Write netCDFs containing absorption spectra

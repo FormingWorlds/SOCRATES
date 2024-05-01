@@ -151,15 +151,15 @@ def map_ptf(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=
         use_p = []
         search_p = list(unique_p[:])
         for p in p_targets:
-            i = utils.get_closest_idx(p, search_p)
+            i = utils.get_closest_idx(np.log10(p), np.log10(search_p))
             selected_p.append(search_p[i])
             search_p.pop(i)
     
-    # Flatten p,t points
+    # Flatten p,t points (ensure ascending order)
     use_t = []
     use_p = []
-    for p in selected_p:
-        for t in selected_t:
+    for p in sorted(selected_p):
+        for t in sorted(selected_t):
             use_t.append(t)
             use_p.append(p)
 
