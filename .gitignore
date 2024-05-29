@@ -14,6 +14,10 @@ bin/
 sbin/Cgen_null
 sbin/Cinc_field
 sbin/Cscale_field
+*.o
+*.mod
+make/Mk_cmd
+julia/gen
 
 # Outputs
 spectraltools/output

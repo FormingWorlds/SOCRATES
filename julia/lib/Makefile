@@ -1,16 +1,16 @@
-
-# linux / gcc options
 LIB = .so
 LDFLAGS = -ldl
 SHLIBFLAGS = -shared
 FC=gfortran
-# FFLAGS= -g
-FFLAGS = -O2 -Wall -fPIC
+FFLAGS = -O3 -Wall -fPIC
+
+ifeq ($(shell uname -s),Darwin)
+	FFLAGS += -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/
+endif
 
 # SOCRATES library code must be built with -fPIC (eg edit Mk_cmd to add this option)
 # library location RAD_BIN is set by set_rad_env script in the top-level socrates working folder
 
-# FDEPS = paleo_fortran.mod
 FOBJ = Utilities_CF.o StrCtrl_C.o StrDim_C.o StrSpecData_C.o StrAtm_C.o StrCld_C.o StrAer_C.o StrBound_C.o StrOut_C.o SOCRATES_C.o \
        StrSpecDataDim_C.o  StrSpecDataBasic_C.o StrSpecDataSolar_C.o StrSpecDataRayleigh_C.o StrSpecDataGas_C.o StrSpecDataPlanck_C.o \
 	   StrSpecDataCont_C.o StrSpecDataContGen_C.o StrSpecDataDrop_C.o \
