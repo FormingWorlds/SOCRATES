@@ -29,8 +29,8 @@ if  [[ "$OSTYPE" == "darwin"* ]]; then
 else 
     extra=""
 fi 
-echo "FORTCOMP        = $fc -O3 -fPIC $extra -c " >> $genpath
-echo "LINK            = $fc -O3 -fPIC $extra " >> $genpath
+echo "FORTCOMP        = $fc -Ofast -fPIC $extra -c " >> $genpath
+echo "LINK            = $fc -Ofast -fPIC $extra " >> $genpath
 
 ar="$(command -v ar)"
 if [ -z "$ar" ]; then 
