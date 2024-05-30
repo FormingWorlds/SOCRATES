@@ -1,12 +1,19 @@
-include("ParseFortran.jl")
-
-include("GenFortranWrappers.jl")
+# Generate socrates wrappers 
 
 SOCRATES_DIR = ENV["RAD_DIR"]
 SVN_REV=1566
 println("Generating wrappers")
 println("SOCRATES_DIR = $SOCRATES_DIR")
 println("SVN_REV = $SVN_REV")
+
+# Tools 
+include("ParseFortran.jl")
+include("GenFortranWrappers.jl")
+
+# Clean up
+gendir = joinpath(SOCRATES_DIR,"julia","gen")
+rm(gendir, force=true, recursive=true)
+mkdir(gendir)
 
 ######################################################################
 # Generate Julia and ISO_CBINDING Fortran wrappers for SOCRATES Types
@@ -74,4 +81,7 @@ for (srcdir, modname, fext) in mod_pars
         joinpath(SOCRATES_DIR,"julia/gen/$modname.jl"), modname, pars_pcf,
         fortran_file=ffile, svn_rev=SVN_REV)
 end
+
+println("Done")
+# readdir(joinpath(SOCRATES_DIR,"julia","gen"))
 

@@ -18,6 +18,8 @@ sbin/Cscale_field
 *.mod
 make/Mk_cmd
 julia/lib/*.so
+julia/gen/*.jl
+julia/gen/*.f90
 
 # Outputs
 spectraltools/output
