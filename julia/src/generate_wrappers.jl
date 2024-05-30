@@ -3,7 +3,10 @@ include("ParseFortran.jl")
 include("GenFortranWrappers.jl")
 
 SOCRATES_DIR = ENV["RAD_DIR"]
-SVN_REV=1226
+SVN_REV=1566
+println("Generating wrappers")
+println("SOCRATES_DIR = $SOCRATES_DIR")
+println("SVN_REV = $SVN_REV")
 
 ######################################################################
 # Generate Julia and ISO_CBINDING Fortran wrappers for SOCRATES Types
