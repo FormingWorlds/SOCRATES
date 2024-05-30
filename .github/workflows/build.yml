@@ -1,0 +1,25 @@
+name: Compile SOCRATES
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    name: Install and build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: NetCDF
+        run: |
+          sudo apt update 
+          sudo apt-get install libnetcdff-dev netcdf-bin gfortran gcc
+
+      - name: SOCRATES
+        run: |
+          export LD_LIBRARY_PATH=""
+          ./configure
+          ./build_code 
+          source set_rad_env 
+          
