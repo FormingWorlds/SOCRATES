@@ -49,9 +49,9 @@ For external users it should only be necessary to edit the file `make/Mk_cmd` to
 
 The following commands can then be run to build the suite and setup your path to the executables and man pages:
 
-`./build_code`
-`ksh2bash.sh`
-`. ./set_rad_env`
+`./configure`
+`./build_code`          
+`source ./set_rad_env`    
 
 
 ### 4) Compilation of scripts in sbin
