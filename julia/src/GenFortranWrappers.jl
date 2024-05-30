@@ -21,10 +21,10 @@ function gen_wrappers(
     type_name, type_fields;
     member_name="",
     var_name=lowercase(type_name),
-    julia_filename="../gen/$(type_name)$(member_name)_JL.jl",
+    julia_filename=joinpath(ENV["RAD_DIR"],"julia/gen/$(type_name)$(member_name)_JL.jl"),
     lib_name="libSOCRATES_C",
     fortran_module_dependencies=[],
-    cfortran_filename="../gen/$(type_name)$(member_name)_C.f90",
+    cfortran_filename=joinpath(ENV["RAD_DIR"],"julia/gen/$(type_name)$(member_name)_C.f90"),
     fortran_module_name="$(type_name)$(member_name)_C",
     fortran_realtype="real(realk)",
     fortran_file,

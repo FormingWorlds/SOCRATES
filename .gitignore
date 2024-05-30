@@ -17,6 +17,7 @@ sbin/Cscale_field
 *.o
 *.mod
 make/Mk_cmd
+julia/lib/*.so
 
 # Outputs
 spectraltools/output

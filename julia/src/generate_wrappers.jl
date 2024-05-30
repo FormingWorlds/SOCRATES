@@ -2,7 +2,7 @@ include("ParseFortran.jl")
 
 include("GenFortranWrappers.jl")
 
-SOCRATES_DIR = "../../"
+SOCRATES_DIR = ENV["RAD_DIR"]
 SVN_REV=1226
 
 ######################################################################
@@ -22,7 +22,7 @@ wrappers = [
 ]
 
 for (strsuffix, modsuffix, var_name) in wrappers
-    local ffile = "src/radiance_core/def_$(modsuffix).F90"
+    local ffile = joinpath(SOCRATES_DIR,"src/radiance_core/def_$(modsuffix).F90")
     local strctrl = ParseFortran.parse_type(joinpath(SOCRATES_DIR, ffile), "Str"*strsuffix)
     GenFortranWrappers.gen_wrappers(
         "Str"*strsuffix, strctrl;
@@ -68,7 +68,7 @@ for (srcdir, modname, fext) in mod_pars
         modname
     )
     GenFortranWrappers.gen_pars(
-        "../gen/$modname.jl", modname, pars_pcf,
+        joinpath(SOCRATES_DIR,"julia/gen/$modname.jl"), modname, pars_pcf,
         fortran_file=ffile, svn_rev=SVN_REV)
 end
 
