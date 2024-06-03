@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Script to generate Mk_cmd for socrates
 
+# Optimisation flags options (uncomment as required)
+optim="-Ofast -march=native"
+# optim="-O3"
+# optim=""
+
 # Remove old files
 rm -rf "bin/"
 rm -f "set_rad_env"
@@ -29,8 +34,8 @@ if  [[ "$OSTYPE" == "darwin"* ]]; then
 else 
     extra=""
 fi 
-echo "FORTCOMP        = $fc -Ofast -fPIC $extra -c " >> $genpath
-echo "LINK            = $fc -Ofast -fPIC $extra " >> $genpath
+echo "FORTCOMP        = $fc $optim -fPIC $extra -c " >> $genpath
+echo "LINK            = $fc $optim -fPIC $extra " >> $genpath
 
 ar="$(command -v ar)"
 if [ -z "$ar" ]; then 
