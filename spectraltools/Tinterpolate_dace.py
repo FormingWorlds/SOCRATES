@@ -82,11 +82,17 @@ def main():
     # t_lims = (50.0, 8900.0)
     # outdir = utils.dirs["dace"] + "/OH_INTERP/"
 
-    isotopologue = '1H2-32S'
-    linelist = 'AYT2'
+    # isotopologue = '1H2-32S'
+    # linelist = 'AYT2'
+    # linelist_version = 2.0
+    # t_lims = (50.0, 2900.0)
+    # outdir = utils.dirs["dace"] + "/H2S_INTERP/"
+
+    isotopologue = '1H-12C-14N'
+    linelist = 'Harris'
     linelist_version = 2.0
     t_lims = (50.0, 2900.0)
-    outdir = utils.dirs["dace"] + "/H2S_INTERP/"
+    outdir = utils.dirs["dace"] + "/HCN_INTERP/"
 
     # -------------------
 

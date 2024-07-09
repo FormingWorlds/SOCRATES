@@ -15,9 +15,9 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["H2O", "H2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "O2", "H2S"]   # List of gases
+    vols = ["H2O", "H2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "HCN", "H2S"]   # List of gases
     alias = "Honeyside"         # Alias for this spectral file
-    nband = 16                 # Number of wavenumber bands
+    nband = 4096                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
     method = 3     # band selection method
     numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
@@ -25,7 +25,7 @@ def main():
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
     preNC = True   # use pre-existing netCDF files in output/ if they are found
 
-    tgt_p = np.logspace(-3, 3, 55)
+    tgt_p = np.logspace(-3.5, 3, 58)
     tgt_t = np.linspace(100.0, 2895.0, 20)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)

@@ -18,6 +18,9 @@ dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
 dirs["cia"]    = os.path.join(dirs["data"]     , "cia/" )
 
+if not os.path.exists(dirs["output"]):
+    raise Exception("Output folder '%s' not found"%dirs["output"])
+
 # Convert wavenumber [cm-1] to wavelength [nm]
 def wn2wl(wn:float) -> float:
     if wn == 0:
@@ -126,7 +129,7 @@ cia_pairs = [
     ["N2","N2"],
     ["N2","H2O"],
     ["O2","CO2"],
-    ["O2","N2"],
+    # ["O2","N2"],      # this one shows some strange behaviour
     ["O2","O2"],
     ["CO2","CO2"],
     ["CO2","H2"],
