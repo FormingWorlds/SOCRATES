@@ -4,9 +4,6 @@ on:
   push:
     branches: 
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   install:
@@ -37,8 +34,9 @@ jobs:
           name: socrates-${{ runner.os }}.zip
           path: socrates-${{ runner.os }}.zip
 
-      # - name: Release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     files: socrates-${{ runner.os }}.zip
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: socrates-${{ runner.os }}.zip
+          body_path: version
