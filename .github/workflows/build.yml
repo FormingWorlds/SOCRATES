@@ -32,7 +32,7 @@ jobs:
           zip -r socrates-${{ runner.os }} .
 
       - name: Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: socrates-${{ runner.os }}.zip
           path: socrates-${{ runner.os }}.zip
