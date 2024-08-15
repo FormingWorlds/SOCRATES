@@ -1,0 +1,312 @@
+A scheme to calculate the stellar illumination for a given point on a planet's surface is available through the {\it socrates\_illuminate} interface. Once given the orbital parameters and stellar constant this will provide the stellar irradiance, zenith and azimuthal angles for a given time, latitude and longitude.
+
+\section{Calculation of Incoming Insolation}
+
+The following discussion of positional astronomy is abbreviated from  
+\cite{Smart44}, where greater detail may be found, particularly
+in chapters II, V and VI.  Let 
+time $t$ be measured from the beginning of the calendar year and perihelion (the planet's closest approach 
+to the star) occur at time $\tau$ .  The mean anomaly $M$ is defined: 
+\beq
+M=\frac{2 \pi(t-\tau)}{T_{Y}}
+\label{CII_eq1} 	
+\eeq					
+where $T_{Y}$ is the length of the year. The true anomaly $v$, the angular distance of the planet round 
+its orbit from perihelion, can be calculated from $M$ for a Keplerian orbit, as an expansion called the equation 
+of the centre.  We use the third-order approximation (Smart, pp119-120):
+\beq
+v=M+(2e-e^{3}/4)\sin M+\frac{5}{4}e^{2} \sin 2M+\frac{13}{12}e^{3} \sin 3M
+\label{CII_eq2}
+\eeq
+where $e$ is the eccentricity of the planet's orbit (a geometric quantity which quantifies how 
+non-circular an ellipse is).  The normally directed incoming stellar radiation at the top of the atmosphere is 
+given by the inverse-square law:
+\beq
+S(t)=S_{0}\frac{r_{au}^{2}}{r(t)^{2}}
+\label{CII_eq3}
+\eeq
+where $S_{0}$ is the ``stellar constant'', the incoming stellar radiation on unit area exposed normally at a distance of 1 astronomical unit $r_{au}$, and $r(t)$ is the actual star-planet distance.  From Kepler's Second Law:
+\beq
+S(t)=S_{0}\bigg( \frac{1 + e \cos v}{a(1 - e^{2})}  \bigg)^{2}
+\label{CII_eq3a}
+\eeq
+where $a$ is the semi-major axis of the planet's orbit in astronomical units.
+
+One other global quantity has to be found, the stellar declination $\delta$, the latitude where the star is 
+vertically overhead.  This depends on the planet's rotation, which defines latitude, as well as its position in 
+its orbit: 
+\beq
+\sin \delta = \sin \epsilon \sin \theta
+\label{CII_eq4}
+\eeq
+where $\epsilon$ is the obliquity of the ecliptic (the angle between the axes of the planet's rotation and of its orbit) 
+and $\theta$  is the angular distance the planet has travelled round its orbit since the vernal equinox, the point in 
+the planet's orbit (reached around 21st March for the Earth) where $\delta$  is zero (the star is overhead at the equator) and 
+increasing (moving towards Northern summer).  This is obviously equal to: 
+\beq
+\sin \delta = \sin \epsilon \sin(v-\lambda)
+\label{CII_eq5}
+\eeq 					
+where $\lambda$ is the angle from perihelion to the vernal equinox (the quantity $\pi-\lambda$  is called the longitude of 
+perihelion).\\
+
+For user supplied orbital elements the above calculations are carried out for the middle of the
+supplied timestep. Where the fixed or secularly varying orbital elements for the Earth are used the
+above calculations are carried out with $t$ for 1200 GMT on the current day. This conveniently 
+makes daily mean incoming sunlight a function of latitude only, and introduces negligible error.\\
+
+\subsection{Calculation of stellar zenith angle}
+
+Calculating the incoming radiation perpendicular to the local vertical at some point requires the 
+stellar zenith angle $\zeta$ there, i.e. the angle between the star and the local vertical.
+At latitude (north) $\phi$, longitude (east) $\lambda$ and time $t$ (now measured from prime meridian stellar 
+midnight), geometry gives: 
+\beq
+\cos \zeta =\cos \phi \cos \delta \cos \Omega + \sin \phi \sin \delta
+\label{CII_eq6}
+\eeq
+where
+\beq
+\Omega=\lambda+\pi(2t/T_{D}-1)
+\label{CII_eq7}
+\eeq 
+is the hour angle of the star (the angle through which the planet has rotated since local stellar noon) 
+and $T_{D}$ is the length of the day (e.g. \cite{Paltridge76}). 
+
+In order to correct for the difference between prime meridian stellar time and universal time (or model time)
+we employ the ``Equation of Time''. The varying angular velocity 
+of the planet in its orbit causes variation in the length of the stellar day (the time for the star to return to the 
+same apparent position in the sky, consisting of one complete rotation of the planet plus as much extra 
+rotation as is needed to catch up with the change in the planet/star angle as it goes round the star). For the Earth,
+these are of order 10 seconds and accumulate to give differences between solar and mean time of up to 17 
+minutes. The {\em Equation of Time} may be calculated from the equations for the planet's orbit.
+The original formulation of \cite{Smart44} is generally used for the Earth. A second formulation (\cite{Mueller95})
+is available which contains higher order terms and may be necessary for more eccentric orbits.\\ 
+
+The stellar zenith angle is calculated as a mean value over the portion of the timestep that the star is above the
+horizon.
+Integrating (\ref{CII_eq6}) gives the mean $\cos \zeta$ between hour angles $\Omega_{1}$ and $\Omega_{2}$  : 
+\beq
+\langle \cos \zeta \rangle =\frac{\cos \phi \cos \delta (\sin \Omega_{2} - \sin \Omega_{1})+ \sin \phi \sin \delta 
+    (\Omega_{2}-\Omega_{1})}{\Omega_{2}-\Omega_{1}}
+\label{CII_eq8}
+\eeq
+This must be calculated only for the part of the timestep (if any) when $\cos \zeta$ is positive, i.e. the star 
+is up.  Where $\tan \phi \tan \delta >1$  there is perpetual day and where $\tan \phi \tan \delta < -1$  perpetual night. 
+At other latitudes the hour angles for sunset ($\Omega_{S}$) and sunrise ($\Omega_{R}$) are: 
+\beq
+\Omega_{S}=\cos^{-1}(-\tan \phi \tan \delta)
+\label{CII_eq8}
+\eeq
+\beq
+\Omega_{R}=-\Omega_{S}
+\label{CII_eq9}
+\eeq
+Thus, for example, at a point where the star sets but does not rise within the timestep, $\cos \zeta$ is given 
+by: 
+\beq
+\langle \cos \zeta \rangle=\frac{\cos \phi \cos \delta (\sin \Omega_{S} - \sin \Omega_{B})}{\Omega_{S}-\Omega_{B}}
+                + \sin \phi \sin \delta
+\label{CII_eq10}
+\eeq 			
+where $\Omega_{B}$ is the hour angle for that point at the beginning of the timestep. Two separate periods of daylight 
+need to be accounted for if the star sets and then rises during a timestep.
+
+The incoming stellar radiation for the timestep at any location is then $S(t)$ times $\langle \cos \zeta \rangle$ times the fraction of the timestep that the star is up at that point.\\
+
+\subsection{Calculation of stellar azimuth angle}
+
+For certain applications the stellar azimuth angle is also required, such as when dealing with shadows from surface terrain.
+Here a mean hour angle ${\overline\Omega}$ is determined for the middle of the period where the star is above the (horizontal) horizon.
+If the star sets and rises during the timestep then the mean hour angle is arbitrarily taken as the middle of the timestep.
+
+The solar azimuth angle ($\alpha$) measured clockwise from north, is then calculated using the formulation from \cite{Manners12}:
+\beq
+\alpha = \atantwo \left( - \cos \delta \sin {\overline\Omega}, ~\sin \delta \cos \phi - \cos \delta \cos {\overline\Omega} \sin \phi \right)
+\eeq
+
+\subsection{Specification of orbital elements}
+
+The following parameters for the planet's orbit may be user-defined:
+
+\begin{description}
+\item{\bf Epoch} [Julian days]\\
+The Julian day number on which the specified orbital elements
+apply. The increments are then the change in these orbital
+elements per Julian day from the given epoch.
+
+The J2000 epoch is specified by the Julian day number 2451545.0
+which equates to midday on the 1st January 2000.
+
+\item{\bf Orbital Eccentricity} [unitless]\\
+The orbital eccentricity determines the amount by which the orbit
+deviates from a perfect circle. A value of 0 is a circular orbit,
+values between 0 and 1 form an elliptic orbit, 1 is a parabolic
+escape orbit, and greater than 1 is a hyperbola. (The latter two cases
+are not available in this formulation.)
+
+\item{\bf Increment to eccentricity per Julian day from epoch} [/day]\\
+
+\item{\bf Argument of periapsis} [radians]\\
+The angle between the ascending node and the periapsis (anticlockwise).
+
+The ascending node in this context is the point in the orbit where the
+planet passes through its autumn equinox for the northern hemisphere.
+The direction from the star to planet at this point in the orbit is the
+zero of the reference frame used here for the orbital elements.
+This direction is also where the host star appears in the sky as viewed
+from the planet at its northern hemisphere spring equinox. For the Earth
+this is known as the First Point of Aries.
+(Note, for a planet with zero obliquity, this zero direction is
+arbitrarily defined.)
+
+The periapsis is the point of closest approach in the planet's
+elliptical orbit. For a circular orbit it is undefined
+(can be set to zero.)
+
+As we are using the ascending node as the zero point for the reference
+frame here, then by definition, the longitude of the ascending node is
+zero, and the argument of periapsis is equal to the longitude of
+periapsis. For a planet around the sun this is known as the longitude
+of perihelion.
+
+\item{\bf Increment to the argument of periapsis per Julian day from epoch} [radians/day]\\
+
+\item{\bf Obliquity of the orbit} [radians]\\
+The angle between the rotational axis of the planet and the orbital axis,
+where the direction is defined so the rotation is in the same sense (i.e.
+anticlockwise).
+
+\item{\bf Increment to obliquity of the orbit per Julian day from epoch} [radians/day]\\
+
+\item{\bf Semi-major axis} [AU]\\
+One half of the major axis of the orbit, equivalent to the average
+between the orbital distance at periapsis and apoapsis (perihelion
+and aphelion for orbits around the Sun). For the Earth this was
+originally defined as 1 AU (astronomical unit), but 1 AU is now
+defined as exactly 149597870700 metres.
+
+\item{\bf Increment to semi-major axis per Julian day from epoch} [AU/day]\\
+
+\item{\bf Mean anomaly at epoch} [radians]\\
+The fraction of the orbital period since passage through periapsis
+expressed as a fraction of a circle in radians. If the orbit were
+completely circular then this would describe the actual angular
+position of the planet in the orbit (the true anomaly).
+
+This is the mean anomaly at the time of the given epoch.
+
+\item{\bf Increment to mean anomaly per Julian day from epoch} [radians/day]\\
+This setting defines the orbital period. It equates to $2\pi$ over the
+orbital period in Julian days.
+
+\item{\bf Hour angle at epoch} [radians]\\
+The fraction of the planet's day since the host star was over
+the planet's prime meridian expressed as a fraction of a circle
+in radians. For the Earth, this is the angle the Sun has moved
+westwards since solar noon.
+
+This is the hour angle at the time of the given epoch.
+
+\item{\bf Increment to hour angle per Julian day from epoch} [radians/day]\\
+This setting defines the mean length of the planet's day. It equates to $2\pi$
+times the length of the planet's day over the length of a Julian day.
+
+The actual day length will vary slightly over an eccentric orbit which will
+be accounted for by the {\em Equation of Time}.
+
+The mean hour angle increment should be consistent with the planetary angular
+rotation rate $\omega$ [radians/second]. If $\omega$ is predefined within a
+GCM, then hour\_angle\_inc can be determined as follows:\\
+\\
+hour\_angle\_inc $=$ $86400\omega$ $-$ mean\_anomaly\_inc $-$ arg\_periapsis\_inc\\
+\\
+In reality this might not be exactly true if the position of the ascending node
+is changing with time (i.e. our reference frame itself is moving).
+\end{description}
+
+\subsection{Special cases for length of day}
+
+In the general case the length of the day is defined by setting the hour angle
+increment as described above. The following special cases are also available:
+
+\begin{description}
+\item{\bf Tidally locked planet}\\
+When the hour\_angle\_inc is set to zero the planet will be tidally locked
+with one side always facing the star. For this case it is not necessary to
+calculate a mean value of the stellar zenith angle and equation~\ref{CII_eq6}
+can be used directly.
+
+The longitude at which the star is overhead will still vary with the {\em equation
+of time} to allow for an eccentric orbit and a constant rotation rate, and the
+stellar declination will vary with the orbital parameters.
+\item{\bf Earth day}\\
+A preset is available to use an Earth day with hour\_angle\_inc set to exactly
+$2\pi$. This avoids any numerical drift due to an inexact user setting of $2\pi$.
+\item{\bf Fixed sun}\\
+The position of the sun in the sky is fixed to the same value for all points.
+The solar zenith and azimuth angles are user supplied.
+\end{description}
+
+
+\subsection{Orbital elements for the Earth}
+
+Presets are available to define the orbital elements of the Earth:
+
+\begin{description}
+\item{\bf Earth: Fixed}\\
+A standard Earth orbit that does not vary from one year to the next.
+The day number of the passage through perihelion is set to a mean
+value for the years 1995-2005.
+
+As the orbit is reset at the beginning of each year there will be a
+slight discontinuity in the orbital position. The epoch used is
+therefore always midday on the first day of the current year.
+The orbital elements used are taken from JPL and the Astronomical
+Almanac (1984) and equivalent to:\\
+\\
+  eccentricity = 1.6710222E-02\\
+  eccentricity\_inc = 0.0\\
+  arg\_periapsis = 1.796767421\\
+  arg\_periapsis\_inc = 0.0\\
+  obliquity = 0.409092804\\
+  obliquity\_inc = 0.0\\
+  semimajor\_axis = 1.0\\
+  semimajor\_axis\_inc = 0.0\\
+  mean\_anomaly = -0.037278428\\
+  mean\_anomaly\_inc = 0.01720278179\\
+  hour\_angle = 0.0\\
+\item{\bf Earth: Secular variation}\\
+An Earth orbit with secular variations of the orbital elements
+described by \cite{Berger78}.
+These use higher order terms than the simple linear increments
+available with the user defined orbital elements.
+\end{description}
+
+\subsubsection{Option to use a 360 day calendar}
+
+It has been common practice to run Earth climate models with an artifical year of 360 days.
+When using this option, the distortions of the seasonal cycle of insolation thus introduced are 
+minimised by altering the date of perihelion: 
+\beq
+\tau_{360}=\tau_{365 \frac{1}{4}}=\frac{360}{365 \frac{1}{4}}+0.71
+\label{CII_eq11}
+\eeq
+where the constant 0.71 is derived from the lengths of the months in the two calendars.
+This changes the current mean value of $\tau$ from 2.5 days to 3.2 days for the
+{\em Earth:Fixed} preset. The actual value varies from year to year (more because of the
+effects of the moon and the other planets on the earth's orbit than because of the variation
+in the length of the calendar year) but in the model the only variation is that forecast
+mode leap years have a slightly different distribution of insolation from other years.
+
+\subsection{Orbital elements for solar system planets}
+
+A fortran utility is available called {\em orb\_elem} that can generate the 
+user defined orbital elements for solar system planets in the required reference
+frame of the planet's orbit.
+
+Orbital elements available in the literature are generally given in the Earth's
+reference frame so require some coordinate transformation.
+
+The fortran code in {\em src/aux/orb\_elem.f90} should be modified directly in
+order to output the elements for a given planet.

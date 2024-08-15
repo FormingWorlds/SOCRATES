@@ -169,7 +169,7 @@ e3 = e*e*e * 13.0_RealK / 12.0_RealK
 v  = m + e1*SIN(m) + e2*SIN(2.0_RealK*m) + e3*SIN(3.0_RealK*m)
 
 ! Solar constant scaling factor
-e4  = ( (1.0_RealK + e*e*0.5_RealK) / (1.0_RealK - e*e) )**2
+e4  = ( 1.0_RealK / (1.0_RealK - e*e) )**2
 scs = e4 * ( 1.0_RealK + e * COS(v) )**2
 IF (orbit%i_elements == ip_elements_user) THEN
   scs = scs / (orbit%semimajor_axis + orbit%semimajor_axis_inc*day_number)**2
