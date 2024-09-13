@@ -2,10 +2,9 @@
 # SOCRATES
 **S**uite **O**f **C**ommunity **RA**diative **T**ransfer codes based on **E**dwards and **S**lingo.     
 
-Rehosted from the original MetOffice source [1] with modifications by Harrison Nicholls.
+Rehosted from the original Met Office source [1] with modifications by Harrison Nicholls.
 
-Contents:
-
+### Contents
 0. Licence
 1. What's included?
 2. [Omitted in this redistribution of the code]
@@ -20,7 +19,7 @@ Contents:
 
 ### 0) BSD 3-Clause licence
 
-(C) Crown copyright Met Office. All rights reserved.
+(C) Crown copyright Met Office. All rights reserved.    
 For further details please refer to the file COPYRIGHT.txt which you should have received as part of this distribution.
 
 
@@ -44,22 +43,19 @@ For further details please refer to the file COPYRIGHT.txt which you should have
 
 ### 3) Compiling the source code externally
 
-For external users it should only be necessary to edit the file `make/Mk_cmd` to allow compilation of the code on your system. 
-`FORTCOMP` and `LINK` can be changed to your local Fortran compiler. To use the netCDF routines you must also change `INCCDF_PATH` and `LIBCDF_PATH` to point to your local netCDF installation.
+The following commands can be run to build the suite and setup your path to the executables and man pages:
 
-The following commands can then be run to build the suite and setup your path to the executables and man pages:
-
-`./configure`
-`./build_code`          
-`source ./set_rad_env`    
+1. `./configure`   
+2. `./build_code`             
+3. `source ./set_rad_env`      
 
 
 ### 4) Compilation of scripts in sbin
 
 There are a small number of utilities in `sbin/` which are written in C and require compilation. A Makefile has been provided:
 
-`cd $RAD_SCRIPT`
-`make`
+1. `cd $RAD_SCRIPT`
+2. `make`
 
 
 ### 5) Running the code
@@ -68,22 +64,22 @@ Once you have set your path to the man pages (see section 2/3) you can find up-t
 
 Two-stream and spherical harmonics radiance codes using netCDF or text CDL input files:
 
-`man Cl_run_cdf`
-`man Cl_run_cdl`
+* `man Cl_run_cdf`
+* `man Cl_run_cdl`
 
 A Mie scattering code for determining optical properties of aerosol and cloud particles:
 
-`man Cscatter`
+* `man Cscatter`
 
 A correlated-k code for the calculation of gaseous absorption coefficients for the spectral files either directly from HITRAN .par or .xsc databases or line-by-line absorption coefficients in a netCDF input file:
 
-`man Ccorr_k`
+* `man Ccorr_k`
 
 Auxillary routines for format conversion, interpolation etc:
 
-`man Ccdf2cdl`
-`man Ccdl2cdf`
-`man Cinterp`
+* `man Ccdf2cdl`
+* `man Ccdl2cdf`
+* `man Cinterp`
 
 These scripts are a command line interface to interactive routines in the `bin/` directory. These routines may be run directly if desired (eg. l_run_cdf).
 
@@ -107,3 +103,5 @@ Significant contributors include:
 ### References
 * [1]  https://code.metoffice.gov.uk/trac/socrates
 * [2]  https://doi.org/10.1002/qj.49712253107
+* [3]  https://doi.org/10.1051/0004-6361/201323169
+* [4]  
