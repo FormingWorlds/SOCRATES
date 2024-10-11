@@ -19,14 +19,14 @@ FOBJ = Utilities_CF.o StrCtrl_C.o StrDim_C.o StrSpecData_C.o StrAtm_C.o StrCld_C
 #=============================================================================
 
 # use -I flag to tell gfortran where to look for SOCRATES .mod files
-%.o: ../src/%.f90 
-	$(FC) -c -o $@ $< $(FFLAGS) -I$(RAD_BIN)
+%.o: ../src/%.f90
+	$(FC) -c -o $@ $< $(FFLAGS) -I$(RAD_DIR)/bin/
 
-%.o: ../gen/%.f90 
-	$(FC) -c -o $@ $< $(FFLAGS) -I$(RAD_BIN)
+%.o: ../gen/%.f90
+	$(FC) -c -o $@ $< $(FFLAGS) -I$(RAD_DIR)/bin/
 
 libSOCRATES_C$(LIB): $(FOBJ)
-	$(FC) $(SHLIBFLAGS) $(FFLAGS) -o $@ $^ $(RAD_BIN)/radlib.a
+	$(FC) $(SHLIBFLAGS) $(FFLAGS) -o $@ $^ $(RAD_DIR)/bin/radlib.a
 
 clean:
 	rm -f *.o *.mod libSOCRATES_C$(LIB)
