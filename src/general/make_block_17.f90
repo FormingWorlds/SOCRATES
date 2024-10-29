@@ -82,11 +82,14 @@ SUBROUTINE make_block_17(Sp, Sol, ierr)
       IF (band == 0) EXIT
       IF (band == -1) THEN
         DO band=1, Sp%Basic%n_band
-          index_absorb = Sp%Gas%index_absorb(1, band)
-          IF (Sp%Gas%n_sub_band_gas(band, index_absorb) > 1) THEN
-            sub_bands(band) = Sp%Gas%n_sub_band_gas(band, index_absorb)
-            wavelength(:, 1:sub_bands(band), band) = &
-              Sp%Gas%wavelength_sub_band(:,1:sub_bands(band),band,index_absorb)
+          IF (Sp%Gas%n_band_absorb(band) > 0) THEN
+            index_absorb = Sp%Gas%index_absorb(1, band)
+            IF (Sp%Gas%n_sub_band_gas(band, index_absorb) > 1) THEN
+              sub_bands(band) = Sp%Gas%n_sub_band_gas(band, index_absorb)
+              wavelength(:, 1:sub_bands(band), band) = &
+                Sp%Gas%wavelength_sub_band(:, 1:sub_bands(band), &
+                                           band, index_absorb)
+            END IF
           END IF
         END DO
         EXIT

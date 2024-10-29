@@ -1,16 +1,15 @@
-# Generated automatically
-# System: Darwin hnmacbook 23.6.0 Darwin Kernel Version 23.6.0: Wed Jul 31 20:49:39 PDT 2024; root:xnu-10063.141.1.700.5~1/RELEASE_ARM64_T6000 arm64 
-# Date: Fri 11 Oct 2024 20:47:04 BST 
- 
-FORTCOMP        = /opt/homebrew/bin/gfortran -Ofast -march=native -fPIC -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/ -c 
-LINK            = /opt/homebrew/bin/gfortran -Ofast -march=native -fPIC -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/ 
-LIBLINK         = /usr/bin/ar rvu 
-INCCDF_PATH     = /opt/homebrew/Cellar/netcdf-fortran/4.6.1/include -I/opt/homebrew/Cellar/netcdf-fortran/4.6.1/include -I/opt/homebrew/Cellar/netcdf-fortran/4.6.1/include 
-LIBCDF_PATH     = /opt/homebrew/Cellar/netcdf-fortran/4.6.1/lib 
-LIBCDF_NAME     = netcdff 
-OMPARG          = -fopenmp 
- 
-LIBSUFFIX       = a 
- 
-.SUFFIXES: $(SUFFIXES) .f90 
- 
+#
+# Pathnames for compilers and global options for naming files
+#
+FORTCOMP        = ifort -O -c
+LINK            = ifort -O
+LIBLINK         = ar rvu
+INCCDF_PATH     = /data/users/frhg/netcdf-fortran-4.4.4/build/ifort17/include
+LIBCDF_PATH     = /data/users/frhg/netcdf-fortran-4.4.4/build/ifort17/lib
+LIBCDF_NAME     = netcdff
+OMPARG          = -qopenmp
+
+LIBSUFFIX       = a
+
+.SUFFIXES: $(SUFFIXES) .f90
+

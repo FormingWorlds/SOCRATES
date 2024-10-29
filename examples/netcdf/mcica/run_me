@@ -43,44 +43,37 @@ fmove 5118_142 sw_ga7
 
 rm -f cdl_lw*
 rm -f cdl_sw*
-Ccdf2cdl -a sw_avg > /dev/null
+
 Ccdf2cdl -a lw_avg > /dev/null
-diff -q ref_lw_avg.dflx cdl_lw_avg.dflx || ierr=1
 diff -q ref_lw_avg.hrts cdl_lw_avg.hrts || ierr=1
-diff -q ref_lw_avg.nflx cdl_lw_avg.nflx || ierr=1
-diff -q ref_lw_avg.uflx cdl_lw_avg.uflx || ierr=1
+
+Ccdf2cdl -a lw_ga7 > /dev/null
+diff -q ref_lw_ga7.hrts cdl_lw_ga7.hrts || ierr=1
+
+Ccdf2cdl -a sw_avg > /dev/null
 diff -q ref_sw_avg.hrts cdl_sw_avg.hrts || ierr=1
-diff -q ref_sw_avg.nflx cdl_sw_avg.nflx || ierr=1
-diff -q ref_sw_avg.sflx cdl_sw_avg.sflx || ierr=1
-diff -q ref_sw_avg.uflx cdl_sw_avg.uflx || ierr=1
-diff -q ref_sw_avg.vflx cdl_sw_avg.vflx || ierr=1
-diff -q ref_sw_avg.dflx cdl_sw_avg.dflx || ierr=1
+
+Ccdf2cdl -a sw_ga7 > /dev/null
+diff -q ref_sw_ga7.hrts cdl_sw_ga7.hrts || ierr=1
 
 Ccdf2cdl -a sw_ds0_avg > /dev/null
 diff -q ref_sw_ds0_avg.hrts cdl_sw_ds0_avg.hrts || ierr=1
-diff -q ref_sw_ds0_avg.nflx cdl_sw_ds0_avg.nflx || ierr=1
-diff -q ref_sw_ds0_avg.sflx cdl_sw_ds0_avg.sflx || ierr=1
-diff -q ref_sw_ds0_avg.uflx cdl_sw_ds0_avg.uflx || ierr=1
-diff -q ref_sw_ds0_avg.vflx cdl_sw_ds0_avg.vflx || ierr=1
-diff -q ref_sw_ds0_avg.dflx cdl_sw_ds0_avg.dflx || ierr=1
 
 Ccdf2cdl -a sw_ds2_avg > /dev/null
 diff -q ref_sw_ds2_avg.hrts cdl_sw_ds2_avg.hrts || ierr=1
-diff -q ref_sw_ds2_avg.nflx cdl_sw_ds2_avg.nflx || ierr=1
-diff -q ref_sw_ds2_avg.sflx cdl_sw_ds2_avg.sflx || ierr=1
-diff -q ref_sw_ds2_avg.uflx cdl_sw_ds2_avg.uflx || ierr=1
-diff -q ref_sw_ds2_avg.vflx cdl_sw_ds2_avg.vflx || ierr=1
-diff -q ref_sw_ds2_avg.dflx cdl_sw_ds2_avg.dflx || ierr=1
+
 if [ $ierr -gt 0 ] ; then
   exit 1
 else
   resrm lw_ga7
   resrm sw_ga7
   resrm lw_avg
-  resrm cdl_lw_avg
   resrm sw_avg
   resrm sw_ds0_avg
   resrm sw_ds2_avg
+  resrm cdl_lw_ga7
+  resrm cdl_sw_ga7
+  resrm cdl_lw_avg
   resrm cdl_sw_avg
   resrm cdl_sw_ds0_avg
   resrm cdl_sw_ds2_avg

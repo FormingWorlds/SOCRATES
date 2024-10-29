@@ -51,7 +51,7 @@ SUBROUTINE solve_band_ses(ierr                                          &
 !                 Tiling of the surface
     , l_tile, n_point_tile, n_tile, list_tile, rho_alb_tile             &
 !                 Optical Properties
-    , ss_prop                                                           &
+    , ss_prop, photol                                                   &
 !                 Cloudy Properties
     , l_cloud, i_cloud                                                  &
 !                 Cloud Geometry
@@ -91,12 +91,13 @@ SUBROUTINE solve_band_ses(ierr                                          &
   USE def_control,  ONLY: StrCtrl
   USE def_dimen,    ONLY: StrDim
   USE def_spectrum, ONLY: StrSpecData
-  USE def_atm,     ONLY: StrAtm
-  USE def_cld,     ONLY: StrCld
-  USE def_bound,   ONLY: StrBound
-  USE def_out,     ONLY: StrOut
-  USE def_planck,  ONLY: StrPlanck
-  USE def_ss_prop, ONLY: str_ss_prop
+  USE def_atm,      ONLY: StrAtm
+  USE def_cld,      ONLY: StrCld
+  USE def_bound,    ONLY: StrBound
+  USE def_out,      ONLY: StrOut
+  USE def_planck,   ONLY: StrPlanck
+  USE def_ss_prop,  ONLY: str_ss_prop
+  USE def_qy,       ONLY: StrQy
   USE def_spherical_geometry, ONLY: StrSphGeo
   USE rad_pcf, ONLy: ip_solar, ip_infra_red, ip_surf_alb_diff,          &
                      ip_cloud_mcica, ip_two_stream, ip_ir_gauss
@@ -342,7 +343,10 @@ SUBROUTINE solve_band_ses(ierr                                          &
 !                 Optical properties
   TYPE(str_ss_prop), INTENT(INOUT) :: ss_prop
 !       Single scattering properties of the atmosphere
-!
+
+  TYPE(StrQy), INTENT(IN) :: photol(spectrum%photol%n_pathway)
+!   Photolysis quantum yields interpolated to model grid temperatures
+
 !                 Cloudy properties
   LOGICAL, INTENT(IN) ::                                                &
       l_cloud
@@ -774,7 +778,7 @@ SUBROUTINE solve_band_ses(ierr                                          &
       , i_direct_part, radiance_part, photolysis_part                   &
       , flux_direct_clear_part, flux_total_clear_part                   &
       , actinic_flux_clear_part, k_esft                                 &
-      , sph, contrib_funci_part, contrib_funcf_part                     &
+      , photol, sph, contrib_funci_part, contrib_funcf_part             &
 !                   Dimensions
       , nd_profile, nd_flux_profile, nd_radiance_profile, nd_j_profile  &
       , nd_layer, nd_viewing_level, nd_direction, dimen%nd_channel      &

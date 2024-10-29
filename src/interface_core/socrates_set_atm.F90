@@ -22,12 +22,16 @@ subroutine set_atm(atm, dimen, spectrum, n_profile, n_layer, &
   he, ocs, na, k, feh, crh, li, rb, cs, ph3, c2h2, hcn, h2s, ar, o, n, no3, &
   n2o5, hono, ho2no2, h2o2, c2h6, ch3, h2co, ho2, &
   hdo, hcl, hf, cosso, tosso, yosos, &
+  ch3cho, ch3ooh, ch3coch3, ch3cocho, chocho, c2h5cho, &
+  hoch2cho, c2h5coch3, mvk, macr, pan, ch3ono2, &
   h2o_1d, co2_1d, o3_1d, n2o_1d, co_1d, ch4_1d, o2_1d, no_1d, so2_1d, no2_1d, &
   nh3_1d, hno3_1d, n2_1d, cfc11_1d, cfc12_1d, cfc113_1d, hcfc22_1d, hfc125_1d, &
   hfc134a_1d, cfc114_1d, tio_1d, vo_1d, h2_1d, he_1d, ocs_1d, na_1d, k_1d, &
   feh_1d, crh_1d, li_1d, rb_1d, cs_1d, ph3_1d, c2h2_1d, hcn_1d, h2s_1d, ar_1d, &
   o_1d, n_1d, no3_1d, n2o5_1d, hono_1d, ho2no2_1d, h2o2_1d, c2h6_1d, ch3_1d, &
   h2co_1d, ho2_1d, hdo_1d, hcl_1d, hf_1d, cosso_1d, tosso_1d, yosos_1d, &
+  ch3cho_1d, ch3ooh_1d, ch3coch3_1d, ch3cocho_1d, chocho_1d, c2h5cho_1d, &
+  hoch2cho_1d, c2h5coch3_1d, mvk_1d, macr_1d, pan_1d, ch3ono2_1d, &
   h2o_mix_ratio, co2_mix_ratio, o3_mix_ratio, n2o_mix_ratio, co_mix_ratio, &
   ch4_mix_ratio, o2_mix_ratio, no_mix_ratio, so2_mix_ratio, no2_mix_ratio, &
   nh3_mix_ratio, hno3_mix_ratio, n2_mix_ratio, cfc11_mix_ratio, &
@@ -39,7 +43,10 @@ subroutine set_atm(atm, dimen, spectrum, n_profile, n_layer, &
   o_mix_ratio, n_mix_ratio, no3_mix_ratio, n2o5_mix_ratio, hono_mix_ratio, &
   ho2no2_mix_ratio, h2o2_mix_ratio, c2h6_mix_ratio, ch3_mix_ratio, &
   h2co_mix_ratio, ho2_mix_ratio, hdo_mix_ratio, hcl_mix_ratio, hf_mix_ratio, &
-  cosso_mix_ratio, tosso_mix_ratio, yosos_mix_ratio, &
+  cosso_mix_ratio, tosso_mix_ratio, yosos_mix_ratio, ch3cho_mix_ratio, &
+  ch3ooh_mix_ratio, ch3coch3_mix_ratio, ch3cocho_mix_ratio, chocho_mix_ratio, &
+  c2h5cho_mix_ratio, hoch2cho_mix_ratio, c2h5coch3_mix_ratio, mvk_mix_ratio, &
+  macr_mix_ratio, pan_mix_ratio, ch3ono2_mix_ratio, &
   l_h2o_well_mixed, l_co2_well_mixed, l_o3_well_mixed, l_n2o_well_mixed, &
   l_co_well_mixed, l_ch4_well_mixed, l_o2_well_mixed, l_no_well_mixed, &
   l_so2_well_mixed, l_no2_well_mixed, l_nh3_well_mixed, l_hno3_well_mixed, &
@@ -54,7 +61,11 @@ subroutine set_atm(atm, dimen, spectrum, n_profile, n_layer, &
   l_hono_well_mixed, l_ho2no2_well_mixed, l_h2o2_well_mixed, &
   l_c2h6_well_mixed, l_ch3_well_mixed, l_h2co_well_mixed, l_ho2_well_mixed, &
   l_hdo_well_mixed, l_hcl_well_mixed, l_hf_well_mixed, l_cosso_well_mixed, &
-  l_tosso_well_mixed, l_yosos_well_mixed, &
+  l_tosso_well_mixed, l_yosos_well_mixed, l_ch3cho_well_mixed, &
+  l_ch3ooh_well_mixed, l_ch3coch3_well_mixed, l_ch3cocho_well_mixed, &
+  l_chocho_well_mixed, l_c2h5cho_well_mixed, l_hoch2cho_well_mixed, &
+  l_c2h5coch3_well_mixed, l_mvk_well_mixed, l_macr_well_mixed, &
+  l_pan_well_mixed, l_ch3ono2_well_mixed, &
   l_invert, l_profile_last, l_debug, i_profile_debug)
 
 use def_atm,      only: StrAtm, allocate_atm
@@ -67,7 +78,9 @@ use gas_list_pcf, only: &
   ip_hfc134a, ip_cfc114, ip_tio, ip_vo, ip_h2, ip_he, ip_ocs, ip_na, ip_k, &
   ip_feh, ip_crh, ip_li, ip_rb, ip_cs, ip_ph3, ip_c2h2, ip_hcn, ip_h2s, ip_ar, &
   ip_o, ip_n, ip_no3, ip_n2o5, ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, &
-  ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos
+  ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos, &
+  ip_ch3cho, ip_ch3ooh, ip_ch3coch3, ip_ch3cocho, ip_chocho, ip_c2h5cho, &
+  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2
 
 implicit none
 
@@ -114,7 +127,9 @@ real(RealExt), intent(in), dimension(:, :), optional :: &
   cfc11, cfc12, cfc113, hcfc22, hfc125, hfc134a, cfc114, tio, vo, h2, &
   he, ocs, na, k, feh, crh, li, rb, cs, ph3, c2h2, hcn, h2s, ar, o, n, no3, &
   n2o5, hono, ho2no2, h2o2, c2h6, ch3, h2co, ho2, &
-  hdo, hcl, hf, cosso, tosso, yosos
+  hdo, hcl, hf, cosso, tosso, yosos, &
+  ch3cho, ch3ooh, ch3coch3, ch3cocho, chocho, c2h5cho, &
+  hoch2cho, c2h5coch3, mvk, macr, pan, ch3ono2
 !   Full field mass mixing ratios
 
 real(RealExt), intent(in), dimension(:), optional :: &
@@ -123,7 +138,9 @@ real(RealExt), intent(in), dimension(:), optional :: &
   hfc134a_1d, cfc114_1d, tio_1d, vo_1d, h2_1d, he_1d, ocs_1d, na_1d, k_1d, &
   feh_1d, crh_1d, li_1d, rb_1d, cs_1d, ph3_1d, c2h2_1d, hcn_1d, h2s_1d, ar_1d, &
   o_1d, n_1d, no3_1d, n2o5_1d, hono_1d, ho2no2_1d, h2o2_1d, c2h6_1d, ch3_1d, &
-  h2co_1d, ho2_1d, hdo_1d, hcl_1d, hf_1d, cosso_1d, tosso_1d, yosos_1d
+  h2co_1d, ho2_1d, hdo_1d, hcl_1d, hf_1d, cosso_1d, tosso_1d, yosos_1d, &
+  ch3cho_1d, ch3ooh_1d, ch3coch3_1d, ch3cocho_1d, chocho_1d, c2h5cho_1d, &
+  hoch2cho_1d, c2h5coch3_1d, mvk_1d, macr_1d, pan_1d, ch3ono2_1d
 !   1d mass mixing ratios
 
 real(RealExt), intent(in), optional :: &
@@ -138,7 +155,10 @@ real(RealExt), intent(in), optional :: &
   o_mix_ratio, n_mix_ratio, no3_mix_ratio, n2o5_mix_ratio, hono_mix_ratio, &
   ho2no2_mix_ratio, h2o2_mix_ratio, c2h6_mix_ratio, ch3_mix_ratio, &
   h2co_mix_ratio, ho2_mix_ratio, hdo_mix_ratio, hcl_mix_ratio, hf_mix_ratio, &
-  cosso_mix_ratio, tosso_mix_ratio, yosos_mix_ratio
+  cosso_mix_ratio, tosso_mix_ratio, yosos_mix_ratio, ch3cho_mix_ratio, &
+  ch3ooh_mix_ratio, ch3coch3_mix_ratio, ch3cocho_mix_ratio, chocho_mix_ratio, &
+  c2h5cho_mix_ratio, hoch2cho_mix_ratio, c2h5coch3_mix_ratio, mvk_mix_ratio, &
+  macr_mix_ratio, pan_mix_ratio, ch3ono2_mix_ratio
 !   Well mixed mass mixing ratios
 
 logical, intent(in), optional :: &
@@ -156,7 +176,11 @@ logical, intent(in), optional :: &
   l_hono_well_mixed, l_ho2no2_well_mixed, l_h2o2_well_mixed, &
   l_c2h6_well_mixed, l_ch3_well_mixed, l_h2co_well_mixed, l_ho2_well_mixed, &
   l_hdo_well_mixed, l_hcl_well_mixed, l_hf_well_mixed, l_cosso_well_mixed, &
-  l_tosso_well_mixed, l_yosos_well_mixed
+  l_tosso_well_mixed, l_yosos_well_mixed, l_ch3cho_well_mixed, &
+  l_ch3ooh_well_mixed, l_ch3coch3_well_mixed, l_ch3cocho_well_mixed, &
+  l_chocho_well_mixed, l_c2h5cho_well_mixed, l_hoch2cho_well_mixed, &
+  l_c2h5coch3_well_mixed, l_mvk_well_mixed, l_macr_well_mixed, &
+  l_pan_well_mixed, l_ch3ono2_well_mixed
 !   Flag to use the well mixed ratios
 
 logical, intent(in), optional :: l_invert
@@ -343,6 +367,39 @@ do i_gas=1, spectrum%gas%n_absorb
     call set_gas_mix_ratio(tosso, tosso_1d, tosso_mix_ratio, l_tosso_well_mixed)
   case(ip_yosos)
     call set_gas_mix_ratio(yosos, yosos_1d, yosos_mix_ratio, l_yosos_well_mixed)
+  case(ip_ch3cho)
+    call set_gas_mix_ratio(ch3cho, ch3cho_1d, ch3cho_mix_ratio, &
+                           l_ch3cho_well_mixed)
+  case(ip_ch3ooh)
+    call set_gas_mix_ratio(ch3ooh, ch3ooh_1d, ch3ooh_mix_ratio, &
+                           l_ch3ooh_well_mixed)
+  case(ip_ch3coch3)
+    call set_gas_mix_ratio(ch3coch3, ch3coch3_1d, ch3coch3_mix_ratio, &
+                           l_ch3coch3_well_mixed)
+  case(ip_ch3cocho)
+    call set_gas_mix_ratio(ch3cocho, ch3cocho_1d, ch3cocho_mix_ratio, &
+                           l_ch3cocho_well_mixed)
+  case(ip_chocho)
+    call set_gas_mix_ratio(chocho, chocho_1d, chocho_mix_ratio, &
+                           l_chocho_well_mixed)
+  case(ip_c2h5cho)
+    call set_gas_mix_ratio(c2h5cho, c2h5cho_1d, c2h5cho_mix_ratio, &
+                           l_c2h5cho_well_mixed)
+  case(ip_hoch2cho)
+    call set_gas_mix_ratio(hoch2cho, hoch2cho_1d, hoch2cho_mix_ratio, &
+                           l_hoch2cho_well_mixed)
+  case(ip_c2h5coch3)
+    call set_gas_mix_ratio(c2h5coch3, c2h5coch3_1d, c2h5coch3_mix_ratio, &
+                           l_c2h5coch3_well_mixed)
+  case(ip_mvk)
+    call set_gas_mix_ratio(mvk, mvk_1d, mvk_mix_ratio, l_mvk_well_mixed)
+  case(ip_macr)
+    call set_gas_mix_ratio(macr, macr_1d, macr_mix_ratio, l_macr_well_mixed)
+  case(ip_pan)
+    call set_gas_mix_ratio(pan, pan_1d, pan_mix_ratio, l_pan_well_mixed)
+  case(ip_ch3ono2)
+    call set_gas_mix_ratio(ch3ono2, ch3ono2_1d, ch3ono2_mix_ratio, &
+                           l_ch3ono2_well_mixed)
   case default
     do i=1, n_layer
       do l=1, n_profile

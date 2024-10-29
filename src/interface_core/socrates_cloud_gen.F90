@@ -204,7 +204,7 @@ implicit none
 
   ! Set the large-scale condensate ratio to be consistent with c_ratio
   where (c_cloud > 0.0_RealK .and. c_cloud < avg_cf)
-    ls_ratio = (avg_cf - c_ratio*c_cloud) / (avg_cf - c_cloud)
+    ls_ratio = max(0.0_RealK, (avg_cf - c_ratio*c_cloud)) / (avg_cf - c_cloud)
   elsewhere
     ls_ratio = 1.0_RealK
   end where
@@ -312,10 +312,10 @@ implicit none
                 !    * relative standard deviation SIGMA
                 rind1 = y(il) * (n1 - 1) + 1.0_RealK
                 ind1  = max(1, min(int(rind1), n1-1))
-                rind1 = rind1 - ind1
+                rind1 = max(0.0_RealK, min(rind1-real(ind1, RealK), 1.0_RealK))
                 rind2 = 40.0_RealK * sigma_qcw(il,k) - 3.0_RealK
                 ind2  = max(1, min(int(rind2), n2-1))
-                rind2 = rind2 - ind2
+                rind2 = max(0.0_RealK, min(rind2-real(ind2, RealK), 1.0_RealK))
 
                 zcw = (1.0_RealK-rind1) * (1.0_RealK-rind2)* xcw(ind1,ind2) &
                     + (1.0_RealK-rind1) * rind2 * xcw(ind1,ind2+1) &
@@ -415,10 +415,10 @@ implicit none
                 ! Horizontally variable convective cloud
                 rind1 = y(il) * (n1 - 1) + 1.0_RealK
                 ind1  = max(1, min(int(rind1), n1-1))
-                rind1 = rind1 - ind1
+                rind1 = max(0.0_RealK, min(rind1-real(ind1, RealK), 1.0_RealK))
                 rind2 = 40.0_RealK * sigma_ccw(il,k) - 3.0_RealK
                 ind2  = max(1, min(int(rind2), n2-1))
-                rind2 = rind2 - ind2
+                rind2 = max(0.0_RealK, min(rind2-real(ind2, RealK), 1.0_RealK))
 
                 zcw = (1.0_RealK-rind1) * (1.0_RealK-rind2)* xcw(ind1,ind2) &
                     + (1.0_RealK-rind1) * rind2 * xcw(ind1,ind2+1) &
@@ -430,10 +430,10 @@ implicit none
                 ! Horizontally variable cloud
                 rind1 = y(il) * (n1 - 1) + 1.0_RealK
                 ind1  = max(1, min(int(rind1), n1-1))
-                rind1 = rind1 - ind1
+                rind1 = max(0.0_RealK, min(rind1-real(ind1, RealK), 1.0_RealK))
                 rind2 = 40.0_RealK * sigma_qcw(il,k) - 3.0_RealK
                 ind2  = max(1, min(int(rind2), n2-1))
-                rind2 = rind2 - ind2
+                rind2 = max(0.0_RealK, min(rind2-real(ind2, RealK), 1.0_RealK))
 
                 zcw = (1.0_RealK-rind1) * (1.0_RealK-rind2)* xcw(ind1,ind2) &
                     + (1.0_RealK-rind1) * rind2 * xcw(ind1,ind2+1) &

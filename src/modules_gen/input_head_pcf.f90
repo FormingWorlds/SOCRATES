@@ -279,7 +279,10 @@ MODULE input_head_pcf
     'NO3       ', 'N2O5      ', 'HONO      ', 'HO2NO2    ', &
     'H2O2      ', 'C2H6      ', 'CH3       ', 'H2CO      ', &
     'HO2       ', 'HDO       ', 'HCl       ', 'HF        ', &
-    'cOSSO     ', 'tOSSO     ', 'yOSOS     '/) 
+    'cOSSO     ', 'tOSSO     ', 'yOSOS     ', 'CH3CHO    ', &
+    'CH3OOH    ', 'CH3COCH3  ', 'CH3COCHO  ', 'CHOCHO    ', &
+    'C2H5CHO   ', 'HOCH2CHO  ', 'C2H5COCH3 ', 'MVK       ', &
+    'MACR      ', 'PAN       ', 'CH3ONO2   ' /) 
 !   Headers for gaseous data
 !
 !
@@ -298,7 +301,10 @@ MODULE input_head_pcf
     'no3         ', 'n2o5        ', 'hono        ', 'ho2no2      ', &
     'h2o2        ', 'c2h6        ', 'ch3         ', 'h2co        ', &
     'ho2         ', 'hdo         ', 'hcl         ', 'hf          ', &
-    'cosso       ', 'tosso       ', 'yosos       '/) 
+    'cosso       ', 'tosso       ', 'yosos       ', 'ch3cho      ', &
+    'ch3ooh      ', 'ch3coch3    ', 'ch3cocho    ', 'chocho      ', &
+    'c2h5cho     ', 'hoch2cho    ', 'c2h5coch3   ', 'mvk         ', &
+    'macr        ', 'pan         ', 'ch3ono2     '/) 
 !   File suffixes for gaseous data
 !
 !
@@ -331,7 +337,13 @@ MODULE input_head_pcf
     ' Hydroperoxy radical          ', ' Semiheavy water              ', &
     ' Hydrogen chloride            ', ' Hydrogen fluoride            ', &
     ' cis-OSSO                     ', ' trans-OSSO                   ', &
-    ' OSO-S                        '/)
+    ' OSO-S                        ', ' Acetaldehyde                 ', &
+    ' Methylhydroperoxide          ', ' Acetone                      ', &
+    ' Methylglyoxal                ', ' Glyoxal                      ', &
+    ' Propanal                     ', ' Glycolaldehyde               ', &
+    ' Methyl ethyl ketone          ', ' Methyl vinyl ketone          ', &
+    ' Methacrolein                 ', ' Peroxyacetyl nitrate         ', &
+    ' Methylnitrate                ' /)
 !   Long titles for gaseous data
 !
 !

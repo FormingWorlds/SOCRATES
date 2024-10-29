@@ -18,23 +18,51 @@ PROGRAM dat2xsc
 !   Error flag
   INTEGER :: iu_dat, iu_xsc
 !   File unit numbers
-  INTEGER :: jj, k, l
+  INTEGER :: i, jj, k, l
   INTEGER :: data_length
   TYPE(StrXscHead) :: xsc
   INTEGER :: xsc_res
 
-  CHARACTER (LEN=256) :: infile
-  CHARACTER (LEN=256) :: outfile
+  CHARACTER (LEN=256) :: infile, outfile, arg
+  LOGICAL :: l_infile, l_outfile
   
   REAL (RealK), ALLOCATABLE :: in_dat(:, :)
   REAL (RealK), ALLOCATABLE :: in_data(:)
   REAL (RealK), ALLOCATABLE :: in_wn(:)
   REAL (RealK), ALLOCATABLE :: out_wn(:, :)
   REAL (RealK), ALLOCATABLE :: xsc_data(:), xsc_wn(:)
+  REAL (RealK) :: temperature = 298.0
 
-
-  CALL get_command_ARGUMENT(1, infile)
-  CALL get_command_ARGUMENT(2, outfile)
+  l_infile = .FALSE.
+  l_outfile = .FALSE.
+  i = 0
+  DO
+    i=i+1
+    IF (i > command_argument_count()) EXIT
+    CALL get_command_argument(i, arg)
+    SELECT CASE (arg)
+    CASE ('-t','--temperature')
+      i=i+1
+      CALL get_command_argument(i, arg)
+      READ(arg, *) temperature
+    CASE default
+      IF (l_infile) THEN
+        ! If the input file has been provided, the second file is
+        ! the output .(uv)xsc file
+        outfile = arg
+        l_outfile = .TRUE.
+      ELSE
+        ! First file given is the input .dat file
+        infile = arg
+        l_infile = .TRUE.
+      END IF
+    END SELECT
+  END DO
+  IF (.NOT.l_outfile) THEN
+    WRITE(iu_err, '(a)') &
+      'Usage: dat2xsc [-t <temperature>] infile.dat outfile.[uv]xsc'
+    STOP
+  END IF
 
 ! Open the cross-section data file
   CALL get_free_unit(ierr, iu_dat)
@@ -90,7 +118,7 @@ PROGRAM dat2xsc
 
   ! Construct common XSC header information
   xsc%chemical_symbol = ''
-  xsc%temperature = 298.0
+  xsc%temperature = temperature
   xsc%common_name = ''
   xsc%no_pts = 1
   xsc%pressure = 0.0

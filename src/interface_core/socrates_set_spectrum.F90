@@ -32,7 +32,10 @@ subroutine set_spectrum(n_instances, spectrum, spectrum_name, spectral_file, &
   l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
   l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
-  l_hf, l_cosso, l_tosso, l_yosos, l_all_gases, wavelength_blue)
+  l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+  l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+  l_pan, l_ch3ono2, &
+  l_all_gases, wavelength_blue)
 
 use errormessagelength_mod, only: errormessagelength
 use ereport_mod, only: ereport
@@ -60,7 +63,9 @@ logical, intent(in), optional :: &
   l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
   l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
-  l_hf, l_cosso, l_tosso, l_yosos, l_all_gases
+  l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+  l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+  l_pan, l_ch3ono2, l_all_gases
 
 real(RealExt), intent(in), optional :: wavelength_blue
 
@@ -126,7 +131,9 @@ else if (present(spectrum_name).or.present(spectrum)) then
     l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
     l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
     l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
-    l_hf, l_cosso, l_tosso, l_yosos, l_all_gases)
+    l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+    l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+    l_pan, l_ch3ono2, l_all_gases)
   ! Map the gas k-terms and weights to the sub-bands
   call map_sub_bands(spec)
 end if
@@ -142,7 +149,9 @@ subroutine compress_spectrum(spec, &
   l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
   l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
-  l_hf, l_cosso, l_tosso, l_yosos, l_all_gases)
+  l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+  l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+  l_pan, l_ch3ono2, l_all_gases)
 
 use gas_list_pcf, only: &
   ip_h2o, ip_co2, ip_o3, ip_n2o, ip_co, ip_ch4, ip_o2, ip_no, ip_so2, ip_no2, &
@@ -150,7 +159,9 @@ use gas_list_pcf, only: &
   ip_hfc134a, ip_cfc114, ip_tio, ip_vo, ip_h2, ip_he, ip_ocs, ip_na, ip_k, &
   ip_feh, ip_crh, ip_li, ip_rb, ip_cs, ip_ph3, ip_c2h2, ip_hcn, ip_h2s, ip_ar, &
   ip_o, ip_n, ip_no3, ip_n2o5, ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, &
-  ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos
+  ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos, &
+  ip_ch3cho, ip_ch3ooh, ip_ch3coch3, ip_ch3cocho, ip_chocho, ip_c2h5cho, &
+  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2
 
 implicit none
 
@@ -162,10 +173,12 @@ logical, intent(in), optional :: &
   l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
   l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
-  l_hf, l_cosso, l_tosso, l_yosos, l_all_gases
+  l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+  l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+  l_pan, l_ch3ono2, l_all_gases
 
-integer :: i, j, n_band_absorb
-logical :: l_retain_absorb(spec%gas%n_absorb)
+integer :: i, j, i_sub, n_band_absorb
+logical :: l_retain_absorb(spec%gas%n_absorb), l_retain_major
 logical :: l_retain_all
 
 
@@ -179,68 +192,104 @@ if (.not.l_retain_all) then
   ! Search the spectrum to find those gases to be retained.
   l_retain_absorb=.false.
   do i=1, spec%gas%n_absorb
-    if (retain_absorber(ip_h2o,     l_h2o    ) .or. &
-        retain_absorber(ip_co2,     l_co2    ) .or. &
-        retain_absorber(ip_o3,      l_o3     ) .or. &
-        retain_absorber(ip_n2o,     l_n2o    ) .or. &
-        retain_absorber(ip_co,      l_co     ) .or. &
-        retain_absorber(ip_ch4,     l_ch4    ) .or. &
-        retain_absorber(ip_o2,      l_o2     ) .or. &
-        retain_absorber(ip_no,      l_no     ) .or. &
-        retain_absorber(ip_so2,     l_so2    ) .or. &
-        retain_absorber(ip_no2,     l_no2    ) .or. &
-        retain_absorber(ip_nh3,     l_nh3    ) .or. &
-        retain_absorber(ip_hno3,    l_hno3   ) .or. &
-        retain_absorber(ip_n2,      l_n2     ) .or. &
-        retain_absorber(ip_cfc11,   l_cfc11  ) .or. &
-        retain_absorber(ip_cfc12,   l_cfc12  ) .or. &
-        retain_absorber(ip_cfc113,  l_cfc113 ) .or. &
-        retain_absorber(ip_hcfc22,  l_hcfc22 ) .or. &
-        retain_absorber(ip_hfc125,  l_hfc125 ) .or. &
-        retain_absorber(ip_hfc134a, l_hfc134a) .or. &
-        retain_absorber(ip_cfc114,  l_cfc114 ) .or. &
-        retain_absorber(ip_tio,     l_tio    ) .or. &
-        retain_absorber(ip_vo,      l_vo     ) .or. &
-        retain_absorber(ip_h2,      l_h2     ) .or. &
-        retain_absorber(ip_he,      l_he     ) .or. &
-        retain_absorber(ip_ocs,     l_ocs    ) .or. &
-        retain_absorber(ip_na,      l_na     ) .or. &
-        retain_absorber(ip_k,       l_k      ) .or. &
-        retain_absorber(ip_feh,     l_feh    ) .or. &
-        retain_absorber(ip_crh,     l_crh    ) .or. &
-        retain_absorber(ip_li,      l_li     ) .or. &
-        retain_absorber(ip_rb,      l_rb     ) .or. &
-        retain_absorber(ip_cs,      l_cs     ) .or. &
-        retain_absorber(ip_ph3,     l_ph3    ) .or. &
-        retain_absorber(ip_c2h2,    l_c2h2   ) .or. &
-        retain_absorber(ip_hcn,     l_hcn    ) .or. &
-        retain_absorber(ip_h2s,     l_h2s    ) .or. &
-        retain_absorber(ip_ar,      l_ar     ) .or. &
-        retain_absorber(ip_o,       l_o      ) .or. &
-        retain_absorber(ip_n,       l_n      ) .or. &
-        retain_absorber(ip_no3,     l_no3    ) .or. &
-        retain_absorber(ip_n2o5,    l_n2o5   ) .or. &
-        retain_absorber(ip_hono,    l_hono   ) .or. &
-        retain_absorber(ip_ho2no2,  l_ho2no2 ) .or. &
-        retain_absorber(ip_h2o2,    l_h2o2   ) .or. &
-        retain_absorber(ip_c2h6,    l_c2h6   ) .or. &
-        retain_absorber(ip_ch3,     l_ch3    ) .or. &
-        retain_absorber(ip_h2co,    l_h2co   ) .or. &
-        retain_absorber(ip_ho2,     l_ho2    ) .or. &
-        retain_absorber(ip_hdo,     l_hdo    ) .or. &
-        retain_absorber(ip_hcl,     l_hcl    ) .or. &
-        retain_absorber(ip_hf,      l_hf     ) .or. &
-        retain_absorber(ip_cosso,   l_cosso  ) .or. &
-        retain_absorber(ip_tosso,   l_tosso  ) .or. &
-        retain_absorber(ip_yosos,   l_yosos  )) then
+    if (retain_absorber(ip_h2o,       l_h2o      ) .or. &
+        retain_absorber(ip_co2,       l_co2      ) .or. &
+        retain_absorber(ip_o3,        l_o3       ) .or. &
+        retain_absorber(ip_n2o,       l_n2o      ) .or. &
+        retain_absorber(ip_co,        l_co       ) .or. &
+        retain_absorber(ip_ch4,       l_ch4      ) .or. &
+        retain_absorber(ip_o2,        l_o2       ) .or. &
+        retain_absorber(ip_no,        l_no       ) .or. &
+        retain_absorber(ip_so2,       l_so2      ) .or. &
+        retain_absorber(ip_no2,       l_no2      ) .or. &
+        retain_absorber(ip_nh3,       l_nh3      ) .or. &
+        retain_absorber(ip_hno3,      l_hno3     ) .or. &
+        retain_absorber(ip_n2,        l_n2       ) .or. &
+        retain_absorber(ip_cfc11,     l_cfc11    ) .or. &
+        retain_absorber(ip_cfc12,     l_cfc12    ) .or. &
+        retain_absorber(ip_cfc113,    l_cfc113   ) .or. &
+        retain_absorber(ip_hcfc22,    l_hcfc22   ) .or. &
+        retain_absorber(ip_hfc125,    l_hfc125   ) .or. &
+        retain_absorber(ip_hfc134a,   l_hfc134a  ) .or. &
+        retain_absorber(ip_cfc114,    l_cfc114   ) .or. &
+        retain_absorber(ip_tio,       l_tio      ) .or. &
+        retain_absorber(ip_vo,        l_vo       ) .or. &
+        retain_absorber(ip_h2,        l_h2       ) .or. &
+        retain_absorber(ip_he,        l_he       ) .or. &
+        retain_absorber(ip_ocs,       l_ocs      ) .or. &
+        retain_absorber(ip_na,        l_na       ) .or. &
+        retain_absorber(ip_k,         l_k        ) .or. &
+        retain_absorber(ip_feh,       l_feh      ) .or. &
+        retain_absorber(ip_crh,       l_crh      ) .or. &
+        retain_absorber(ip_li,        l_li       ) .or. &
+        retain_absorber(ip_rb,        l_rb       ) .or. &
+        retain_absorber(ip_cs,        l_cs       ) .or. &
+        retain_absorber(ip_ph3,       l_ph3      ) .or. &
+        retain_absorber(ip_c2h2,      l_c2h2     ) .or. &
+        retain_absorber(ip_hcn,       l_hcn      ) .or. &
+        retain_absorber(ip_h2s,       l_h2s      ) .or. &
+        retain_absorber(ip_ar,        l_ar       ) .or. &
+        retain_absorber(ip_o,         l_o        ) .or. &
+        retain_absorber(ip_n,         l_n        ) .or. &
+        retain_absorber(ip_no3,       l_no3      ) .or. &
+        retain_absorber(ip_n2o5,      l_n2o5     ) .or. &
+        retain_absorber(ip_hono,      l_hono     ) .or. &
+        retain_absorber(ip_ho2no2,    l_ho2no2   ) .or. &
+        retain_absorber(ip_h2o2,      l_h2o2     ) .or. &
+        retain_absorber(ip_c2h6,      l_c2h6     ) .or. &
+        retain_absorber(ip_ch3,       l_ch3      ) .or. &
+        retain_absorber(ip_h2co,      l_h2co     ) .or. &
+        retain_absorber(ip_ho2,       l_ho2      ) .or. &
+        retain_absorber(ip_hdo,       l_hdo      ) .or. &
+        retain_absorber(ip_hcl,       l_hcl      ) .or. &
+        retain_absorber(ip_hf,        l_hf       ) .or. &
+        retain_absorber(ip_cosso,     l_cosso    ) .or. &
+        retain_absorber(ip_tosso,     l_tosso    ) .or. &
+        retain_absorber(ip_yosos,     l_yosos    ) .or. &
+        retain_absorber(ip_ch3cho,    l_ch3cho   ) .or. &
+        retain_absorber(ip_ch3ooh,    l_ch3ooh   ) .or. &
+        retain_absorber(ip_ch3coch3,  l_ch3coch3 ) .or. &
+        retain_absorber(ip_ch3cocho,  l_ch3cocho ) .or. &
+        retain_absorber(ip_chocho,    l_chocho   ) .or. &
+        retain_absorber(ip_c2h5cho,   l_c2h5cho  ) .or. &
+        retain_absorber(ip_hoch2cho,  l_hoch2cho ) .or. &
+        retain_absorber(ip_c2h5coch3, l_c2h5coch3) .or. &
+        retain_absorber(ip_mvk,       l_mvk      ) .or. &
+        retain_absorber(ip_macr,      l_macr     ) .or. &
+        retain_absorber(ip_pan,       l_pan      ) .or. &
+        retain_absorber(ip_ch3ono2,   l_ch3ono2  )) then
       l_retain_absorb(i)=.true.
     end if
   end do
 
+  i_sub = 0
   do i=1, spec%basic%n_band
+    ! Retain the major gas if it is used to define sub-bands
+    l_retain_major = .false.
+    sub_bands: do
+      ! Sub-bands increase sequentially across bands
+      i_sub = i_sub + 1
+      if (i_sub > spec%var%n_sub_band) then
+        ! Exit the loop if all sub-bands have been scanned
+        exit sub_bands
+      end if
+      if (spec%var%index_sub_band(1, i_sub) == i) then
+        ! This is the first sub-band assigned to this band
+        if (spec%var%index_sub_band(2, i_sub) > 0) then
+          ! This sub-band indexes a major gas k-term
+          l_retain_major = .true.
+        end if
+        ! Only the first sub-band for the band needs to be checked
+        ! as a k-term index of 0 indicates there is no k-term mapping
+        ! for this band and there will only be one sub-band.
+        exit sub_bands
+      end if
+    end do sub_bands
     n_band_absorb=0
     do j=1, spec%gas%n_band_absorb(i)
-      if (l_retain_absorb(spec%gas%index_absorb(j, i))) then
+      ! Retain the requested gases and the major gases required for sub-bands
+      if ( l_retain_absorb(spec%gas%index_absorb(j, i)) .or. &
+           (j == 1 .and. l_retain_major) ) then
         n_band_absorb = n_band_absorb + 1
         spec%gas%index_absorb(n_band_absorb, i) = spec%gas%index_absorb(j, i)
       end if

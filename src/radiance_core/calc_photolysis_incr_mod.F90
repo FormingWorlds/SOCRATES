@@ -19,10 +19,11 @@ CONTAINS
 SUBROUTINE calc_photolysis_incr(                                      &
   sp, photolysis_rate_incr, nd_profile, nd_flux_profile, nd_layer,    &
   nd_esft_term, nd_abs, weight_channel_incr, i_band, l_path,          &
-  iex_minor, i_sub, n_layer, n_profile, k_abs_layer )
+  iex_minor, i_sub, n_layer, n_profile, k_abs_layer, photol )
 
   USE realtype_rd, ONLY: RealK
   USE def_spectrum, ONLY: StrSpecData
+  USE def_qy, ONLY: StrQy
 
   USE yomhook, ONLY: lhook, dr_hook
   USE parkind1, ONLY: jprb, jpim
@@ -70,8 +71,11 @@ SUBROUTINE calc_photolysis_incr(                                      &
     k_abs_layer(nd_profile, nd_layer, nd_esft_term, nd_abs)
 !       Scaled absorption terms
 
+  TYPE (StrQy), INTENT(IN) :: photol(sp%photol%n_pathway)
+!   Photolysis quantum yields interpolated to model grid temperatures
+
 ! Local variables
-  INTEGER :: i_temp, i_wl, i_gas_last, i_path, i_gas, i_abs, i_k_sub
+  INTEGER :: i_wl, i_gas_last, i_path, i_gas, i_abs, i_k_sub
   INTEGER :: i, l, i_k
   REAL (RealK) :: sub_band_work, photol_work(n_profile, n_layer)
 
@@ -145,14 +149,23 @@ SUBROUTINE calc_photolysis_incr(                                      &
         END IF
       END IF
       ! Finally do calculations that depend on this pathway
-      DO i=1, n_layer
-        DO l=1, n_profile
-          i_temp = 1 ! Temperature lookup (only 1 for now)
-          photolysis_rate_incr(l, i, i_path) &
-            = photolysis_rate_incr(l, i, i_path) + photol_work(l, i) &
-            * sp%photol%quantum_yield(i_temp, i_wl, i_path)
+      IF (sp%photol%n_t_lookup_photol(i_path) > 1) THEN
+        DO i=1, n_layer
+          DO l=1, n_profile
+            photolysis_rate_incr(l, i, i_path) &
+              = photolysis_rate_incr(l, i, i_path) + photol_work(l, i) &
+              * photol(i_path)%qy(l, i, i_wl)
+          END DO
         END DO
-      END DO
+      ELSE
+        DO i=1, n_layer
+          DO l=1, n_profile
+            photolysis_rate_incr(l, i, i_path) &
+              = photolysis_rate_incr(l, i, i_path) + photol_work(l, i) &
+              * sp%photol%quantum_yield(1, i_wl, i_path)
+          END DO
+        END DO
+      END IF
       i_gas_last=i_gas
     END IF
   END DO

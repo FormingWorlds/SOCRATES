@@ -14,6 +14,7 @@
 MODULE def_control
 
 USE filenamelength_mod, ONLY: filenamelength
+USE gas_list_pcf, ONLY: npd_gases  
 USE missing_data_mod, ONLY: rmdi, imdi
 USE realtype_rd, ONLY: RealK
 
@@ -185,7 +186,33 @@ TYPE StrCtrl
 !   Flag for absorption by Hydrogen sulphide
   LOGICAL :: l_cocs                                               = .FALSE.
 !   Flag for absorption by Carbonyl sulphide
+  LOGICAL :: l_ch3cho                                             = .FALSE.
+!   Flag for absorption by Acetaldehyde
+  LOGICAL :: l_ch3ooh                                             = .FALSE.
+!   Flag for absorption by Methylhydroperoxide
+  LOGICAL :: l_ch3coch3                                           = .FALSE.
+!   Flag for absorption by acetone
+  LOGICAL :: l_ch3cocho                                           = .FALSE.
+!   Flag for absorption by methylglyoxal (MGLY)
+  LOGICAL :: l_chocho                                             = .FALSE.
+!   Flag for absorption by glyoxal
+  LOGICAL :: l_c2h5cho                                            = .FALSE.
+!   Flag for absorption by propanal
+  LOGICAL :: l_hoch2cho                                           = .FALSE.
+!   Flag for absorption by glycolaldehyde
+  LOGICAL :: l_c2h5coch3                                          = .FALSE.
+!   Flag for absorption by methyl ethyl ketone (MEK)
+  LOGICAL :: l_mvk                                                = .FALSE.
+!   Flag for absorption by methyl vinyl ketone (MVK)
+  LOGICAL :: l_macr                                               = .FALSE.
+!   Flag for absorption by methacrolein (MACR)
+  LOGICAL :: l_pan                                                = .FALSE.
+!   Flag for absorption by peroxyacetyl nitrate (PAN)
+  LOGICAL :: l_ch3ono2                                            = .FALSE.
+!   Flag for absorption by methylnitrate
 
+  LOGICAL :: l_photol_only(npd_gases)                             = .FALSE.
+!   Flags to treat gases for photolysis only, ignoring affect on flux
 
 ! Properties of clouds:
   INTEGER :: i_cloud                                              = imdi

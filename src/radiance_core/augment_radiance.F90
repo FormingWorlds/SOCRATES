@@ -29,7 +29,7 @@ SUBROUTINE augment_radiance(control, sp, atm, bound, radout             &
     , i_direct_incr, radiance_incr, photolysis_incr                     &
     , flux_direct_incr_clear, flux_total_incr_clear                     &
     , actinic_flux_incr_clear, k_abs_layer                              &
-    , sph, contrib_funci_incr, contrib_funcf_incr                       &
+    , photol, sph, contrib_funci_incr, contrib_funcf_incr               &
 !                 Dimensions
     , nd_profile, nd_flux_profile, nd_radiance_profile, nd_j_profile    &
     , nd_layer, nd_viewing_level, nd_direction, nd_channel              &
@@ -45,6 +45,7 @@ SUBROUTINE augment_radiance(control, sp, atm, bound, radout             &
   USE def_atm, ONLY: StrAtm
   USE def_bound, ONLY: StrBound
   USE def_out, ONLY: StrOut
+  USE def_qy, ONLY: StrQy
   USE def_spherical_geometry, ONLY: StrSphGeo
   USE finalise_photol_incr_mod, ONLY:  finalise_photol_incr
   USE rad_pcf, ONLY: ip_solar, ip_spherical_harmonic, ip_two_stream,    &
@@ -138,6 +139,9 @@ SUBROUTINE augment_radiance(control, sp, atm, bound, radout             &
 !       Increment to clear total flux
     , actinic_flux_incr_clear(nd_flux_profile, nd_layer)
 !       Increment to clear actinic flux
+
+  TYPE(StrQy), INTENT(IN) :: photol(sp%photol%n_pathway)
+!   Photolysis quantum yields interpolated to model grid temperatures
 
   TYPE(StrSphGeo), INTENT(IN) :: sph
 !   Spherical geometry fields
@@ -255,9 +259,10 @@ SUBROUTINE augment_radiance(control, sp, atm, bound, radout             &
           CALL calc_photolysis_incr(                                           &
             sp, photolysis_rate_incr, nd_profile, nd_flux_profile, nd_layer,   &
             nd_esft_term, nd_abs, weight_channel_incr, i_band, l_path,         &
-            iex_minor, i_sub, n_layer, n_profile, k_abs_layer )
+            iex_minor, i_sub, n_layer, n_profile, k_abs_layer, photol )
           CALL finalise_photol_incr(                                           &
-            sp, atm, l_path, nd_flux_profile, nd_layer, n_profile, n_layer,    &
+            control, sp, atm, l_path,                                          &
+            nd_flux_profile, nd_layer, n_profile, n_layer,                     &
             photolysis_div_incr, photolysis_rate_incr, actinic_flux_incr)
           CALL augment_channel(                                                &
             control, sp, bound, radout, l_initial_channel, l_clear,            &
@@ -304,12 +309,13 @@ SUBROUTINE augment_radiance(control, sp, atm, bound, radout             &
           CALL calc_photolysis_incr(                                           &
             sp, photolysis_rate_incr, nd_profile, nd_flux_profile, nd_layer,   &
             nd_esft_term, nd_abs, weight_channel_incr, i_band, l_path,         &
-            iex_minor, i_sub, n_layer, n_profile, k_abs_layer )
+            iex_minor, i_sub, n_layer, n_profile, k_abs_layer, photol )
           weight_band_incr = weight_band_incr + weight_channel_incr
         END IF
       END DO
       CALL finalise_photol_incr(                                               &
-        sp, atm, l_path, nd_flux_profile, nd_layer, n_profile, n_layer,        &
+        control, sp, atm, l_path,                                              &
+        nd_flux_profile, nd_layer, n_profile, n_layer,                         &
         photolysis_div_incr, photolysis_rate_incr, actinic_flux_incr)
 
       IF (sp%map%n_sub_band_k(iex, i_band) > 1) THEN

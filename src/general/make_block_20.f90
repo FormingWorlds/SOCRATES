@@ -37,12 +37,12 @@ SUBROUTINE make_block_20(Sp, ierr)
 !   Unit number for the quantum yield data file
   INTEGER :: iu_pe
 !   Unit number for the photoelectron factors data file
-  INTEGER :: data_length_qy
+  INTEGER :: data_length_qy, header_length_qy
   INTEGER :: data_length_pe
   INTEGER :: n_qy
   INTEGER :: pathway_absorber(Sp%Dim%nd_pathway)
   INTEGER :: pathway_products(Sp%Dim%nd_pathway)
-  INTEGER :: n_t_lookup_photol(Sp%Dim%nd_pathway)
+  INTEGER :: n_t_lookup_photol(Sp%Dim%nd_pathway), n_t_lookup
   INTEGER :: n_wl_lookup_photol(Sp%Dim%nd_pathway)
   INTEGER :: nd_t_lookup_photol, nd_wl_lookup_photol
   REAL(RealK) :: t_lookup_photol(Sp%Dim%nd_t_lookup_photol, Sp%Dim%nd_pathway)
@@ -53,15 +53,17 @@ SUBROUTINE make_block_20(Sp, ierr)
   REAL(RealK) :: threshold_wl(Sp%Dim%nd_pathway)
   LOGICAL :: l_thermalise(Sp%Dim%nd_pathway)
 
-  REAL(RealK) :: qy
+  REAL(RealK), ALLOCATABLE :: qy(:)
   REAL(RealK), ALLOCATABLE :: qy_data(:, :)
   REAL(RealK), ALLOCATABLE :: pe_data(:, :)
   REAL(RealK), ALLOCATABLE :: qy_unique(:, :)
   REAL(RealK), ALLOCATABLE :: qy_tmp(:, :)
-  REAL(RealK), ALLOCATABLE :: qy_sub(:)
+  REAL(RealK), ALLOCATABLE :: qy_sub(:, :)
+  REAL(RealK), ALLOCATABLE :: t_lookup(:)
   CHARACTER (LEN=256) :: qy_file
   CHARACTER (LEN=256) :: pe_file
   CHARACTER (LEN=1) :: char_in
+  CHARACTER (LEN=256) :: line_in
   LOGICAL :: l_exist_qy
   LOGICAL :: l_exist_pe
 
@@ -211,26 +213,50 @@ SUBROUTINE make_block_20(Sp, ierr)
 
     ! Count the number of lines in the file
     data_length_qy = 0
+    header_length_qy = 0
     DO
-      READ(iu_qy, *, iostat=ios)
+      READ(iu_qy, '(A)', iostat=ios) line_in
       IF (ios /= 0) EXIT
-      data_length_qy = data_length_qy + 1
+      IF (line_in(1:2) == '*T') THEN
+        ! Where a *TEMPERATURES directive (or just *T) is present
+        ! then the number of temperatures is read followed by a
+        ! list of their values. Everything prior to the directive
+        ! is considered part of the header.
+        READ(line_in(INDEX(line_in,' '):), *) n_t_lookup
+        ALLOCATE(t_lookup(n_t_lookup))
+        READ(iu_qy, *, iostat=ios) t_lookup
+        header_length_qy = data_length_qy + 2
+        data_length_qy = 0
+      ELSE
+        data_length_qy = data_length_qy + 1
+      END IF
     END DO
     REWIND(iu_qy)
+    DO i=1, header_length_qy
+      READ(iu_qy, *)
+    END DO
+    ! If no *TEMPERATURES directive is found, a single (arbitrary)
+    ! temperature is assumed.
+    IF (.NOT.ALLOCATED(t_lookup)) THEN
+      n_t_lookup = 1
+      ALLOCATE(t_lookup(n_t_lookup))
+      t_lookup = 0.0_RealK
+    END IF
     ! Read in the data (wavelength in nm, quantum yield)
-    ALLOCATE(qy_data(2,data_length_qy))
+    ALLOCATE(qy_data(1 + n_t_lookup, data_length_qy))
     READ(iu_qy, *, iostat=ios) qy_data
     CLOSE(iu_qy)
 
     ! Determine the upper wavelength bounds for unique QY values
-    ALLOCATE(qy_unique(2,0:data_length_qy))
+    ALLOCATE(qy_unique(1 + n_t_lookup, 0:data_length_qy))
+    ALLOCATE(qy(n_t_lookup))
     qy = -99.0_RealK
     n_qy = 0
     DO i=1, data_length_qy
-      IF (qy_data(2,i) /= qy) THEN
-        qy = qy_data(2,i)
+      IF (ANY(qy_data(2:,i) /= qy)) THEN
+        qy = qy_data(2:,i)
         n_qy = n_qy+1
-        qy_unique(2,n_qy)=qy
+        qy_unique(2:,n_qy)=qy
       END IF
       ! Upper wavelength bound at mid-point to next data point
       ! (converted from nm to m)
@@ -240,17 +266,18 @@ SUBROUTINE make_block_20(Sp, ierr)
       ELSE
         qy_unique(1,n_qy)=(qy_data(1,i)+qy_data(1,i+1))*0.5E-09_RealK
       END IF
-      IF (qy > 0.0_RealK) THEN
+      IF (ANY(qy > 0.0_RealK)) THEN
         ! Adjust threshold wavelength for last QY > 0
         Sp%Photol%threshold_wavelength(Sp%Photol%n_pathway) &
           = MAX( Sp%Photol%threshold_wavelength(Sp%Photol%n_pathway), &
                  qy_data(1,i)*1.0E-09_RealK )
       END IF
     END DO
-    DEALLOCATE(qy_data)
-    IF (qy == 0.0_RealK) THEN
+    IF (ALL(qy == 0.0_RealK)) THEN
       n_qy = n_qy-1
     END IF
+    DEALLOCATE(qy)
+    DEALLOCATE(qy_data)
     ! Quantum yield is constrained to zero beyond threshold
     qy_unique(1,n_qy) = MIN(qy_unique(1,n_qy), &
       Sp%Photol%threshold_wavelength(Sp%Photol%n_pathway))
@@ -259,6 +286,9 @@ SUBROUTINE make_block_20(Sp, ierr)
     ALLOCATE(qy_unique(2,0:n_qy))
     qy_unique(1,1)=Sp%Photol%threshold_wavelength(Sp%Photol%n_pathway)
     qy_unique(2,1)=1.0_RealK
+    n_t_lookup = 1
+    ALLOCATE(t_lookup(n_t_lookup))
+    t_lookup = 0.0_RealK
   END IF
 
   ! Read in photoelectron factors from a file
@@ -291,10 +321,10 @@ SUBROUTINE make_block_20(Sp, ierr)
     CLOSE(iu_pe)
 
     ! Reallocate qy_unique to hold extra values
-    ALLOCATE(qy_tmp(2,n_qy))
+    ALLOCATE(qy_tmp(1 + n_t_lookup, n_qy))
     qy_tmp=qy_unique(:,1:n_qy)
     DEALLOCATE(qy_unique)
-    ALLOCATE(qy_unique(2,0:n_qy+data_length_pe+1))
+    ALLOCATE(qy_unique(1 + n_t_lookup, 0:n_qy+data_length_pe+1))
     i_qy=1
     i_pe=1
     i=1
@@ -307,26 +337,26 @@ SUBROUTINE make_block_20(Sp, ierr)
         EXIT
       ELSE IF (i_pe > data_length_pe) THEN
         qy_unique(1,i)=qy_tmp(1,i_qy)
-        qy_unique(2,i)=qy_tmp(2,i_qy)
+        qy_unique(2:,i)=qy_tmp(2:,i_qy)
         i=i+1
         i_qy=i_qy+1
 !        PRINT*, '1:',i, i_qy, i_pe, qy_unique(1,i-1), qy_unique(2,i-1)
       ELSE IF (i_qy > n_qy) THEN
         qy_unique(1,i)=pe_data(2,i_pe)
-        qy_unique(2,i)=pe_data(3,i_pe)
+        qy_unique(2:,i)=pe_data(3,i_pe)
         i=i+1
         i_pe=i_pe+1        
 !        PRINT*, '2:',i, i_qy, i_pe, qy_unique(1,i-1), qy_unique(2,i-1)
       ELSE IF (qy_tmp(1,i_qy) <= pe_data(2,i_pe)) THEN
         qy_unique(1,i)=qy_tmp(1,i_qy)
-        qy_unique(2,i)=qy_tmp(2,i_qy)+pe_data(3,i_pe)
+        qy_unique(2:,i)=qy_tmp(2:,i_qy)+pe_data(3,i_pe)
         i=i+1
         i_qy=i_qy+1
         IF (qy_tmp(1,i_qy) == pe_data(2,i_pe)) i_pe=i_pe+1
 !        PRINT*, '3:',i, i_qy, i_pe, qy_unique(1,i-1), qy_unique(2,i-1)
       ELSE
         qy_unique(1,i)=pe_data(2,i_pe)
-        qy_unique(2,i)=qy_tmp(2,i_qy)+pe_data(3,i_pe)
+        qy_unique(2:,i)=qy_tmp(2:,i_qy)+pe_data(3,i_pe)
         i=i+1
         i_pe=i_pe+1
 !        PRINT*, '4:',i, i_qy, i_pe, qy_unique(1,i-1), qy_unique(2,i-1)
@@ -338,15 +368,15 @@ SUBROUTINE make_block_20(Sp, ierr)
 
   IF (Sp%Basic%l_present(17)) THEN
     ! Mean Quantum Yield values across the sub-bands.
-    ALLOCATE(qy_sub(0:Sp%Var%n_sub_band))
-    qy_sub(:) = 0.0_RealK
+    ALLOCATE(qy_sub(n_t_lookup, 0:Sp%Var%n_sub_band))
+    qy_sub(:, :) = 0.0_RealK
     qy_unique(1,0)=0.0_RealK
     i=1
     outer: DO i_sub=1, Sp%Var%n_sub_band
       inner: DO
         IF (qy_unique(1,i) > sp%var%wavelength_sub_band(1, i_sub)) THEN
           ! Add QY value to weighted mean
-          qy_sub(i_sub) = qy_sub(i_sub) + qy_unique(2,i) &
+          qy_sub(:, i_sub) = qy_sub(:, i_sub) + qy_unique(2:, i) &
              * ( 1.0_RealK / MAX(qy_unique(1,i-1), &
                                  sp%var%wavelength_sub_band(1, i_sub)) &
                - 1.0_RealK / MIN(qy_unique(1,i), &
@@ -361,36 +391,35 @@ SUBROUTINE make_block_20(Sp, ierr)
     END DO outer
     ! Reduce to unique QY values
     i_qy=0
-    qy_sub(0)=-99.9_RealK
+    qy_sub(:, 0)=-99.9_RealK
     DO i_sub=1, Sp%Var%n_sub_band
-      IF (ABS(qy_sub(i_sub)-qy_sub(i_sub-1)) > 1.0E-10_RealK) THEN
+      IF (ANY(ABS(qy_sub(:, i_sub)-qy_sub(:, i_sub-1)) > 1.0E-10_RealK)) THEN
         ! If QY is different assign a new unique value
         i_qy=i_qy+1
         n_qy=UBOUND(qy_unique,2)
         IF (i_qy > n_qy) THEN
-          ALLOCATE(qy_tmp(2,n_qy))
+          ALLOCATE(qy_tmp(1 + n_t_lookup, n_qy))
           qy_tmp=qy_unique(:,1:n_qy)
           DEALLOCATE(qy_unique)
-          ALLOCATE(qy_unique(2,i_qy))
+          ALLOCATE(qy_unique(1 + n_t_lookup, i_qy))
           qy_unique(:,1:n_qy)=qy_tmp
           DEALLOCATE(qy_tmp)
         END IF
-        qy_unique(1,i_qy) = sp%var%wavelength_sub_band(2, i_sub)
-        qy_unique(2,i_qy) = qy_sub(i_sub)
+        qy_unique(1, i_qy) = sp%var%wavelength_sub_band(2, i_sub)
+        qy_unique(2:, i_qy) = qy_sub(:, i_sub)
       ELSE
         ! If QY same as previous band, just reset the limiting wavelength
-        qy_unique(1,i_qy) = sp%var%wavelength_sub_band(2, i_sub)
+        qy_unique(1, i_qy) = sp%var%wavelength_sub_band(2, i_sub)
       END IF
     END DO
     n_qy=i_qy
-    IF (qy_unique(2,i_qy) <= 1.0E-10_RealK) THEN
+    IF (ALL(qy_unique(2:, i_qy) <= 1.0E-10_RealK)) THEN
       n_qy = n_qy-1
     END IF
     DEALLOCATE(qy_sub)
   END IF
 
-  ! Hardwire a single look-up temperature for now.
-  Sp%Photol%n_t_lookup_photol(Sp%Photol%n_pathway) = 1
+  Sp%Photol%n_t_lookup_photol(Sp%Photol%n_pathway) = n_t_lookup
   Sp%Photol%n_wl_lookup_photol(Sp%Photol%n_pathway) = n_qy
 
   nd_t_lookup_photol  = MAXVAL(Sp%Photol%n_t_lookup_photol)
@@ -419,12 +448,13 @@ SUBROUTINE make_block_20(Sp, ierr)
                       1:Sp%Dim%nd_wl_lookup_photol, &
                       1:Sp%Photol%n_pathway-1)
   END IF
-  Sp%Photol%t_lookup_photol(1, Sp%Photol%n_pathway) = 0.0_RealK
-
+  Sp%Photol%t_lookup_photol(1:n_t_lookup, Sp%Photol%n_pathway) &
+    = t_lookup
+  DEALLOCATE(t_lookup)
   Sp%Photol%wl_lookup_photol(1:n_qy, Sp%Photol%n_pathway) &
-    = qy_unique(1,1:n_qy)
-  Sp%Photol%quantum_yield(1, 1:n_qy, Sp%Photol%n_pathway) &
-    = qy_unique(2,1:n_qy)
+    = qy_unique(1, 1:n_qy)
+  Sp%Photol%quantum_yield(1:n_t_lookup, 1:n_qy, Sp%Photol%n_pathway) &
+    = qy_unique(2:, 1:n_qy)
   DEALLOCATE(qy_unique)
 
   Sp%Dim%nd_t_lookup_photol = nd_t_lookup_photol

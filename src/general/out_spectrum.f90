@@ -1331,7 +1331,7 @@ CONTAINS
       n_t = Spectrum%Photol%n_t_lookup_photol(i)
       WRITE(iu_spc, '(a,i5,a,3(3x,1pe16.9))') 'Temperatures:', &
         n_t, ':', Spectrum%Photol%t_lookup_photol(1:MIN(n_t, 3), i)
-      IF (n_t > 3) WRITE(iu_spc, '(19x, 3(3x,1pe16.9))') &
+      IF (n_t > 3) WRITE(iu_spc, '((19x, 3(3x,1pe16.9)))') &
         Spectrum%Photol%t_lookup_photol(4:n_t, i)
       WRITE(iu_spc, '(a,i6,a)') 'Wavelengths:', &
         Spectrum%Photol%n_wl_lookup_photol(i), ',     Quantum Yield:'
@@ -1339,7 +1339,7 @@ CONTAINS
         WRITE(iu_spc, '(4(3x,1pe16.9))') &
           Spectrum%Photol%wl_lookup_photol(i_wl, i), &
           Spectrum%Photol%quantum_yield(1:MIN(n_t, 3), i_wl, i)
-        IF (n_t > 3) WRITE(iu_spc, '(19x, 3(3x,1pe16.9))') &
+        IF (n_t > 3) WRITE(iu_spc, '((19x, 3(3x,1pe16.9)))') &
           Spectrum%Photol%quantum_yield(4:n_t, i_wl, i)
       END DO
     END DO

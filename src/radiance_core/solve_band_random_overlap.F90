@@ -47,7 +47,7 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 !                 Tiling of the surface
     , l_tile, n_point_tile, n_tile, list_tile, rho_alb_tile             &
 !                 Optical Properties
-    , ss_prop                                                           &
+    , ss_prop, photol, l_photol_only                                    &
 !                 Cloudy Properties
     , l_cloud, i_cloud                                                  &
 !                 Cloud Geometry
@@ -93,6 +93,7 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
   USE def_out,      ONLY: StrOut
   USE def_planck,   ONLY: StrPlanck
   USE def_ss_prop,  ONLY: str_ss_prop
+  USE def_qy,       ONLY: StrQy
   USE def_spherical_geometry, ONLY: StrSphGeo
   USE rad_pcf, ONLY: ip_solar, ip_infra_red, ip_two_stream, ip_ir_gauss,&
                      ip_overlap_exact_major, ip_spherical_harmonic,     &
@@ -321,6 +322,12 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
   TYPE(STR_ss_prop), INTENT(INOUT) :: ss_prop
 !       Single scattering properties of the atmosphere
 
+  TYPE(StrQy), INTENT(IN) :: photol(spectrum%photol%n_pathway)
+!   Photolysis quantum yields interpolated to model grid temperatures
+
+  LOGICAL, INTENT(IN) :: l_photol_only(nd_abs)
+!   Only use gas for photolysis, ignoring affect on flux
+
 !                 Cloudy properties
   LOGICAL, INTENT(IN) ::                                                &
       l_cloud
@@ -429,14 +436,22 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 !       Loop variables
     , i_abs                                                             &
 !       Index of active absorber
-    , i_esft_pointer(nd_abs, nd_k_term_inner), iex                      &
+    , iex                                                               &
 !       Pointer to ESFT for gas
     , step                                                              &
 !       Stepsize over which to increment the ESFT pointer
     , n_term                                                            &
 !       Total number of monochromatic calculations
+    , n_term_reduced                                                    &
+!       Number of monochromatic calculations required
     , n_k_term_inner
 !       Number of monochromatic calculations in inner loop
+  INTEGER, ALLOCATABLE :: i_esft_pointer(:, :)
+!       Pointer to ESFT for gas
+  INTEGER, ALLOCATABLE :: i_term_reduced(:)
+!       Pointer to term in outer loop
+  REAL (RealK), ALLOCATABLE :: product_weight(:)
+!       Product of ESFT weights
   REAL (RealK) ::                                                       &
       k_esft(nd_profile, nd_layer, nd_abs, nd_k_term_inner)             &
 !       Current ESFT exponents for each absorber
@@ -449,8 +464,6 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 !       Incident direct flux
     , flux_inc_down(nd_profile)                                         &
 !       Incident downward flux
-    , product_weight(nd_k_term_inner)                                   &
-!       Product of ESFT weights
     , dummy_ke(nd_profile, nd_layer)
 
 ! Monochromatic incrementing radiances:
@@ -486,11 +499,18 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
     , weight_sub_band_incr
 !       Weight applied to sub-band increments
 
-  INTEGER ::                                                            &
-      iex_major                                                         &
+  INTEGER, ALLOCATABLE ::                                               &
+      iex_major_all(:)                                                  &
 !       k-term for the major gas (first gas in band)
-    , iex_minor(nd_abs)
+    , iex_minor_all(:, :)
 !       k-term for the minor gases
+  INTEGER ::                                                            &
+      iex_major(nd_k_term_inner)                                        &
+!       k-term for the major gas (first gas in band)
+    , iex_minor(nd_abs, nd_k_term_inner)
+!       k-term for the minor gases
+  INTEGER :: index_subcol
+!       Index of sampled sub-column for MCICA (dummy here)
 
   REAL (RealK) ::                                                       &
       contrib_funci_part(nd_flux_profile, nd_layer, nd_k_term_inner)
@@ -508,103 +528,131 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 
   IF (lhook) CALL dr_hook(ModuleName//':'//RoutineName,zhook_in,zhook_handle)
 
+
   ! Loop through all combinations of terms for all absorbers
   n_term = PRODUCT(n_abs_esft(index_abs(1:n_abs)))
-  DO k_outer=1, int(ceiling(dble(n_term)/nd_k_term_inner))
-    n_k_term_inner = min( nd_k_term_inner , &
-      n_term - (k_outer-1)*nd_k_term_inner )
-    DO k_inner=1, n_k_term_inner
-      k = (k_outer-1)*nd_k_term_inner + k_inner
+  n_term_reduced = 0
+  ALLOCATE(i_term_reduced(n_term))
+  ALLOCATE(i_esft_pointer(n_abs, n_term))
+  ALLOCATE(iex_major_all(n_term))
+  ALLOCATE(iex_minor_all(n_abs, n_term))
+  ALLOCATE(product_weight(n_term))
+  DO k=1, n_term
+    ! Set the combination of terms for this iteration of the loop
+    DO j=1, n_abs
+      i_abs = index_abs(j)
+      ! Set the pointer to the ESFT term for this absorber
+      step = n_term / PRODUCT(n_abs_esft(index_abs(1:j)))
+      i_esft_pointer(j, k) = MOD((k-1)/step, n_abs_esft(i_abs)) + 1
+      iex = i_esft_pointer(j, k)
+      ! The product of the ESFT weights
+      IF (j ==1) THEN
+        iex_major_all(k) = iex
+        iex_minor_all(j, k) = 0
+        product_weight(k) = w_abs_esft(iex, i_abs)
+      ELSE IF (i_gas_overlap == ip_overlap_exact_major &
+        .AND. j <= spectrum%gas%n_band_absorb(i_band)) THEN
+        ! For the exact_major overlap method the fractional contribution of
+        ! each minor gas to the major gas k-term is taken from the wavelength
+        ! mapping. The minor gas k-terms are still randomly overlapped with
+        ! each other.
+        iex_minor_all(j, k) = iex
+        product_weight(k) = product_weight(k) &
+          * spectrum%map%weight_k_major(iex, i_abs, iex_major_all(k), i_band)
+      ELSE
+        ! k-terms are assumed to be randomly overlapped
+        iex_minor_all(j, k) = 0
+        product_weight(k) = product_weight(k) &
+          * w_abs_esft(iex, i_abs)
+      END IF
+    END DO
+    ! For the exact_major overlap method some combinations of terms will have
+    ! zero weight allowing the radiative transfer calculations to be skipped.
+    IF (product_weight(k) > 0.0_RealK) THEN
+      n_term_reduced = n_term_reduced + 1
+      i_term_reduced(n_term_reduced) = k
+    END IF
+  END DO
 
-      ! Set the combination of terms for this iteration of the loop
-      DO j=1, n_abs
-        i_abs = index_abs(j)
-        ! Set the ESFT term for this absorber
-        step = n_term / PRODUCT(n_abs_esft(index_abs(1:j)))
-        i_esft_pointer(i_abs, k_inner) = MOD((k-1)/step, n_abs_esft(i_abs)) + 1
-        iex = i_esft_pointer(i_abs, k_inner)
-        k_esft(1:n_profile, 1:n_layer, i_abs, k_inner) = &
-          k_abs_layer(1:n_profile, 1:n_layer, iex, i_abs)
-        ! The product of the ESFT weights
-        IF (j ==1) THEN
-          iex_major = iex
-          iex_minor(j) = 0
-          product_weight(k_inner) = w_abs_esft(iex, i_abs)
-        ELSE IF (i_gas_overlap == ip_overlap_exact_major &
-          .AND. j <= spectrum%gas%n_band_absorb(i_band)) THEN
-          ! For the exact_major overlap method the fractional contribution of
-          ! each minor gas to the major gas k-term is taken from the wavelength
-          ! mapping. The minor gas k-terms are still randomly overlapped with
-          ! each other.
-          iex_minor(j) = iex
-          product_weight(k_inner) = product_weight(k_inner) &
-            * spectrum%map%weight_k_major(iex, i_abs, iex_major, i_band)
-        ELSE
-          ! k-terms are assumed to be randomly overlapped
-          iex_minor(j) = 0
-          product_weight(k_inner) = product_weight(k_inner) &
-            * w_abs_esft(iex, i_abs)
+
+  ! Set the appropriate source terms for the two-stream equations.
+  IF ( (i_angular_integration == ip_two_stream).OR. &
+       (i_angular_integration == ip_ir_gauss) ) THEN
+    IF (isolir == ip_solar) THEN
+      ! Solar region.
+      IF (control%l_spherical_solar) THEN
+        DO l=1, n_profile
+          d_planck_flux_surface(l) = 0.0e+00_RealK
+          flux_inc_down(l)         = 0.0e+00_RealK
+          flux_inc_direct(l)       = 0.0e+00_RealK
+        END DO
+      ELSE
+        DO l=1, n_profile
+          d_planck_flux_surface(l) = 0.0e+00_RealK
+          flux_inc_down(l) = solar_irrad(l) / zen_0(l)
+          flux_inc_direct(l) = solar_irrad(l) / zen_0(l)
+        END DO
+      END IF
+    ELSE IF (isolir == ip_infra_red) THEN
+      ! Infra-red region.
+      DO l=1, n_profile
+        flux_inc_direct(l) = 0.0e+00_RealK
+        flux_inc_down(l) = -planck%flux(l, 0)
+        d_planck_flux_surface(l) &
+          = planck%flux_ground(l) - planck%flux(l, n_layer)
+      END DO
+      DO k_inner=1, nd_k_term_inner
+        DO l=1, n_profile
+          flux_direct_part(l, n_layer, k_inner) = 0.0e+00_RealK
+        END DO
+        IF (l_clear) THEN
+          DO l=1, n_profile
+            flux_direct_clear_part(l, n_layer, k_inner) = 0.0e+00_RealK
+          END DO
         END IF
       END DO
-      ! For the exact_major overlap method some combinations of terms will have
-      ! zero weight allowing the radiative transfer calculations to be skipped.
-      IF (product_weight(k_inner) == 0.0_RealK) CYCLE
+    END IF
+  ELSE IF (i_angular_integration == ip_spherical_harmonic) THEN
+    IF (isolir == ip_solar) THEN
+      DO l=1, n_profile
+        flux_inc_down(l) = 0.0e+00_RealK
+      END DO
+      DO k_inner=1, nd_k_term_inner
+        DO l=1, n_profile
+          i_direct_part(l, 0, k_inner) = solar_irrad(l)
+        END DO
+      END DO
+    ELSE
+      DO l=1, n_profile
+        flux_inc_down(l) = -planck%flux(l, 0)
+        d_planck_flux_surface(l) &
+          = planck%flux_ground(l) - planck%flux(l, n_layer)
+      END DO
+    END IF
+  END IF
 
-      ! Set the appropriate source terms for the two-stream equations.
-      IF ( (i_angular_integration == ip_two_stream).OR.                   &
-           (i_angular_integration == ip_ir_gauss) ) THEN
 
-        IF (isolir == ip_solar) THEN
+  DO k_outer=1, INT(CEILING(REAL(n_term_reduced, RealK)/nd_k_term_inner))
+    n_k_term_inner = MIN( nd_k_term_inner, &
+      n_term_reduced - (k_outer-1)*nd_k_term_inner )
 
-!         Solar region.
-          IF (control%l_spherical_solar) THEN
-            DO l=1, n_profile
-              d_planck_flux_surface(l) = 0.0e+00_RealK
-              flux_inc_down(l)         = 0.0e+00_RealK
-              flux_inc_direct(l)       = 0.0e+00_RealK
-            END DO
-          ELSE
-            DO l=1, n_profile
-              d_planck_flux_surface(l)=0.0e+00_RealK
-              flux_inc_down(l)=solar_irrad(l)/zen_0(l)
-              flux_inc_direct(l)=solar_irrad(l)/zen_0(l)
-            END DO
-          END IF
-
-        ELSE IF (isolir == ip_infra_red) THEN
-!         Infra-red region.
-
-          DO l=1, n_profile
-            flux_inc_direct(l)=0.0e+00_RealK
-            flux_direct_part(l, n_layer, k_inner)=0.0e+00_RealK
-            flux_inc_down(l)=-planck%flux(l, 0)
-            d_planck_flux_surface(l)                                      &
-              =planck%flux_ground(l)-planck%flux(l, n_layer)
-          END DO
-          IF (l_clear) THEN
-            DO l=1, n_profile
-              flux_direct_clear_part(l, n_layer, k_inner)=0.0e+00_RealK
-            END DO
-          END IF
-
-        END IF
-
-      ELSE IF (i_angular_integration == ip_spherical_harmonic) THEN
-
-        IF (isolir == ip_solar) THEN
-          DO l=1, n_profile
-            i_direct_part(l, 0, k_inner)=solar_irrad(l)
-            flux_inc_down(l)=0.0e+00_RealK
-          END DO
+    DO k_inner=1, n_k_term_inner
+      k = (k_outer-1)*nd_k_term_inner + k_inner
+      ! Set the combination of terms for this iteration of the loop
+      iex_major(k_inner) = iex_major_all(i_term_reduced(k))
+      iex_minor(:, k_inner) = 0
+      DO j=1, n_abs
+        iex_minor(j, k_inner) = iex_minor_all(j, i_term_reduced(k))
+        i_abs = index_abs(j)
+        IF (l_photol_only(i_abs)) THEN
+          k_esft(1:n_profile, 1:n_layer, i_abs, k_inner) = 0.0_RealK
         ELSE
-          DO l=1, n_profile
-            flux_inc_down(l)=-planck%flux(l, 0)
-            d_planck_flux_surface(l)                                      &
-              =planck%flux_ground(l)-planck%flux(l, n_layer)
-          END DO
+          ! Set the ESFT term for this absorber
+          iex = i_esft_pointer(j, i_term_reduced(k))
+          k_esft(1:n_profile, 1:n_layer, i_abs, k_inner) = &
+            k_abs_layer(1:n_profile, 1:n_layer, iex, i_abs)
         END IF
-
-      END IF
+      END DO
     END DO ! k_inner
 
     CALL gas_optical_properties(n_profile, n_layer                      &
@@ -662,8 +710,8 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
           , i_clm_lyr_chn, i_clm_cld_typ, area_column                     &
 !                   Additional variables required for McICA
           , l_cloud_cmp, n_cloud_profile, i_cloud_profile                 &
-          , i_cloud_type, nd_cloud_component, iex_major, i_band           &
-          , i_cloud_representation                                        &
+          , i_cloud_type, nd_cloud_component, iex_major(k_inner)          &
+          , i_band, i_cloud_representation                                &
 !                   Levels for the calculation of radiances
           , n_viewing_level, i_rad_layer, frac_rad_layer                  &
 !                   Viewing geometry
@@ -730,7 +778,7 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 !                   Cloudy properties
         , l_cloud, i_cloud                                              &
 !                   Cloud geometry
-        , n_cloud_top, iex_major                                        &
+        , n_cloud_top, index_subcol                                     &
         , n_region, k_clr, i_region_cloud, frac_region                  &
         , w_free, cloud_overlap                                         &
         , n_column_slv, list_column_slv                                 &
@@ -769,14 +817,16 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
       k = (k_outer-1)*nd_k_term_inner + k_inner
 
 !     Increment the fluxes within the band.
-      weight_incr = control%weight_band(i_band)*product_weight(k_inner)
+      weight_incr = control%weight_band(i_band) &
+        * product_weight(i_term_reduced(k))
       weight_sub_band_incr = control%weight_band(i_band)
       DO j=2, n_abs
         i_abs=index_abs(j)
-        iex=i_esft_pointer(i_abs, k_inner)
-        IF (iex_minor(j) > 0) THEN
+        iex=i_esft_pointer(j, i_term_reduced(k))
+        IF (iex_minor(j, k_inner) > 0) THEN
           weight_sub_band_incr = weight_sub_band_incr * &
-            spectrum%map%weight_k_major(iex_minor(j), i_abs, iex_major, i_band)
+            spectrum%map%weight_k_major(iex_minor(j, k_inner), i_abs, &
+                                        iex_major(k_inner), i_band)
         ELSE
           weight_sub_band_incr = weight_sub_band_incr * &
             w_abs_esft(iex, i_abs)
@@ -784,10 +834,10 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
       END DO
       IF (control%l_blue_flux_surf) &
         weight_blue_incr = spectrum%solar%weight_blue(i_band) &
-          * product_weight(k_inner)
+          * product_weight(i_term_reduced(k))
 
       CALL augment_radiance(control, spectrum, atm, bound, radout         &
-        , i_band, iex_major, iex_minor                                    &
+        , i_band, iex_major(k_inner), iex_minor(:, k_inner)               &
         , n_profile, n_layer, n_viewing_level, n_direction                &
         , l_clear, l_initial, l_initial_band, l_initial_channel           &
         , weight_incr, weight_blue_incr, weight_sub_band_incr             &
@@ -801,7 +851,7 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
         , flux_direct_clear_part(:,:,k_inner)                             &
         , flux_total_clear_part(:,:,k_inner)                              &
         , actinic_flux_clear_part(:,:,k_inner), k_abs_layer               &
-        , sph, contrib_funci_part(:,:,k_inner)                            &
+        , photol, sph, contrib_funci_part(:,:,k_inner)                    &
         , contrib_funcf_part(:,:,k_inner)                                 &
 !                   Dimensions
         , nd_profile, nd_flux_profile, nd_radiance_profile, nd_j_profile  &
@@ -817,15 +867,18 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
             DO l=1, n_profile
               flux_direct_ground_part(l)                                  &
                 = sph%allsky%flux_direct(l, n_layer+1)
+              ! Note: l_spherical_solar currently only
+              ! compatible with nd_k_term_inner == 1
             END DO
           ELSE
             DO l=1, n_profile
-              flux_direct_ground_part(l) = flux_direct_part(l, n_layer, k_inner)
+              flux_direct_ground_part(l) &
+                = flux_direct_part(l, n_layer, k_inner)
             END DO
           END IF
         END IF
         CALL augment_tiled_radiance(control, spectrum, radout             &
-          , i_band, iex_major, iex_minor                                  &
+          , i_band, iex_major(k_inner), iex_minor(:, k_inner)             &
           , n_point_tile, n_tile, list_tile                               &
           , l_initial_channel_tile                                        &
           , weight_incr, weight_blue_incr, weight_sub_band_incr           &
@@ -843,6 +896,11 @@ SUBROUTINE solve_band_random_overlap(ierr                               &
 
     END DO ! k_inner
   END DO ! k_outer
+  DEALLOCATE(product_weight)
+  DEALLOCATE(iex_minor_all)
+  DEALLOCATE(iex_major_all)
+  DEALLOCATE(i_esft_pointer)
+  DEALLOCATE(i_term_reduced)
 
   IF (lhook) CALL dr_hook(ModuleName//':'//RoutineName,zhook_out,zhook_handle)
 

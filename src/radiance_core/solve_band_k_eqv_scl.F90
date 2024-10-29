@@ -47,7 +47,7 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
 !                   Tiling of the surface
     , l_tile, n_point_tile, n_tile, list_tile, rho_alb_tile &
 !                   Optical properties
-    , ss_prop &
+    , ss_prop, photol, l_photol_only &
 !                   Cloudy properties
     , l_cloud, i_cloud &
 !                   Cloud geometry
@@ -92,6 +92,7 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
   USE def_out,      ONLY: StrOut
   USE def_planck,   ONLY: StrPlanck
   USE def_ss_prop,  ONLY: str_ss_prop
+  USE def_qy,       ONLY: StrQy
   USE def_spherical_geometry, ONLY: StrSphGeo
   USE rad_pcf, ONLY: ip_solar, ip_infra_red, ip_spherical_harmonic,     &
                      ip_two_stream, ip_surf_alb_diff, ip_ir_gauss,      &
@@ -322,6 +323,12 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
 !                   Optical properties
   TYPE(str_ss_prop), INTENT(INOUT) :: ss_prop
 !   Single scattering properties of the atmosphere
+
+  TYPE(StrQy), INTENT(IN) :: photol(spectrum%photol%n_pathway)
+!   Photolysis quantum yields interpolated to model grid temperatures
+
+  LOGICAL, INTENT(IN) :: l_photol_only(nd_abs)
+!   Only use gas for photolysis, ignoring affect on flux
 
 !                   Cloudy properties
   LOGICAL, INTENT(IN) :: &
@@ -597,6 +604,9 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
     DO j=2, n_abs
 
       i_abs_band=index_abs(j)
+      ! Ignore absorption for gases that only require photolysis rates
+      IF (l_photol_only(i_abs_band)) CYCLE
+
       IF (n_abs_esft(i_abs_band) == 1 .AND. control%l_spherical_solar) THEN
         ! If there is only 1 k-term for this absorber there is no need to
         ! calculate an equivalent extinction: the single absorption coefficient
@@ -925,6 +935,9 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
     DO j=2, n_abs
 
       i_abs_band=index_abs(j)
+      ! Ignore absorption for gases that only require photolysis rates
+      IF (l_photol_only(i_abs_band)) CYCLE
+
       IF (n_abs_esft(i_abs_band) == 1 .AND. control%l_grey_single) THEN
         ! If there is only 1 k-term for this absorber there is no need to
         ! calculate an equivalent extinction: the single absorption coefficient
@@ -1101,11 +1114,19 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
     END IF
 
 !   Set the absorption for this absorber and k-term.
-    DO i=1, n_layer
-      DO l=1, n_profile
-        k_gas_abs(l, i) = k_abs_layer(l, i, iex, i_abs)
+    IF (l_photol_only(i_abs)) THEN
+      DO i=1, n_layer
+        DO l=1, n_profile
+          k_gas_abs(l, i) = 0.0_RealK
+        END DO
       END DO
-    END DO
+    ELSE
+      DO i=1, n_layer
+        DO l=1, n_profile
+          k_gas_abs(l, i) = k_abs_layer(l, i, iex, i_abs)
+        END DO
+      END DO
+    END IF
 
     IF (i_cloud == ip_cloud_mcica) THEN
 
@@ -1273,7 +1294,7 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
       , i_direct_part, radiance_part, photolysis_part &
       , flux_direct_clear_part, flux_total_clear_part &
       , actinic_flux_clear_part, k_abs_layer &
-      , sph, contrib_funci_part, contrib_funcf_part &
+      , photol, sph, contrib_funci_part, contrib_funcf_part &
 !                   Dimensions
       , nd_profile, nd_flux_profile, nd_radiance_profile, nd_j_profile &
       , nd_layer, nd_viewing_level, nd_direction, dimen%nd_channel &

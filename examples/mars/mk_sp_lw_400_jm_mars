@@ -57,51 +57,51 @@ if [ ! -s $sp_dir/h2o-h2o_lw_c ] ; then
      > $sp_dir/h2o-h2o_lw_clog
 fi
 
-# echo -n 'CO2 '
-# if [ ! -s $sp_dir/co2_lw_l ] ; then
-#   if [ ! -s $CO2_LBL_LW ] ; then
-#     echo ": No LBL file: please run ./mk_co2_lbl_lw_400_jm_mars"
-#     exit 1
-#   else
-#     rm -f $sp_dir/co2_lw_l*
-#     Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
-#       -R 1 400 -l 2 ${COL_MASS_K_CO2} -b 5.0e-4 \
-#       -sb ${GAS_DATA_DIR}/gas_fractions_09_10 -lp 2 \
-#       -s $skelfile +p -lk \
-#       -o $sp_dir/co2_lw_l -m $sp_dir/co2_lw_lm \
-#       -L $CO2_LBL_LW \
-#        > $sp_dir/co2_lw_log
-#   fi
-# fi
-# echo 'done'
+echo -n 'CO2 '
+if [ ! -s $sp_dir/co2_lw_l ] ; then
+  if [ ! -s $CO2_LBL_LW ] ; then
+    echo ": No LBL file: please run ./mk_co2_lbl_lw_400_jm_mars"
+    exit 1
+  else
+    rm -f $sp_dir/co2_lw_l*
+    Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
+      -R 1 400 -l 2 ${COL_MASS_K_CO2} -b 5.0e-4 \
+      -sb ${GAS_DATA_DIR}/gas_fractions_09_10 -lp 2 \
+      -s $skelfile +p -lk \
+      -o $sp_dir/co2_lw_l -m $sp_dir/co2_lw_lm \
+      -L $CO2_LBL_LW \
+       > $sp_dir/co2_lw_log
+  fi
+fi
+echo 'done'
 
-# if [ ! -s $sp_dir/co2-co2_lw_c ] ; then
-#   echo "CO2-CO2 CIA"
-#   rm -f $sp_dir/co2-co2_lw_c*
-#   Ccorr_k -F $CONT_PT_FILE -CIA $CONT_CO2_CO2 \
-#     -R 1 400 -i 1.0 -ct 2 2 ${COL_CO2C} -t 5.0e-4 \
-#     -k -s $skelfile +p -lk \
-#     -o $sp_dir/co2-co2_lw_c -m $sp_dir/co2-co2_lw_cm \
-#     -L $sp_dir/co2-co2_lw_clbl.nc \
-#     -np $procs > $sp_dir/co2-co2_lw_clog
-# fi
+if [ ! -s $sp_dir/co2-co2_lw_c ] ; then
+  echo "CO2-CO2 CIA"
+  rm -f $sp_dir/co2-co2_lw_c*
+  Ccorr_k -F $CONT_PT_FILE -CIA $CONT_CO2_CO2 \
+    -R 1 400 -i 1.0 -ct 2 2 ${COL_CO2C} -t 5.0e-4 \
+    -k -s $skelfile +p -lk \
+    -o $sp_dir/co2-co2_lw_c -m $sp_dir/co2-co2_lw_cm \
+    -L $sp_dir/co2-co2_lw_clbl.nc \
+    -np $procs > $sp_dir/co2-co2_lw_clog
+fi
 
-# echo -n 'SO2 '
-# if [ ! -s $sp_dir/so2_lw_l ] ; then
-#   if [ ! -s $SO2_LBL_LW ] ; then
-#     echo ": No LBL file: please run ./mk_so2_lbl_lw_400_jm_mars"
-#     exit 1
-#   else
-#     rm -f $sp_dir/so2_lw_l*
-#     Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
-#       -R 1 400 -l 9 ${COL_MASS_K_SO2} -b 5.0e-4 \
-#       -s $skelfile +p -lk \
-#       -o $sp_dir/so2_lw_l -m $sp_dir/so2_lw_lm \
-#       -L $SO2_LBL_LW \
-#        > $sp_dir/so2_lw_log
-#   fi
-# fi
-# echo 'done'
+echo -n 'SO2 '
+if [ ! -s $sp_dir/so2_lw_l ] ; then
+  if [ ! -s $SO2_LBL_LW ] ; then
+    echo ": No LBL file: please run ./mk_so2_lbl_lw_400_jm_mars"
+    exit 1
+  else
+    rm -f $sp_dir/so2_lw_l*
+    Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
+      -R 1 400 -l 9 ${COL_MASS_K_SO2} -b 5.0e-4 \
+      -s $skelfile +p -lk \
+      -o $sp_dir/so2_lw_l -m $sp_dir/so2_lw_lm \
+      -L $SO2_LBL_LW \
+       > $sp_dir/so2_lw_log
+  fi
+fi
+echo 'done'
 
 
 # Sulphuric acid aerosol

@@ -63,6 +63,7 @@ PROGRAM l_run_cdf
   CHARACTER (LEN=errormessagelength) :: iomessage
 !       I/O error message
   CHARACTER (LEN=errormessagelength) :: cmessage
+!       Error message
   LOGICAL :: l_interactive
 !       Switch for interactive use
 
@@ -753,20 +754,14 @@ PROGRAM l_run_cdf
     ENDDO
     IF (control%i_gas_overlap == IP_overlap_single) THEN
       WRITE(iu_stdout, '(a)') 'Enter type number of gas.'
-4     read(iu_stdin, *) control%i_gas
-!     Convert from the type to the species.
-      i=0
-5     i=i+1
-      IF (Spectrum%Gas%type_absorb(i) == control%i_gas) THEN
-        control%i_gas=i
-      ELSE IF (i < Spectrum%Gas%n_absorb) THEN
-        goto 5
-      ELSE
-        WRITE(iu_err, '(/a)')                                           &
-          '+++ This gas is not in the spectrum.'
-        WRITE(iu_err, '(a)') 'Please reenter.'
-        goto 4
-      ENDIF
+      READ(iu_stdin, *) control%i_gas
+      IF (.NOT.ANY(Spectrum%Gas%type_absorb(1:Spectrum%Gas%n_absorb) &
+                   == control%i_gas)) THEN
+        cmessage = 'The selected gas is not in the spectral file: '// &
+          TRIM(gas_suffix(Spectrum%Gas%type_absorb(control%i_gas)))
+        ierr=i_err_fatal
+        CALL ereport(RoutineName, ierr, cmessage)
+      END IF
     ELSE IF (control%i_gas_overlap ==                                   &
       IP_overlap_random_resort_rebin) THEN
       control%n_esft_red = -1
@@ -829,6 +824,12 @@ PROGRAM l_run_cdf
       IF (ierr /= i_normal) STOP
     ELSE
       atm%gas_mix_ratio(:, :, i_gas) = 0.0_RealK
+      DO i = 1, spectrum%photol%n_pathway
+        IF (spectrum%photol%pathway_absorber(i) == i_gas) THEN
+          ! No mixing ratio is provided but photolysis rates are required
+          control%l_photol_only(Spectrum%Gas%type_absorb(i_gas)) = .true.
+        END IF
+      END DO
     ENDIF
 
 !   Water vapour may be required for other elsewhere (as in

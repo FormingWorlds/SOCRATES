@@ -39,11 +39,13 @@ SUBROUTINE map_sub_bands(Sp)
     i_band = Sp%Var%index_sub_band(1, i_sub)
     i_k    = Sp%Var%index_sub_band(2, i_sub)
     IF (i_k == 0) THEN
-      ! In this case there is only one sub-band for the band
-      Sp%Map%n_sub_band_k(:,i_band) = 1
-      ! All the major gas k-terms will contribute to this sub-band
-      i_gas = Sp%Gas%index_absorb(1, i_band)
-      Sp%Map%n_k_sub_band(i_gas, i_sub) = Sp%Gas%i_band_k(i_band, i_gas)
+      IF (Sp%Gas%n_band_absorb(i_band) > 0) THEN
+        ! In this case there is only one sub-band for the band
+        Sp%Map%n_sub_band_k(:,i_band) = 1
+        ! All the major gas k-terms will contribute to this sub-band
+        i_gas = Sp%Gas%index_absorb(1, i_band)
+        Sp%Map%n_k_sub_band(i_gas, i_sub) = Sp%Gas%i_band_k(i_band, i_gas)
+      END IF
     ELSE
       ! Otherwise i_k points to the major gas k-term
       i_gas = Sp%Gas%index_absorb(1, i_band)
@@ -139,16 +141,18 @@ SUBROUTINE map_sub_bands(Sp)
         - 1.0_RealK/Sp%Var%wavelength_sub_band(2, i_sub) )
     IF (i_k == 0) THEN
       ! In this case there is only one sub-band for the band
-      i_gas = Sp%Gas%index_absorb(1, i_band)
-      Sp%Map%n_sub_band_k(:, i_band) = 1
       Sp%Map%list_sub_band_k(1, :, i_band) = i_sub
-      Sp%Map%weight_sub_band_k(1, :, i_band) = Sp%Gas%w(:, i_band, i_gas)
-      ! All the major gas k-terms will contribute to this sub-band
-      DO n_k=1, Sp%Gas%i_band_k(i_band, i_gas)
-        Sp%Map%list_k_sub_band(n_k, i_gas, i_sub) = n_k
-        Sp%Map%weight_k_sub_band(n_k, i_gas, i_sub) &
-          = Sp%Gas%w(n_k, i_band, i_gas)
-      END DO
+      IF (Sp%Gas%n_band_absorb(i_band) > 0) THEN
+        i_gas = Sp%Gas%index_absorb(1, i_band)
+        Sp%Map%n_sub_band_k(:, i_band) = 1
+        Sp%Map%weight_sub_band_k(1, :, i_band) = Sp%Gas%w(:, i_band, i_gas)
+        ! All the major gas k-terms will contribute to this sub-band
+        DO n_k=1, Sp%Gas%i_band_k(i_band, i_gas)
+          Sp%Map%list_k_sub_band(n_k, i_gas, i_sub) = n_k
+          Sp%Map%weight_k_sub_band(n_k, i_gas, i_sub) &
+            = Sp%Gas%w(n_k, i_band, i_gas)
+        END DO
+      END IF
     ELSE
       ! Otherwise i_k points to the major gas k-term
       i_gas = Sp%Gas%index_absorb(1, i_band)

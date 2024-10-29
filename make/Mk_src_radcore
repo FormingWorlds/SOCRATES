@@ -25,6 +25,7 @@ SOURCE_RADCORE=	adjust_ir_radiance.f90 \
 		copy_clr_full.f90 \
 		copy_clr_sol.f90 \
 		def_planck.f90 \
+		def_qy.f90 \
 		def_ss_prop.f90 \
 		def_spherical_geometry.f90 \
 		diff_albedo_basis.f90 \
@@ -95,9 +96,7 @@ SOURCE_RADCORE=	adjust_ir_radiance.f90 \
 		sol_scat_cos.f90 \
 		solar_coefficient_basic.f90 \
 		solar_source.f90 \
-		solve_band_k_eqv.f90 \
 		solve_band_k_eqv_scl.f90 \
-		solve_band_one_gas.f90 \
 		solve_band_random_overlap.f90 \
 		solve_band_random_overlap_resort_rebin.f90 \
 		solve_band_ses.f90 \

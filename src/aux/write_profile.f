@@ -55,8 +55,8 @@
 !           Length of profile name
      &  , n_level_ref
 !           Number of levels in reference atm.
-      CHARACTER !, Intent(IN)
-     &    name_profile*80
+      CHARACTER(LEN=80), Intent(IN) ::
+     &    name_profile
 !           Name of profile
       LOGICAL, Intent(IN) ::
      &    l_reference
@@ -84,10 +84,10 @@
 !           Pressure flag
      &  , l_height
 !           Height flag
-      CHARACTER
-     &    file_name*80
+      CHARACTER(LEN=80) ::
+     &    file_name
 !           Name of output file
-     &  , empty*80
+     &  , empty = REPEAT(' ',80)
 !           Empty character string to fill names
       REAL  (RealK) ::
      &    field(npd_profile, npd_layer+1)
@@ -98,18 +98,8 @@
 !     Subroutines called:
       EXTERNAL
      &    write_cdl_field
-!
-!
-!     Set values on a data statement.
-!
-      data 
-     &    empty(1:20)/'                    '/
-     &  , empty(21:40)/'                    '/
-     &  , empty(41:60)/'                    '/
-     &  , empty(61:80)/'                    '/
-!
-!
-!
+
+
 !     Initialize the logicals.
       l_pressure=.false.
       l_height=.false.

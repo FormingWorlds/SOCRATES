@@ -865,14 +865,14 @@ contains
         do k = dimen%id_cloud_top, atm%n_layer
           kk = abs(layer_offset-k)
           do l=1, atm%n_profile
-            out_field(l, k) = real(full_field(kk, list(l)), RealK)
+            out_field(l, k) = max(real(full_field(kk, list(l)),RealK),0.0_RealK)
           end do
         end do
       else
         do k = dimen%id_cloud_top, atm%n_layer
           kk = abs(layer_offset-k)
           do l=1, atm%n_profile
-            out_field(l, k) = real(full_field(list(l), kk), RealK)
+            out_field(l, k) = max(real(full_field(list(l), kk),RealK),0.0_RealK)
           end do
         end do
       end if
@@ -882,7 +882,7 @@ contains
           kk = abs(layer_offset-k)
           do l=1, atm%n_profile
             ll = stride_layer*(list(l)-1) + kk
-            out_field(l, k) = real(oned_field(ll), RealK)
+            out_field(l, k) = max(real(oned_field(ll), RealK), 0.0_RealK)
           end do
         end do
       else
@@ -890,7 +890,7 @@ contains
           kk = abs(layer_offset-k)
           do l=1, atm%n_profile
             ll = atm%n_profile*(kk-1) + list(l)
-            out_field(l, k) = real(oned_field(ll), RealK)
+            out_field(l, k) = max(real(oned_field(ll), RealK), 0.0_RealK)
           end do
         end do
       end if

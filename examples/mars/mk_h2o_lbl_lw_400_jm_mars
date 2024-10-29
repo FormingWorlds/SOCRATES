@@ -8,12 +8,12 @@ else
 fi
 
 # Set environment variables
-procs=80
+procs=24
 . ./env_mars
 
 # HITRAN2020 data downloaded from hitran.org on 11.11.22
 # (No CO2 broadening coefficients are available for H2O.)
-HITRAN_H2O="/home/n/nichollsh/SOCRATES/nogit_HITRAN2020/h2o_data.par"
+HITRAN_H2O="${ARCHIVE_DATA}/HITRAN2020/h2o_111122.par"
 
 # CAVIAR foreign-broadened continuum
 CONT_H2O_FRN="${RAD_DATA}/continua/caviar_frn"
@@ -24,7 +24,6 @@ skelfile="${LW_DATA}/sp_lw_400_jm_mars_skel"
 ./mk_sp_lw_400_jm_mars_skel $skelfile > /dev/null
 
 lbl_base=${H2O_LBL_LWF%.nc}
-echo $lbl_base
 if [ ! -s ${lbl_base}.nc ] || [ ! -f ${lbl_base}.done ] ; then
   echo "Generating H2O line + foreign continuum absorption data: IR"
   rm -f ${lbl_base}*

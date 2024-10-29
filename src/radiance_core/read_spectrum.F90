@@ -1280,7 +1280,7 @@ DO
   SELECT CASE (TRIM(line))
 
   CASE ('Self-broadened indexing numbers of all absorbers.')
-    READ(iu_spc,'(/,8(2x, i3))',IOSTAT=ios, IOMSG=iomessage) &
+    READ(iu_spc,'(/,6(2x, i3))',IOSTAT=ios, IOMSG=iomessage) &
       Sp%Gas%index_sb(1:Sp%Gas%n_absorb)
 
   CASE ('Band        Gas, Number of k-terms, ' // &
@@ -3557,7 +3557,7 @@ SUBROUTINE read_block_20_0_0
     READ(iu_spc, FMT='(13x,i5)', IOSTAT=ios, IOMSG=iomessage) &
       Sp%Photol%n_t_lookup_photol(i)
     BACKSPACE(iu_spc)
-    READ(iu_spc, '(19x, 3(3x,1pe16.9))', IOSTAT=ios, IOMSG=iomessage) &
+    READ(iu_spc, '((19x, 3(3x,1pe16.9)))', IOSTAT=ios, IOMSG=iomessage) &
       Sp%Photol%t_lookup_photol(1:Sp%Photol%n_t_lookup_photol(i), i)
     READ(iu_spc, FMT='(12x,i6)', IOSTAT=ios, IOMSG=iomessage) &
       Sp%Photol%n_wl_lookup_photol(i)
@@ -3565,7 +3565,7 @@ SUBROUTINE read_block_20_0_0
       READ(iu_spc, '(3x,1pe16.9)', IOSTAT=ios, IOMSG=iomessage) &
         Sp%Photol%wl_lookup_photol(i_wl, i)
       BACKSPACE(iu_spc)
-      READ(iu_spc, '(19x, 3(3x,1pe16.9))', IOSTAT=ios, IOMSG=iomessage) &
+      READ(iu_spc, '((19x, 3(3x,1pe16.9)))', IOSTAT=ios, IOMSG=iomessage) &
         Sp%Photol%quantum_yield(1:Sp%Photol%n_t_lookup_photol(i), i_wl, i)
     END DO
     IF (Sp%Basic%l_present(17)) THEN

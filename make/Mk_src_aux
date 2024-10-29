@@ -13,6 +13,8 @@ SOURCE90_AUX =	aerosol_profile_pcf.f90 \
 		socrates_cloud_ext_diag.f90 \
 		socrates_cloud_gen.f90 \
 		socrates_cloud_level_diag.f90 \
+		socrates_horizon_1d.f90 \
+		socrates_horizon_2d.f90 \
 		socrates_illuminate.f90 \
 		socrates_runes.f90 \
 		socrates_bones.f90 \
