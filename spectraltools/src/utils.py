@@ -108,7 +108,14 @@ def checksum(filename:str):
         while chunk := f.read(8192):
             file_hash.update(chunk)
     return file_hash.hexdigest()
-    
+
+# Check that the environment is configured
+def checkenv():
+    from shutil import which 
+    if which("prep_spec") is not None:
+        return True
+    else:
+        raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")    
 
 # Map absorber names to their IDs (see radiance_core/gas_list_pcf.f90)
 gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3", "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a", "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb", "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5", "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF", "cis-OSSO", "trans-OSSO", "OSO-S"]

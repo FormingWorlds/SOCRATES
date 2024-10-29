@@ -15,18 +15,18 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"             # Source database (DO NOT CHANGE)
-    vols = ["H2O", "H2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "HCN", "H2S"]   # List of gases
-    alias = "Honeyside"         # Alias for this spectral file
-    nband = 4096                 # Number of wavenumber bands
+    vols = ["H2O"] #, "H2", "CO2", "CO", "CH4", "N2", "NH3", "SO2", "N2O", "O3", "HCN", "H2S"]   # List of gases
+    alias = "test"         # Alias for this spectral file
+    nband = 128                 # Number of wavenumber bands
     drops = True  # include water droplet scattering?
     method = 3     # band selection method
-    numax = 3.5e4  # clip to this maximum wavenumber [cm-1]
+    numax = 1000  # clip to this maximum wavenumber [cm-1]
     numin = 1.0    # clip to this minimum wavenumber [cm-1]
     dnu   = 0.0    # downsample to this wavenumber resolution [cm-1]
-    preNC = True   # use pre-existing netCDF files in output/ if they are found
+    preNC = False   # use pre-existing netCDF files in output/ if they are found
 
-    tgt_p = np.logspace(-3.5, 3, 58)
-    tgt_t = np.linspace(100.0, 2895.0, 20)
+    tgt_p = np.logspace(-3.5, 3, 4)
+    tgt_t = np.linspace(100.0, 2895.0, 3)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
     # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
@@ -225,6 +225,7 @@ def main():
     
 
 if __name__ == "__main__":
+    utils.checkenv()
     print("Hello\n")
     main()
     print("Goodbye")
