@@ -764,6 +764,10 @@ function gen_cfortran_get_array(
 
     first_field = true
     for field in type_fields_filtered
+        
+        if !field[:allocatable]
+            continue 
+        end
 
         ifstr = first_field ? "if" : "else if"
         fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
