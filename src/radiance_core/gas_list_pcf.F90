@@ -20,7 +20,7 @@ IMPLICIT NONE
 
 INTEGER, PRIVATE :: i
 
-INTEGER, PARAMETER :: npd_gases = 67
+INTEGER, PARAMETER :: npd_gases = 76
 !   Number of indexed gases
 
 INTEGER, PARAMETER :: IP_h2o = 1
@@ -158,6 +158,18 @@ INTEGER, PARAMETER :: IP_pan = 66
 INTEGER, PARAMETER :: IP_ch3ono2 = 67
 !   Identifier for methylnitrate
 
+! Gases below were added by Harrison Nicholls
+! They are not in the main SOCRATES repository.
+INTEGER, PARAMETER :: IP_sio  = 68
+INTEGER, PARAMETER :: IP_sio2 = 69
+INTEGER, PARAMETER :: IP_fe   = 70
+INTEGER, PARAMETER :: IP_feo  = 71
+INTEGER, PARAMETER :: IP_na2  = 72
+INTEGER, PARAMETER :: IP_nao  = 73
+INTEGER, PARAMETER :: IP_mg   = 74
+INTEGER, PARAMETER :: IP_mg2  = 75
+INTEGER, PARAMETER :: IP_mgo  = 76
+
 CHARACTER (LEN=20), PARAMETER :: name_absorb(npd_gases) = (/ &
                                    "Water Vapour        ", &
                                    "Carbon Dioxide      ", &
@@ -225,7 +237,16 @@ CHARACTER (LEN=20), PARAMETER :: name_absorb(npd_gases) = (/ &
                                    "Methyl vinyl ketone ", &
                                    "Methacrolein        ", &
                                    "Peroxyacetyl nitrate", &
-                                   "Methylnitrate       "/)
+                                   "Methylnitrate       ", &
+                                   "Silicon monoxide    ", &
+                                   "Silicon dioxide     ", &
+                                   "Atomic iron         ", &
+                                   "Iron(II) oxide      ", &
+                                   "Disodium            ", &
+                                   "Sodium oxide        ", &
+                                   "Atomic magnesium    ", &
+                                   "Magnesium dimer     ", &
+                                   "Magnesium oxide     " /)
 
 
 ! Molecular weights taken from "General Inorganic Chemistry"
@@ -297,7 +318,16 @@ REAL (RealK), PARAMETER :: molar_weight(npd_gases) = (/ &
   70.0898_RealK,     & ! MVK (from NIST)
   70.0898_RealK,     & ! MACR (from NIST)
   121.0489_RealK,    & ! PAN (from NIST)
-  77.0394_RealK     /) ! CH3ONO2 (from NIST)
+  77.0394_RealK,     & ! CH3ONO2 (from NIST)
+  44.0849_RealK,     & ! from NIST
+  60.0843_RealK,     & ! from NIST
+  55.8450_RealK,     & ! from NIST
+  71.8440_RealK,     & ! from NIST
+  45.9795_RealK,     & ! from NIST
+  38.9892_RealK,     & ! from NIST
+  24.3050_RealK,     & ! from NIST
+  48.6100_RealK,     & ! from NIST
+  40.3044_RealK /)     ! from NIST
 
 
 ! Array of identifiers in HITRAN for each gas in the radiation code.
@@ -368,7 +398,16 @@ INTEGER, PARAMETER :: hitran_number(npd_gases) = (/ &
   0,   & ! MVK      
   0,   & ! MACR     
   0,   & ! PAN      
-  0   /) ! CH3ONO2  
+  0,   & ! CH3ONO2  
+  0,   & ! SiO 
+  0,   & ! SiO2
+  0,   & ! Fe  
+  0,   & ! FeO
+  0,   & ! Na2 
+  0,   & ! NaO
+  0,   & ! Mg  
+  0,   & ! Mg2 
+  0 /)   ! MgO
 
 ! Maximum number of specified HITRAN isotopes for a given absorber
 INTEGER, PARAMETER :: npd_isotopes = 3
@@ -449,7 +488,16 @@ REAL (RealK), PARAMETER :: depolarization_factor(npd_gases) = (/ &
   0.0_RealK,     & ! MVK      
   0.0_RealK,     & ! MACR     
   0.0_RealK,     & ! PAN      
-  0.0_RealK     /) ! CH3ONO2  
+  0.0_RealK,     & ! CH3ONO2  
+  0.0_RealK,     & ! sio  
+  0.0_RealK,     & ! sio2 
+  0.0_RealK,     & ! fe   
+  0.0_RealK,     & ! feo  
+  0.0_RealK,     & ! na2  
+  0.0_RealK,     & ! nao  
+  0.0_RealK,     & ! mg   
+  0.0_RealK,     & ! mg2  
+  0.0_RealK /)     ! mgo  
 
 ! Maximum number of photolysis products for a given absorber
 INTEGER, PARAMETER :: npd_products = 9
@@ -646,7 +694,17 @@ CHARACTER(LEN=56), PARAMETER :: photol_products(npd_products, npd_gases) &
   "CH3ONO2 -> CH2ONO2 + H            ", &
   "CH3ONO2 -> CH3O + NO + O(3P)      ", &
   "CH3ONO2 -> CH3ONO + O(1D)         ", &
-  (blank, i=1, npd_products-8)          & ! CH3ONO2
+  (blank, i=1, npd_products-8),         & ! CH3ONO2
+  (blank, i=1, npd_products),           & ! CH3ONO2
+  (blank, i=1, npd_products),           & ! sio 
+  (blank, i=1, npd_products),           & ! sio2
+  (blank, i=1, npd_products),           & ! fe  
+  (blank, i=1, npd_products),           & ! feo 
+  (blank, i=1, npd_products),           & ! na2 
+  (blank, i=1, npd_products),           & ! nao 
+  (blank, i=1, npd_products),           & ! mg  
+  (blank, i=1, npd_products),           & ! mg2 
+  (blank, i=1, npd_products)            & ! mgo 
   ], shape=[npd_products, npd_gases] )
 
 ! Name used by UKCA for photolysis pathway
@@ -760,7 +818,16 @@ CHARACTER(LEN=56), PARAMETER :: photol_fldname(0:npd_products, npd_gases) &
   "jpan                          ",  & ! CH3C(O)OONO2 -> CH3C(O)OO + NO2
   (blank, i=2, npd_products),        & ! PAN
   "jmena                         ",  & ! CH3ONO2 -> Unspecified
-  (blank, i=1, npd_products)         & ! CH3ONO2
+  (blank, i=0, npd_products),        & ! CH3ONO2
+  (blank, i=0, npd_products),        & ! sio 
+  (blank, i=0, npd_products),        & ! sio2
+  (blank, i=0, npd_products),        & ! fe  
+  (blank, i=0, npd_products),        & ! feo 
+  (blank, i=0, npd_products),        & ! na2 
+  (blank, i=0, npd_products),        & ! nao 
+  (blank, i=0, npd_products),        & ! mg  
+  (blank, i=0, npd_products),        & ! mg2 
+  (blank, i=0, npd_products)         & ! mgo 
   ], shape=[npd_products+1, npd_gases] )
 
 ! Threshold wavelength defining energy required for photolysis
@@ -954,7 +1021,16 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
    294.0E-09_RealK,                 & ! CH3ONO2 -> CH2ONO2 + H      
    250.0E-09_RealK,                 & ! CH3ONO2 -> CH3O + NO + O(3P)
    241.0E-09_RealK,                 & ! CH3ONO2 -> CH3ONO + O(1D)   
-  (0.0_RealK, i=1, npd_products-8)  & ! CH3ONO2 : JPL 19-5
+  (0.0_RealK, i=1, npd_products-8), & ! CH3ONO2 : JPL 19-5
+  (0.0_RealK, i=1, npd_products),   & ! sio 
+  (0.0_RealK, i=1, npd_products),   & ! sio2
+  (0.0_RealK, i=1, npd_products),   & ! fe  
+  (0.0_RealK, i=1, npd_products),   & ! feo 
+  (0.0_RealK, i=1, npd_products),   & ! na2 
+  (0.0_RealK, i=1, npd_products),   & ! nao 
+  (0.0_RealK, i=1, npd_products),   & ! mg  
+  (0.0_RealK, i=1, npd_products),   & ! mg2 
+  (0.0_RealK, i=1, npd_products)    & ! mgo 
   ], shape=[npd_products, npd_gases] )
 
 ! Unless otherwise stated, data comes from JPL publication No. 15-10:

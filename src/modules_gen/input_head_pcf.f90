@@ -282,7 +282,9 @@ MODULE input_head_pcf
     'cOSSO     ', 'tOSSO     ', 'yOSOS     ', 'CH3CHO    ', &
     'CH3OOH    ', 'CH3COCH3  ', 'CH3COCHO  ', 'CHOCHO    ', &
     'C2H5CHO   ', 'HOCH2CHO  ', 'C2H5COCH3 ', 'MVK       ', &
-    'MACR      ', 'PAN       ', 'CH3ONO2   ' /) 
+    'MACR      ', 'PAN       ', 'CH3ONO2   ', 'SiO       ', &
+    'SiO2      ', 'Fe        ', 'FeO       ', 'Na2       ', &
+    'NaO       ', 'Mg        ', 'Mg2       ', 'MgO       '/)
 !   Headers for gaseous data
 !
 !
@@ -304,7 +306,9 @@ MODULE input_head_pcf
     'cosso       ', 'tosso       ', 'yosos       ', 'ch3cho      ', &
     'ch3ooh      ', 'ch3coch3    ', 'ch3cocho    ', 'chocho      ', &
     'c2h5cho     ', 'hoch2cho    ', 'c2h5coch3   ', 'mvk         ', &
-    'macr        ', 'pan         ', 'ch3ono2     '/) 
+    'macr        ', 'pan         ', 'ch3ono2     ', 'sio         ', &
+    'sio2        ', 'fe          ', 'feo         ', 'na2         ', &
+    'nao         ', 'mg          ', 'mg2         ', 'mgo         '/)
 !   File suffixes for gaseous data
 !
 !
@@ -343,7 +347,11 @@ MODULE input_head_pcf
     ' Propanal                     ', ' Glycolaldehyde               ', &
     ' Methyl ethyl ketone          ', ' Methyl vinyl ketone          ', &
     ' Methacrolein                 ', ' Peroxyacetyl nitrate         ', &
-    ' Methylnitrate                ' /)
+    ' Methylnitrate                ', ' Silicon monoxide             ', &
+    ' Silicon dioxide              ', ' Atomic iron                  ', &
+    ' Iron(II) oxide               ', ' Disodium                     ', &
+    ' Sodium oxide                 ', ' Atomic magnesium             ', &
+    ' Magnesium dimer              ', ' Magnesium oxide              ' /)
 !   Long titles for gaseous data
 !
 !
