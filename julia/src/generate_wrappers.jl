@@ -1,12 +1,12 @@
-# Generate socrates wrappers 
+# Generate socrates wrappers
 
 SOCRATES_DIR = ENV["RAD_DIR"]
-SVN_REV=1566
+SVN_REV=1642
 println("Generating wrappers")
 println("SOCRATES_DIR = $SOCRATES_DIR")
 println("SVN_REV = $SVN_REV")
 
-# Tools 
+# Tools
 include("ParseFortran.jl")
 include("GenFortranWrappers.jl")
 

@@ -1,15 +1,16 @@
-#
-# Pathnames for compilers and global options for naming files
-#
-FORTCOMP        = ifort -O -c
-LINK            = ifort -O
-LIBLINK         = ar rvu
-INCCDF_PATH     = /data/users/frhg/netcdf-fortran-4.4.4/build/ifort17/include
-LIBCDF_PATH     = /data/users/frhg/netcdf-fortran-4.4.4/build/ifort17/lib
-LIBCDF_NAME     = netcdff
-OMPARG          = -qopenmp
-
-LIBSUFFIX       = a
-
-.SUFFIXES: $(SUFFIXES) .f90
-
+# Generated automatically
+# System: Linux atmlxint6.atm.ox.ac.uk 5.4.0-193-generic #213-Ubuntu SMP Fri Aug 2 19:14:16 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux 
+# Date: Tue 29 Oct 10:45:29 GMT 2024 
+ 
+FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC  -c 
+LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC  
+LIBLINK         = /usr/bin/ar rvu 
+INCCDF_PATH     = /usr/include -I/usr/include 
+LIBCDF_PATH     = /usr/lib/x86_64-linux-gnu 
+LIBCDF_NAME     = netcdff 
+OMPARG          = -fopenmp 
+ 
+LIBSUFFIX       = a 
+ 
+.SUFFIXES: $(SUFFIXES) .f90 
+ 

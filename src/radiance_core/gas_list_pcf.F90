@@ -354,7 +354,21 @@ INTEGER, PARAMETER :: hitran_number(npd_gases) = (/ &
   1,   & ! HDO
   15,  & ! HCl
   14,  & ! HF
-  (0, i=ip_cosso, npd_gases) /)
+  0,   & ! cis-OSSO     
+  0,   & ! trans-OSSO 
+  0,   & ! OSO-S    
+  0,   & ! CH3CHO   
+  0,   & ! CH3OOH   
+  0,   & ! CH3COCH3 
+  0,   & ! CH3COCHO 
+  0,   & ! CHOCHO   
+  0,   & ! C2H5CHO  
+  0,   & ! HOCH2CHO 
+  0,   & ! C2H5COCH3
+  0,   & ! MVK      
+  0,   & ! MACR     
+  0,   & ! PAN      
+  0   /) ! CH3ONO2  
 
 ! Maximum number of specified HITRAN isotopes for a given absorber
 INTEGER, PARAMETER :: npd_isotopes = 3
@@ -409,7 +423,33 @@ REAL (RealK), PARAMETER :: depolarization_factor(npd_gases) = (/ &
   0.0279_RealK,  & ! Dry air
   0.0_RealK,     & ! O
   0.0_RealK,     & ! N
- (0.0_RealK, i=ip_no3, npd_gases) /)
+  0.0_RealK,     & ! NO3
+  0.0_RealK,     & ! N2O5
+  0.0_RealK,     & ! HONO
+  0.0_RealK,     & ! HO2NO2
+  0.0_RealK,     & ! H2O2
+  0.0_RealK,     & ! C2H6
+  0.0_RealK,     & ! CH3
+  0.0_RealK,     & ! H2CO
+  0.0_RealK,     & ! HO2
+  0.0_RealK,     & ! HDO
+  0.0_RealK,     & ! HCl
+  0.0_RealK,     & ! HF
+  0.0_RealK,     & ! cis-OSSO     
+  0.0_RealK,     & ! trans-OSSO 
+  0.0_RealK,     & ! OSO-S    
+  0.0_RealK,     & ! CH3CHO   
+  0.0_RealK,     & ! CH3OOH   
+  0.0_RealK,     & ! CH3COCH3 
+  0.0_RealK,     & ! CH3COCHO 
+  0.0_RealK,     & ! CHOCHO   
+  0.0_RealK,     & ! C2H5CHO  
+  0.0_RealK,     & ! HOCH2CHO 
+  0.0_RealK,     & ! C2H5COCH3
+  0.0_RealK,     & ! MVK      
+  0.0_RealK,     & ! MACR     
+  0.0_RealK,     & ! PAN      
+  0.0_RealK     /) ! CH3ONO2  
 
 ! Maximum number of photolysis products for a given absorber
 INTEGER, PARAMETER :: npd_products = 9

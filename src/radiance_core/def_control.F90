@@ -211,7 +211,7 @@ TYPE StrCtrl
   LOGICAL :: l_ch3ono2                                            = .FALSE.
 !   Flag for absorption by methylnitrate
 
-  LOGICAL :: l_photol_only(npd_gases)                             = .FALSE.
+  LOGICAL,ALLOCATABLE :: l_photol_only(:)  
 !   Flags to treat gases for photolysis only, ignoring affect on flux
 
 ! Properties of clouds:
