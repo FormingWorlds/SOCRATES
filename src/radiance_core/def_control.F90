@@ -210,6 +210,15 @@ TYPE StrCtrl
 !   Flag for absorption by peroxyacetyl nitrate (PAN)
   LOGICAL :: l_ch3ono2                                            = .FALSE.
 !   Flag for absorption by methylnitrate
+  LOGICAL :: l_sio                                                = .FALSE.
+  LOGICAL :: l_sio2                                               = .FALSE.
+  LOGICAL :: l_fe                                                 = .FALSE.
+  LOGICAL :: l_feo                                                = .FALSE.
+  LOGICAL :: l_na2                                                = .FALSE.
+  LOGICAL :: l_nao                                                = .FALSE.
+  LOGICAL :: l_mg                                                 = .FALSE.
+  LOGICAL :: l_mg2                                                = .FALSE.
+  LOGICAL :: l_mgo                                                = .FALSE.
 
   LOGICAL :: l_photol_only(npd_gases)                             = .FALSE.
 !   Flags to treat gases for photolysis only, ignoring affect on flux
