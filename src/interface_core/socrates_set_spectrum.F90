@@ -34,8 +34,8 @@ subroutine set_spectrum(n_instances, spectrum, spectrum_name, spectral_file, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
   l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
   l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-  l_pan, l_ch3ono2, &
-  l_all_gases, wavelength_blue)
+  l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, &
+  l_all_gases, wavelength_blue),
 
 use errormessagelength_mod, only: errormessagelength
 use ereport_mod, only: ereport
@@ -65,7 +65,8 @@ logical, intent(in), optional :: &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
   l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
   l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-  l_pan, l_ch3ono2, l_all_gases
+  l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
+  l_mg2, l_mgo, l_all_gases
 
 real(RealExt), intent(in), optional :: wavelength_blue
 
@@ -133,7 +134,8 @@ else if (present(spectrum_name).or.present(spectrum)) then
     l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
     l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
     l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-    l_pan, l_ch3ono2, l_all_gases)
+    l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
+    l_mg2, l_mgo,l_all_gases)
   ! Map the gas k-terms and weights to the sub-bands
   call map_sub_bands(spec)
 end if
@@ -151,7 +153,8 @@ subroutine compress_spectrum(spec, &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
   l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
   l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-  l_pan, l_ch3ono2, l_all_gases)
+  l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
+  l_mg2, l_mgo, l_all_gases)
 
 use gas_list_pcf, only: &
   ip_h2o, ip_co2, ip_o3, ip_n2o, ip_co, ip_ch4, ip_o2, ip_no, ip_so2, ip_no2, &
@@ -161,7 +164,8 @@ use gas_list_pcf, only: &
   ip_o, ip_n, ip_no3, ip_n2o5, ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, &
   ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos, &
   ip_ch3cho, ip_ch3ooh, ip_ch3coch3, ip_ch3cocho, ip_chocho, ip_c2h5cho, &
-  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2
+  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2,  l_sio, & 
+  l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo
 
 implicit none
 
@@ -175,7 +179,8 @@ logical, intent(in), optional :: &
   l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
   l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
   l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-  l_pan, l_ch3ono2, l_all_gases
+  l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, &
+  l_mgo, l_all_gases
 
 integer :: i, j, i_sub, n_band_absorb
 logical :: l_retain_absorb(spec%gas%n_absorb), l_retain_major
@@ -257,7 +262,16 @@ if (.not.l_retain_all) then
         retain_absorber(ip_mvk,       l_mvk      ) .or. &
         retain_absorber(ip_macr,      l_macr     ) .or. &
         retain_absorber(ip_pan,       l_pan      ) .or. &
-        retain_absorber(ip_ch3ono2,   l_ch3ono2  )) then
+        retain_absorber(ip_ch3ono2,   l_ch3ono2  ) .or. &
+        retain_absorber(ip_sio ,      l_sio      ) .or. &     
+        retain_absorber(ip_sio2,      l_sio2     ) .or. &     
+        retain_absorber(ip_fe  ,      l_fe       ) .or. &     
+        retain_absorber(ip_feo ,      l_feo      ) .or. &     
+        retain_absorber(ip_na2 ,      l_na2      ) .or. &     
+        retain_absorber(ip_nao ,      l_nao      ) .or. &     
+        retain_absorber(ip_mg  ,      l_mg       ) .or. &     
+        retain_absorber(ip_mg2 ,      l_mg2      ) .or. &     
+        retain_absorber(ip_mgo ,      l_mgo      )) then     
       l_retain_absorb(i)=.true.
     end if
   end do

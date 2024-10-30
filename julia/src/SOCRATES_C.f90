@@ -88,7 +88,13 @@ contains
     subroutine PS_set_spectrum(n_instances, spectrum_Cptr, spectrum_name_Cstr, spectral_file_Cstr, &
         l_h2o, l_co2, l_o3, l_o2, l_n2o, l_ch4, l_so2, l_cfc11, l_cfc12, &
         l_cfc113, l_cfc114, l_hcfc22, l_hfc125, l_hfc134a, l_co, l_nh3, &
-        l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, l_all_gases, &
+        l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, l_ph3, & 
+        l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+        l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
+        l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+        l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+        l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
+        l_mg2, l_mgo, l_all_gases, &
         wavelength_blue) bind(C, name='PS_set_spectrum')   
     
         implicit none
@@ -105,7 +111,13 @@ contains
         logical(c_bool), intent(in), optional :: &
             l_h2o, l_co2, l_o3, l_o2, l_n2o, l_ch4, l_so2, l_cfc11, l_cfc12, &
             l_cfc113, l_cfc114, l_hcfc22, l_hfc125, l_hfc134a, l_co, l_nh3, &
-            l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, & 
+            l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, l_ph3, &
+            l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+            l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
+            l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
+            l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
+            l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
+            l_mg2, l_mgo, & 
             l_all_gases
         
         real(c_double), intent(in), optional :: wavelength_blue
@@ -159,6 +171,15 @@ contains
             l_li          = logical(l_li), &
             l_rb          = logical(l_rb), &
             l_cs          = logical(l_cs), &
+            l_sio         = logical(l_sio ), &
+            l_sio2        = logical(l_sio2), &
+            l_fe          = logical(l_fe  ), &
+            l_feo         = logical(l_feo ), &
+            l_na2         = logical(l_na2 ), &
+            l_nao         = logical(l_nao ), &
+            l_mg          = logical(l_mg  ), &
+            l_mg2         = logical(l_mg2 ), &
+            l_mgo         = logical(l_mgo ), &
             l_all_gases   = logical(l_all_gases), &
             wavelength_blue = wavelength_blue )
 

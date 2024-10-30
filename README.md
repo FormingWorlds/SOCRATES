@@ -99,9 +99,24 @@ Significant contributors include:
 * A. Slingo
 * J. Manners
 
+### 8) Adding a new gas
+
+This has to be done manually and will require editing a lot of files. The easiest thing to 
+do is to search for the gas "ho2no2" across all files and copy what you see. Always add
+new gases to the end of the existing lists. This will require changing function calls and 
+various hardcoded arrays and variable names. You should expect to change these files:
+* `julia/src/SOCRATES_C.f90`
+* `julia/src/SOCRATES.jl`
+* `spectraltools/src/phys.py`
+* `spectraltools/src/utils.py`
+* `src/interface_core/socrates_set_spectrum.F90`
+* `src/modules_gen/input_head_pcf.f90`
+* `src/radiance_core/def_control.F90`
+* `src/radiance_core/gas_list_pcf.F90`
+
 
 ### References
 * [1]  https://code.metoffice.gov.uk/trac/socrates
 * [2]  https://doi.org/10.1002/qj.49712253107
 * [3]  https://doi.org/10.1051/0004-6361/201323169
-* [4]  
+* [4]  https://doi.org/10.5194/gmd-16-5601-2023
