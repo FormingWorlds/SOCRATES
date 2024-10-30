@@ -103,8 +103,8 @@ Significant contributors include:
 
 This has to be done manually and will require editing a lot of files. The easiest thing to 
 do is to search for the gas "ho2no2" across all files and copy what you see. Always add
-new gases to the end of the existing lists. This will require changing function calls and 
-various hardcoded arrays and variable names. You should expect to change these files:
+new gases to the end of the existing lists. This will require changing function calls, 
+various hardcoded arrays and variables. You should expect to edit these files:
 * `julia/src/SOCRATES_C.f90`
 * `julia/src/SOCRATES.jl`
 * `spectraltools/src/phys.py`

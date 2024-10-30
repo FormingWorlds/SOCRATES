@@ -86,15 +86,14 @@ contains
 
     ! C-bound wrapper for interface_core/socrates_set_spectrum set_spectrum
     subroutine PS_set_spectrum(n_instances, spectrum_Cptr, spectrum_name_Cstr, spectral_file_Cstr, &
-        l_h2o, l_co2, l_o3, l_o2, l_n2o, l_ch4, l_so2, l_cfc11, l_cfc12, &
-        l_cfc113, l_cfc114, l_hcfc22, l_hfc125, l_hfc134a, l_co, l_nh3, &
-        l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, l_ph3, & 
-        l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+        l_h2o, l_co2, l_o3, l_n2o, l_co, l_ch4, l_o2, l_no, l_so2, l_no2, l_nh3, &
+        l_hno3, l_n2, l_cfc11, l_cfc12, l_cfc113, l_hcfc22, l_hfc125, l_hfc134a, &
+        l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
+        l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
         l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
         l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
         l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-        l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
-        l_mg2, l_mgo, l_all_gases, &
+        l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, l_all_gases, &
         wavelength_blue) bind(C, name='PS_set_spectrum')   
     
         implicit none
@@ -109,15 +108,14 @@ contains
         type(c_ptr), value, intent(in)              :: spectral_file_Cstr
         
         logical(c_bool), intent(in), optional :: &
-            l_h2o, l_co2, l_o3, l_o2, l_n2o, l_ch4, l_so2, l_cfc11, l_cfc12, &
-            l_cfc113, l_cfc114, l_hcfc22, l_hfc125, l_hfc134a, l_co, l_nh3, &
-            l_tio, l_vo, l_h2, l_he, l_na, l_k, l_li, l_rb, l_cs, l_ph3, &
-            l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+            l_h2o, l_co2, l_o3, l_n2o, l_co, l_ch4, l_o2, l_no, l_so2, l_no2, l_nh3, &
+            l_hno3, l_n2, l_cfc11, l_cfc12, l_cfc113, l_hcfc22, l_hfc125, l_hfc134a, &
+            l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
+            l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
             l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
             l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
             l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-            l_pan, l_ch3ono2,  l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, & 
-            l_mg2, l_mgo, & 
+            l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, & 
             l_all_gases
         
         real(c_double), intent(in), optional :: wavelength_blue
@@ -146,40 +144,81 @@ contains
             spectrum      = spectrum, &
             spectral_file = spectral_file, &
             spectrum_name = spectrum_name, &
-            l_h2o         = logical(l_h2o), & ! c_bool is not the same as default 'kind' of Fortran logical
-            l_co2         = logical(l_co2), &
-            l_o3          = logical(l_o3), &
-            l_o2          = logical(l_o2), &
-            l_n2o         = logical(l_n2o), &
-            l_ch4         = logical(l_ch4), &
-            l_so2         = logical(l_so2), &
-            l_cfc11       = logical(l_cfc11), &
-            l_cfc12       = logical(l_cfc12), &
-            l_cfc113      = logical(l_cfc113), &
-            l_cfc114      = logical(l_cfc114), &
-            l_hcfc22      = logical(l_hcfc22), &
-            l_hfc125      = logical(l_hfc125), &
-            l_hfc134a     = logical(l_hfc134a), &
-            l_co          = logical(l_co), &
-            l_nh3         = logical(l_nh3), &
-            l_tio         = logical(l_tio), &
-            l_vo          = logical(l_vo), &
-            l_h2          = logical(l_h2), &
-            l_he          = logical(l_he), &
-            l_na          = logical(l_na), &
-            l_k           = logical(l_k), &
-            l_li          = logical(l_li), &
-            l_rb          = logical(l_rb), &
-            l_cs          = logical(l_cs), &
-            l_sio         = logical(l_sio ), &
-            l_sio2        = logical(l_sio2), &
-            l_fe          = logical(l_fe  ), &
-            l_feo         = logical(l_feo ), &
-            l_na2         = logical(l_na2 ), &
-            l_nao         = logical(l_nao ), &
-            l_mg          = logical(l_mg  ), &
-            l_mg2         = logical(l_mg2 ), &
-            l_mgo         = logical(l_mgo ), &
+            l_h2o         = logical(l_h2o      ), & ! c_bool is not the same as default 'kind' of Fortran logical 
+            l_co2         = logical(l_co2      ), & 
+            l_o3          = logical(l_o3       ), & 
+            l_n2o         = logical(l_n2o      ), & 
+            l_co          = logical(l_co       ), & 
+            l_ch4         = logical(l_ch4      ), & 
+            l_o2          = logical(l_o2       ), & 
+            l_no          = logical(l_no       ), & 
+            l_so2         = logical(l_so2      ), & 
+            l_no2         = logical(l_no2      ), & 
+            l_nh3         = logical(l_nh3      ), & 
+            l_hno3        = logical(l_hno3     ), & 
+            l_n2          = logical(l_n2       ), & 
+            l_cfc11       = logical(l_cfc11    ), & 
+            l_cfc12       = logical(l_cfc12    ), & 
+            l_cfc113      = logical(l_cfc113   ), & 
+            l_hcfc22      = logical(l_hcfc22   ), & 
+            l_hfc125      = logical(l_hfc125   ), & 
+            l_hfc134a     = logical(l_hfc134a  ), & 
+            l_cfc114      = logical(l_cfc114   ), & 
+            l_tio         = logical(l_tio      ), & 
+            l_vo          = logical(l_vo       ), & 
+            l_h2          = logical(l_h2       ), & 
+            l_he          = logical(l_he       ), & 
+            l_ocs         = logical(l_ocs      ), & 
+            l_na          = logical(l_na       ), & 
+            l_k           = logical(l_k        ), & 
+            l_feh         = logical(l_feh      ), & 
+            l_crh         = logical(l_crh      ), & 
+            l_li          = logical(l_li       ), & 
+            l_rb          = logical(l_rb       ), & 
+            l_cs          = logical(l_cs       ), & 
+            l_ph3         = logical(l_ph3      ), & 
+            l_c2h2        = logical(l_c2h2     ), & 
+            l_hcn         = logical(l_hcn      ), & 
+            l_h2s         = logical(l_h2s      ), & 
+            l_ar          = logical(l_ar       ), & 
+            l_o           = logical(l_o        ), & 
+            l_n           = logical(l_n        ), & 
+            l_no3         = logical(l_no3      ), & 
+            l_n2o5        = logical(l_n2o5     ), & 
+            l_hono        = logical(l_hono     ), & 
+            l_ho2no2      = logical(l_ho2no2   ), & 
+            l_h2o2        = logical(l_h2o2     ), & 
+            l_c2h6        = logical(l_c2h6     ), & 
+            l_ch3         = logical(l_ch3      ), & 
+            l_h2co        = logical(l_h2co     ), & 
+            l_ho2         = logical(l_ho2      ), & 
+            l_hdo         = logical(l_hdo      ), & 
+            l_hcl         = logical(l_hcl      ), & 
+            l_hf          = logical(l_hf       ), & 
+            l_cosso       = logical(l_cosso    ), &
+            l_tosso       = logical(l_tosso    ), &
+            l_yosos       = logical(l_yosos    ), &
+            l_ch3cho      = logical(l_ch3cho   ), &
+            l_ch3ooh      = logical(l_ch3ooh   ), &
+            l_ch3coch3    = logical(l_ch3coch3 ), &
+            l_ch3cocho    = logical(l_ch3cocho ), &
+            l_chocho      = logical(l_chocho   ), &
+            l_c2h5cho     = logical(l_c2h5cho  ), &
+            l_hoch2cho    = logical(l_hoch2cho ), &
+            l_c2h5coch3   = logical(l_c2h5coch3), &
+            l_mvk         = logical(l_mvk      ), &
+            l_macr        = logical(l_macr     ), &
+            l_pan         = logical(l_pan      ), &
+            l_ch3ono2     = logical(l_ch3ono2  ), &
+            l_sio         = logical(l_sio      ), &
+            l_sio2        = logical(l_sio2     ), &
+            l_fe          = logical(l_fe       ), & 
+            l_feo         = logical(l_feo      ), & 
+            l_na2         = logical(l_na2      ), & 
+            l_nao         = logical(l_nao      ), & 
+            l_mg          = logical(l_mg       ), & 
+            l_mg2         = logical(l_mg2      ), & 
+            l_mgo         = logical(l_mgo      ), & 
             l_all_gases   = logical(l_all_gases), &
             wavelength_blue = wavelength_blue )
 
@@ -372,7 +411,6 @@ contains
         type(c_ptr), value, intent(in)          :: aer_Cptr
         type(c_ptr), value, intent(in)          :: dimen_Cptr
         type(c_ptr), value, intent(in)          :: sp_Cptr
-
         ! local variables
         type(StrAer), pointer                   :: aer
         type(StrDim), pointer                 :: dimen
