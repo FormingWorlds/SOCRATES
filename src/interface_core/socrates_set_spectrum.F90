@@ -35,7 +35,7 @@ subroutine set_spectrum(n_instances, spectrum, spectrum_name, spectral_file, &
   l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
   l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
   l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, &
-  l_all_gases, wavelength_blue),
+  l_all_gases, wavelength_blue)
 
 use errormessagelength_mod, only: errormessagelength
 use ereport_mod, only: ereport
@@ -164,8 +164,8 @@ use gas_list_pcf, only: &
   ip_o, ip_n, ip_no3, ip_n2o5, ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, &
   ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos, &
   ip_ch3cho, ip_ch3ooh, ip_ch3coch3, ip_ch3cocho, ip_chocho, ip_c2h5cho, &
-  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2,  l_sio, & 
-  l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo
+  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2, ip_sio, & 
+  ip_sio2, ip_fe, ip_feo, ip_na2, ip_nao, ip_mg, ip_mg2, ip_mgo
 
 implicit none
 
