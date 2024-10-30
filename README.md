@@ -7,12 +7,11 @@ Rehosted from the original Met Office source [1] with modifications by Harrison 
 ### Contents
 0. Licence
 1. What's included?
-2. [Omitted in this redistribution of the code]
-3. Compiling the source code externally
-4. Compilation of scripts in sbin
-5. Running the code
-6. Tested compilers
-7. Contributors
+2. Compiling the source code externally
+3. Running the code
+4. Tested compilers
+5. Contributors
+6. Adding a new gas
 
 
 --------------------------------
@@ -41,7 +40,7 @@ For further details please refer to the file COPYRIGHT.txt which you should have
 
 `spectraltools/` contains new addons to the code which allow for streamlined and flexible creation of spectral files from precomputed cross-sections.
 
-### 3) Compiling the source code externally
+### 2) Compiling the source code externally
 
 The following commands can be run to build the suite and setup your path to the executables and man pages:
 
@@ -49,16 +48,7 @@ The following commands can be run to build the suite and setup your path to the 
 2. `./build_code`             
 3. `source ./set_rad_env`      
 
-
-### 4) Compilation of scripts in sbin
-
-There are a small number of utilities in `sbin/` which are written in C and require compilation. A Makefile has been provided:
-
-1. `cd $RAD_SCRIPT`
-2. `make`
-
-
-### 5) Running the code
+### 3) Running the code
 
 Once you have set your path to the man pages (see section 2/3) you can find up-to-date instructions for running the following routines:
 
@@ -86,20 +76,22 @@ These scripts are a command line interface to interactive routines in the `bin/`
 It is very useful to study the examples/ directory for common usage of the code.
 
 
-### 6) Tested compilers
+### 4) Tested compilers
 
 The full suite has been tested with the following compilers:
 * Intel ifort 17.0.7    
-* GCC gfortran 9.4.0
+* GNU gfortran 9.4.0
 
-### 7) Contributors
-
-Significant contributors include:
+### 5) Contributors
 * J. Edwards
 * A. Slingo
 * J. Manners
+* S. Havemann
+* S. Mullerworth 
+* D. Sergeev
+* H. Nicholls
 
-### 8) Adding a new gas
+### 6) Adding a new gas
 
 This has to be done manually and will require editing a lot of files. The easiest thing to 
 do is to search for the gas "ho2no2" across all files and copy what you see. Always add
