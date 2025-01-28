@@ -1,7 +1,7 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 # Python wizard for interactive file conversion
 
-# Import local files 
+# Import local files
 import src.utils as utils
 import src.spectral as spectral
 import src.dace as dace
@@ -38,7 +38,7 @@ def main():
 
 
 
-   
+
     # ------------ EXECUTION -------------
     # Check volatile names
     for i in range(len(vols)):
@@ -53,7 +53,7 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v.strip()+"/")
         if not os.path.exists(formula_path):
             raise Exception("Could not find folder '%s'" % formula_path)
-        
+
 
     # ===========
     # Remove content of output folder under this alias (optionally including netCDFs)
@@ -71,7 +71,7 @@ def main():
     print("Parameters")
     print("    source: %s"%source)
     print("    alias:  %s"%alias)
-    print("    vols:   %s"%utils.get_arr_as_str(vols))  
+    print("    vols:   %s"%utils.get_arr_as_str(vols))
     print("    nvols:  %d"%len(vols))
     print("    nband:  %d"%nband)
     print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
@@ -104,7 +104,7 @@ def main():
         dat_numax = max(dat_numax, vol_numax)
         print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
 
-        #     get tmin, tmax 
+        #     get tmin, tmax
         _,at,_ = dace.list_all_ptf(formula_path)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
@@ -133,7 +133,7 @@ def main():
 
 
     # ===========
-    # Determine bands 
+    # Determine bands
     band_edges = spectral.best_bands(nu_arr, method, nband)
 
 
@@ -154,7 +154,7 @@ def main():
         nc_paths[v] = ncp
         if os.path.exists(ncp) and preNC:
             print("WARNING: Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues."%v)
-            continue 
+            continue
 
         # Get numin, numax for this volatile
         formula_path = os.path.join(utils.dirs[source], v+"/")
@@ -167,7 +167,7 @@ def main():
         # This is for performance reasons, but is also critical for ensuring that the volatiles all use the same p,t points
         files = []
         print("Using pt->f map from %s for %s"%(vols[-1],v))
-        for f in arr_f: 
+        for f in arr_f:
             # Try simply substituting volatile name and wavenumber range
             ftry = list(str(f).replace(vols[-1], v))
             ftry[-26:-21] = str_numin[:]
@@ -176,16 +176,16 @@ def main():
 
             if os.path.exists(ftry):
                 files.append(ftry)
-                continue 
+                continue
 
-            # Try also substituting "out"<->"itp" 
+            # Try also substituting "out"<->"itp"
             if "Itp" in ftry:
                 ftry = ftry.replace("Itp", "Out")
             else:
                 ftry = ftry.replace("Out", "Itp")
             if os.path.exists(ftry):
                 files.append(ftry)
-                continue 
+                continue
 
             raise Exception("Could not find bin file for '%s' corresponding to '%s'"%(v,f))
 
@@ -203,14 +203,14 @@ def main():
 
 
     # ===========
-    # Calculate k-coefficients from netCDF 
+    # Calculate k-coefficients from netCDF
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
-        for f2 in vols[i:]: 
+        for f2 in vols[i:]:
             spectral.calc_kcoeff_cia(alias, f1, f2, dnu_last)
 
 
-    # =========== 
+    # ===========
     # Calculate water droplet properties
     if drops and ("H2O" in vols):
         spectral.calc_waterdroplets(alias)
@@ -221,8 +221,8 @@ def main():
     spectral.assemble(alias, vols)
 
     # ------------------------------------
-    return 
-    
+    return
+
 
 if __name__ == "__main__":
     utils.checkenv()
