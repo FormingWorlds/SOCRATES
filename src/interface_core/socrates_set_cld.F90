@@ -514,6 +514,7 @@ case (ip_cloud_ice_water, ip_cloud_combine_ice_water)
       do l = 1, atm%n_profile
         if (frac_liq(l, k) + frac_ice(l, k) > eps) then
           ! Split mixed phase fraction between ice and liquid
+          call split_mix_phase(ip_cloud_type_water, ip_cloud_type_ice)
           cld%frac_cloud(l, k, ip_cloud_type_water) = &
             frac(l, k)*frac_liq(l, k) / (frac_liq(l, k)+frac_ice(l, k))
           cld%frac_cloud(l, k, ip_cloud_type_ice) = &
@@ -547,6 +548,7 @@ case (ip_cloud_ice_water, ip_cloud_combine_ice_water)
         do l = 1, atm%n_profile
           if (frac_liq(l, k) + frac_ice(l, k) > eps) then
             ! Split mixed phase fraction between ice and liquid
+            call split_mix_phase(ip_cloud_type_water, ip_cloud_type_ice)
             frac_liq(l, k) = &
               frac(l, k)*frac_liq(l, k) / (frac_liq(l, k)+frac_ice(l, k))
             frac_ice(l, k) = &
@@ -664,6 +666,7 @@ case (ip_cloud_csiw, ip_cloud_split_ice_water)
       do l = 1, atm%n_profile
         if (frac_liq(l, k) + frac_ice(l, k) > eps) then
           ! Split mixed phase fraction between ice and liquid
+          call split_mix_phase(ip_cloud_type_sw, ip_cloud_type_si)
           cld%frac_cloud(l, k, ip_cloud_type_sw) = &
             frac(l, k)*frac_liq(l, k) / (frac_liq(l, k)+frac_ice(l, k))
           cld%frac_cloud(l, k, ip_cloud_type_si) = &
@@ -695,6 +698,7 @@ case (ip_cloud_csiw, ip_cloud_split_ice_water)
       do l = 1, atm%n_profile
         if (frac_liq(l, k) + frac_ice(l, k) > eps) then
           ! Split mixed phase fraction between ice and liquid
+          call split_mix_phase(ip_cloud_type_cw, ip_cloud_type_ci)
           cld%frac_cloud(l, k, ip_cloud_type_cw) = &
             frac(l, k)*frac_liq(l, k) / (frac_liq(l, k)+frac_ice(l, k))
           cld%frac_cloud(l, k, ip_cloud_type_ci) = &
@@ -900,6 +904,39 @@ contains
       call ereport(ModuleName//':'//RoutineName, ierr, cmessage)      
     end if
   end subroutine set_cld_field
+
+
+  subroutine split_mix_phase(i_cloud_type_water, i_cloud_type_ice)
+    implicit none
+
+    integer, intent(in) :: i_cloud_type_water, i_cloud_type_ice
+    real(RealK) :: frac_mix, liq_mix_mmr, ice_mix_mmr
+
+    ! Split mixed phase fraction between ice and liquid
+    ! using the ratio of their in-cloud MMRs
+
+    frac_mix = frac_liq(l, k) + frac_ice(l, k) - frac(l, k)
+    if (frac_mix > eps .and. &
+        frac_liq(l, k) > eps .and. frac_ice(l, k) > eps) then
+      liq_mix_mmr = 0.0_RealK
+      ice_mix_mmr = 0.0_RealK
+      do i = 1, cld%n_condensed
+        if (cld%i_cloud_type(i) == i_cloud_type_water) then
+          liq_mix_mmr = liq_mix_mmr &
+            + cld%condensed_mix_ratio(l, k, i) / frac_liq(l, k)
+        else if (cld%i_cloud_type(i) == i_cloud_type_ice) then
+          ice_mix_mmr = ice_mix_mmr &
+            + cld%condensed_mix_ratio(l, k, i) / frac_ice(l, k)
+        end if
+      end do
+      if (liq_mix_mmr + ice_mix_mmr > eps) then
+        frac_liq(l, k) = max(frac_liq(l, k) - frac_mix &
+          * ice_mix_mmr / (liq_mix_mmr + ice_mix_mmr), 0.0_RealK)
+        frac_ice(l, k) = max(frac_ice(l, k) - frac_mix &
+          * liq_mix_mmr / (liq_mix_mmr + ice_mix_mmr), 0.0_RealK)
+      end if
+    end if
+  end subroutine split_mix_phase
 
 end subroutine set_cld
 end module socrates_set_cld
