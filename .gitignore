@@ -27,3 +27,8 @@ spectraltools/output/
 spectraltools/data
 spectraltools/data/
 spectraltools/moleculesUV/
+__pycache__
+.vscode
+.idea
+*.pyc
+.pytest_cache
