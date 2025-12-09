@@ -1,12 +1,12 @@
 # Generated automatically
-# System: Linux atmlxint6.atm.ox.ac.uk 5.4.0-193-generic #213-Ubuntu SMP Fri Aug 2 19:14:16 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux 
-# Date: Thu 31 Oct 13:48:05 GMT 2024 
+# System: Linux norma1.intra.astro.rug.nl 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Oct 31 13:55:05 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux 
+# Date: Mon Dec  8 02:01:11 PM CET 2025 
  
 FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC  -c 
 LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC  
 LIBLINK         = /usr/bin/ar rvu 
-INCCDF_PATH     = /usr/include -I/usr/include 
-LIBCDF_PATH     = /usr/lib/x86_64-linux-gnu 
+INCCDF_PATH     = /usr/include -I/usr/lib64/gfortran/modules 
+LIBCDF_PATH     = netcdff 
 LIBCDF_NAME     = netcdff 
 OMPARG          = -fopenmp 
  

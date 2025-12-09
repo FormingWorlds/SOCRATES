@@ -9,8 +9,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     """Choose the best band edges.
 
     Given all the available nu values, calculates the 'best' band edges for a given method. \n
-    Methods:    
-        0 = linspace   \n 
+    Methods:
+        0 = linspace   \n
         1 = logspace   \n
         2 = logspace, using a single band to cover long WL \n
         3 = logspace, using a few linear-spaced bands to cover long WL \n
@@ -23,7 +23,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Wavenumber array [cm-1]
     method : int
         Selection method
-    nband : int 
+    nband : int
         Required number of bands
     floor : float
         Restrict nu to be larger than this value
@@ -47,17 +47,17 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         raise Exception("Too many bands! (%d requested)"%nband)
     if (method == 9) and (nband != 318):
         raise Exception("When method=9 (legacy), you must set nband=318")
-    
+
     # Check range
     numin = max(nu_arr[1], floor)
-    numax = nu_arr[-2] 
+    numax = nu_arr[-2]
     lognumin = np.log10(numin)
     lognumax = np.log10(numax)
 
     # Simple case
     if nband == 1:
         return [numin, numax]
-    
+
     # Other cases ...
     if (nband == 2) and (method > 2):
         method = 2
@@ -65,22 +65,22 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     shrt_cutoff = 1.7e4  # [cm-1] Value where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
         method = 3
-    
+
     long_cutoff = 300.0 # [cm-1] Value where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
-        method = 1 
-    
+        method = 1
+
     # Get target bands
     nedges = nband+1
     match method:
         case 0:
             bands = np.linspace(numin, numax, nedges)
-        case 1: 
+        case 1:
             bands = np.logspace(lognumin, lognumax, nedges)
         case 2:
             bands = np.array([numin, long_cutoff])
             bands = np.append(bands, np.logspace(np.log10(long_cutoff) , lognumax , nedges-1 )[1:])
-        case 3: 
+        case 3:
             len_lin = int(nedges*0.15)
             bands = np.linspace(numin, long_cutoff, len_lin+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), lognumax, nedges-len_lin))
@@ -91,9 +91,9 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
             bands = np.append(bands, np.logspace(np.log10(shrt_cutoff), lognumax, len3))
-        
+
         case 9:
-            bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500))) 
+            bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500)))
             bands[0] = 1.0
             numin = bands[0]
             numax = bands[-1]
@@ -111,7 +111,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             set_band += 1                  # target nu set to next edge
             dist_last = 9e99
             if set_band > 1:
-                print("    band %3d : %.2f - %.2f cm-1     %.2f - %.2f nm" 
+                print("    band %3d : %.2f - %.2f cm-1     %.2f - %.2f nm"
                       % (set_band-1, bands_out[-2], bands_out[-1], utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]))
                       )
         else:
@@ -133,7 +133,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 def get_cia_pair(fA:str, fB:str):
     """Get the valid CIA pairing.
 
-    If the two absorber names fA,fB form a valid CIA pair, returns that pair as 
+    If the two absorber names fA,fB form a valid CIA pair, returns that pair as
     as list with two elements. Otherwise returns an empty list.
 
     Parameters
@@ -182,10 +182,10 @@ def read_band_edges(sfpath:str) -> list:
     for l in lines:
         # We want block 1 data
         if "Band        Lower limit         Upper limit" in l:
-            block_idx = 0 
+            block_idx = 0
         if (block_idx > 0) and ("*END" in l):
-            break 
-        
+            break
+
         # Read bands
         if (block_idx > 0):
             s = [float(ss.strip()) for ss in l.split()[1:]]
@@ -195,12 +195,12 @@ def read_band_edges(sfpath:str) -> list:
             # Upper edges
             band_edgesm.append(s[1])  # [metres]
 
-        # Block index 
+        # Block index
         block_idx += 1
 
     if len(band_edgesm)-1 != nband:
         raise Exception("Band edges could not be read from spectral file")
-    
+
     return band_edgesm
 
 
@@ -217,11 +217,11 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         Pressure values [bar]
     t_points : np.ndarray
         Temperature values [K]
-    volatile_list : list 
+    volatile_list : list
         List of absorber names
-    band_edges : list 
+    band_edges : list
         List of band edges (length = nbands+1) [cm-1]
-    
+
     dry : bool
         Dry run?
 
@@ -234,7 +234,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     print("Creating skeleton spectral file '%s'"%alias)
     skel_path = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     utils.rmsafe(skel_path)
- 
+
     # Sanitise bands
     if not utils.is_ascending(band_edges):
         raise Exception("Band edges must be strictly ascending")
@@ -244,7 +244,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     print("    number of bands: %d"%nband)
     print("    numin , numax: %.2f , %.2f cm-1"%(numin, numax))
 
-    # Sanitise volatiles 
+    # Sanitise volatiles
     volatile_list_inp = [str(v) for v in volatile_list]
     volatile_list = []
     for v in volatile_list_inp:
@@ -267,9 +267,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_skel.sh"%alias)
     utils.rmsafe(exec_file_name)
 
-    p_write = np.round(p_points * 1.0e5, 3)  
+    p_write = np.round(p_points * 1.0e5, 3)
     t_write = np.round(t_points, 3)
-    
+
     print("    number of p,t points: %d"%len(t_write))
     print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
     print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write)))
@@ -279,20 +279,20 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     pt_lbl_file.write('*PTVAL' + '\n')
     for prs in np.unique(p_write):
         line = ""
-        line += "%.4f"%prs 
+        line += "%.4f"%prs
         for t in np.unique(t_write):
-            line +=" %.4f"%t 
-        line += "\n" 
+            line +=" %.4f"%t
+        line += "\n"
         pt_lbl_file.write(line)
     pt_lbl_file.write('*END' + '\n')
     pt_lbl_file.close()
-    
+
     ref_pres_cia = utils.get_closest(1.0e5, p_write) # set reference pressure to ~1 bar
     pt_cia_file = open(pt_cia, "w+")
     pt_cia_file.write('*PTVAL \n')
-    line = "%.4f"%ref_pres_cia 
+    line = "%.4f"%ref_pres_cia
     for t in np.unique(t_write):
-        line +=" %.4f"%t 
+        line +=" %.4f"%t
     pt_cia_file.write(line + " \n")
     pt_cia_file.write('*END \n')
     pt_cia_file.close()
@@ -307,7 +307,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     # Set number of bands
     f.write("%d \n"%nband)
 
-    # Set total number of absorbers 
+    # Set total number of absorbers
     # (both LbL- and CIA-only ones, count all uncommented, individual molecules below)
     f.write("%d \n"%nvols)
     abs_ids = []
@@ -380,14 +380,14 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     dry : bool
         Dry run?
 
-    Returns 
+    Returns
     ----------
     str
         Path to file containing the new k-coefficients
     """
 
     # <EXAMPLE>
-    # 
+    #
     # Ccorr_k -F ${GAS_DATA_DIR}/${PT_FILE} \
     #   -R 1 400 -l 1 ${COL_MASS_K_H2O} -b 5.0e-4 \
     #   -s $skelfile +p -lk \
@@ -411,7 +411,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     for f in [nc_xsc_path, skel_path, pt_lbl]:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
-        
+
     formula = formula.strip()
     absid = utils.absorber_id[formula]
 
@@ -437,7 +437,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
         b_hi = band_edgesm[i+1]    # long WL edge
         if (vol_wlmin <= b_lo) and (vol_wlmax >= b_hi):  # if this band is entirely within volatile's domain
             vol_bands.append(i+1)
-    iband = [ min(vol_bands) , max(vol_bands)] 
+    iband = [ min(vol_bands) , max(vol_bands)]
     iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]
     print("    band limits: " + str(iband_revrev))
 
@@ -446,8 +446,8 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f = open(exec_file_name, 'w+')
 
     f.write("Ccorr_k")
-    f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients. 
-    f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used 
+    f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
+    f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
     f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
 
     match tol_type:
@@ -465,7 +465,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
     f.write(" -np %s"%nproc)            # Doesn't seem to work for LbL calculation
     f.write(" \n ")
-    
+
     f.close()
     os.chmod(exec_file_name,0o777)
 
@@ -509,7 +509,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     dry : bool
         Dry run?
 
-    Returns 
+    Returns
     ----------
     str
         Path to file containing the new k-coefficients
@@ -517,7 +517,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     # Parameters
     max_path = 1.0e1
-    tol_type = 'b' 
+    tol_type = 'b'
     nproc = 30          # Number of processes
     nu_cutoff = 2500.0  # Line cutoff [m-1]
 
@@ -526,7 +526,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     pair = get_cia_pair(p_in[0], p_in[1])
     if len(pair) == 0:
         return
-    
+
     pair_ids = [utils.absorber_id[p] for p in pair]
     pair_str = "%s-%s"%(pair[0],pair[1])
     both_water = bool( (pair[0]=="H2O") and (pair[1]=="H2O"))
@@ -536,7 +536,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     pt_cia       = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%alias)
     skel_path    = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     check_files = [skel_path, pt_cia]
-    
+
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
         mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s296")
@@ -545,11 +545,11 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
         check_files.extend([db_cia])
-        
+
     for f in check_files:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
-    
+
     # Read skeleton file for bands...
     band_edgesm = read_band_edges(skel_path)
     nband = len(band_edgesm)-1
@@ -562,7 +562,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     monitor_path   = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias, pair_str)); utils.rmsafe(monitor_path)
     mapping_path   = os.path.join(utils.dirs["output"],"%s_%s_map.nc"% (alias, pair_str)); utils.rmsafe(mapping_path)
     logging_path   = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias, pair_str)); utils.rmsafe(logging_path)
- 
+
     # Open executable file for writing
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,pair_str)); utils.rmsafe(exec_file_name)
     f = open(exec_file_name, 'w+')
@@ -579,14 +579,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
             if (ckd_wlrange[0] < b_lo) and (ckd_wlrange[1] > b_hi):  # if this band is entirely within MT_CKD's domain
                 ckd_bands.append(i+1)
 
-        iband = [ min(ckd_bands) , max(ckd_bands)] 
+        iband = [ min(ckd_bands) , max(ckd_bands)]
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so it is printed the same as best_bands)
 
         print("    Using MT_CKD with band limits: " + str(iband_revrev))
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
-        f.write(" -R %d %d"%(iband[0], iband[1])) 
+        f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -c %.3f"%nu_cutoff)
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
@@ -603,8 +603,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
-        f.write(" -lm %s"%lbl_map_path) 
-        f.write(" -np %s"%nproc) 
+        f.write(" -lm %s"%lbl_map_path)
+        f.write(" -np %s"%nproc)
         f.write(" \n ")
 
         #   Ccorr_k -F $CONT_PT_FILE \
@@ -625,14 +625,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
         f.write(" -CIA %s"%db_cia)
-        f.write(" -R %d %d"%(iband[0], iband[1])) 
+        f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
 
         match tol_type:
-            case 'n': f.write(" -n 4")       
-            case 't': f.write(" -t 1.0e-3")  
-            case 'b': f.write(" -b 1.0e-3")  
+            case 'n': f.write(" -n 4")
+            case 't': f.write(" -t 1.0e-3")
+            case 'b': f.write(" -b 1.0e-3")
 
         f.write(" -s %s"%skel_path)
         f.write(" +p")
@@ -678,7 +678,7 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     dry : bool
         Dry run?
 
-    Returns 
+    Returns
     ----------
     str
         Path to scattering properties fit
@@ -694,9 +694,9 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     for f in check_files:
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
-        
+
     print("Calculating water droplet optical properties for '%s'..."%alias)
-        
+
     # Output paths
     fit_path       = os.path.join(utils.dirs["output"],"%s_droplet.sct"%     alias); utils.rmsafe(fit_path)
     monitor_path   = os.path.join(utils.dirs["output"],"%s_droplet_mon.log"% alias); utils.rmsafe(monitor_path)
@@ -744,7 +744,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     dry : bool
         Dry run?
 
-    Returns 
+    Returns
     ----------
     str
         Path to file
@@ -752,7 +752,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
 
     # <EXAMPLE>
-    # 
+    #
     # echo 'Constructing spectral file'
     # prep_spec << EOF > ${specfile}_log 2>&1
     # $skelfile                 # skeleton file
@@ -771,7 +771,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # 5                         # add k-terms
     # y                         #     append
     # $sp_dir/so2_lw_l          #     path to esft data
-    # 19                        # add CIA 
+    # 19                        # add CIA
     # $sp_dir/h2o-h2o_lw_c      #     path to esft data
     # 19                        # add CIA
     # y                         #     append
@@ -825,17 +825,17 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             lblcount += 1
     print("")
 
-    #    add CIA 
+    #    add CIA
     print("    CIA: ", end='')
     cia_count = 0
     for i,p in enumerate(utils.cia_pairs):
         if ((p[0] in volatile_list) and (p[1] in volatile_list)):
-            
+
             pair_str = p[0]+"-"+p[1]
             cia_path = os.path.join(utils.dirs["output"],"%s_%s_cia.sf_k"%(alias,pair_str))
 
             if os.path.exists(cia_path):
-            
+
                 print(pair_str+" ", end='')
 
                 f.write("19 \n")
@@ -853,20 +853,20 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     print("    water droplets: ", end='')
     droplet_path = os.path.join(utils.dirs["output"],"%s_droplet.sct"%alias)
     if os.path.exists(droplet_path):
-        
+
         f.write("10 \n")                        # Block 10
         f.write("5 \n")                         # Droplet type
-        f.write("%s \n"%droplet_path)           # Fit data  
+        f.write("%s \n"%droplet_path)           # Fit data
         f.write("1.50000E-06 5.00000E-05 \n")   # Pade fits
 
         print("yes")
     else:
         print("no")
-        
+
     #    add aerosols
     print("    aerosols: ", end='')
     print("(none)")
-        
+
     #    add ice
     print("    ice: ", end='')
     print("(none)")

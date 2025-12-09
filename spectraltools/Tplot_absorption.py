@@ -1,7 +1,7 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 # Plot absorption spectrum
 
-# Import local files 
+# Import local files
 import src.cross as cross
 import src.utils as utils
 
@@ -37,28 +37,29 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
     xc.read()
     xc.plot(yunits=yunits_int, saveout=saveas)
 
+main(formula = 'H2O', source = 'dace', target_p = '100.0000', target_t = '100.0000', yunits = 'm2kg-1', saveas = 'lol2')
 
 # Run main function
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Plot absorption spectrum')
-    parser.add_argument('absorber', type=str, help='Absorber name')
-    parser.add_argument('source',   type=str, help='Source database name')
-    parser.add_argument('pres',     type=str, help='Target pressure [bar]')
-    parser.add_argument('temp',     type=str, help='Target temperature [K]')
-    parser.add_argument('--yunits', type=str, default="cm2g-1", help='y-axis units')
-    parser.add_argument('--saveas', type=str, default="", help='Save plot under this name')
+#    parser = argparse.ArgumentParser(description='Plot absorption spectrum')
+#    parser.add_argument('absorber', type=str, help='Absorber name')
+#    parser.add_argument('source',   type=str, help='Source database name')
+#    parser.add_argument('pres',     type=str, help='Target pressure [bar]')
+#    parser.add_argument('temp',     type=str, help='Target temperature [K]')
+#    parser.add_argument('--yunits', type=str, default="cm2g-1", help='y-axis units')
+#    parser.add_argument('--saveas', type=str, default="", help='Save plot under this name')
 
-    args = parser.parse_args()
-    
-    
-    main(args.absorber,   # absorber
-         args.source,     # database
-         args.pres,       # target pressure [bar]
-         args.temp,       # target temperature [K],
-         args.yunits,     # y-axis units
-         args.saveas      # Save name
-         )
+#    args = parser.parse_args()
+
+
+#    main(args.absorber,   # absorber
+#         args.source,     # database
+#         args.pres,       # target pressure [bar]
+#         args.temp,       # target temperature [K],
+#         args.yunits,     # y-axis units
+#         args.saveas      # Save name
+#         )
 
 
 # End of file

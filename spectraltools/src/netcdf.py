@@ -7,7 +7,7 @@ import os
 import src.utils as utils
 import src.cross as cross
 
-def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list, 
+def write_ncdf_from_grid(UV, nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list,
                          dnu:float=-1, numin:float=0.0, numax:float=np.inf):
     """Write netCDF file containing P, T, nu, and cross-section data.
 
@@ -21,28 +21,28 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
         Name of source database
     p_points : np.ndarray
         Sorted pressure values [bar]
-    t_points : np.ndarray 
+    t_points : np.ndarray
         Sorted temperature values [K]
     f_points : list
-        List of file paths mapping to the p,t values 
+        List of file paths mapping to the p,t values
     dnu : float
         Resolution to downsample to. Value of -1 results in no downsampling
 
 
     Returns
     -------
-    float 
+    float
         Wavenumber spacing [m-1]
     """
 
-    # Check input is valid 
+    # Check input is valid
     len_p = len(p_points)
     len_t = len(t_points)
     if len_p != len_t:
         raise Exception("Pressure and Temperature points have different lengths (%d,%d)"%(len_p,len_t))
     if not utils.is_ascending(p_points):
         print(utils.get_arr_as_str(p_points))
-        raise Exception("Pressure array is not strictly ascending") 
+        raise Exception("Pressure array is not strictly ascending")
 
     # Open file
     print("Writing netCDF for '%s' from '%s'..."%(formula,source))
@@ -51,7 +51,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
-    x_first.read(numin=numin, numax=numax, dnu=dnu)
+    x_first.read(UV, numin=numin, numax=numax, dnu=dnu)
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
     print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
 
@@ -59,7 +59,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
     # Create dimensions
     print("    define dimensions")
-    
+
     len_nu = len(nu_arr)
     dim_nu = ds.createDimension("nu",      len_nu)
     dim_pt = ds.createDimension("pt_pair", len_p)
@@ -90,9 +90,9 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
     # Round sig figs and convert units
     # This is important because unreasonable precision will mean the values in the PT dat file
     # won't match the values in the LbL netCDF file. It's better to round to ~3 dp instead.
-    p_write = np.round(p_points * 1.0e5, 3)  
+    p_write = np.round(p_points * 1.0e5, 3)
     t_write = np.round(t_points, 3)
-    
+
     # Write p,t,nu
     print("    write p, t, nu")
     var_p[:]  = p_write
@@ -111,7 +111,7 @@ def write_ncdf_from_grid(nc_path:str, formula:str, source:str, p_points:np.ndarr
 
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
-        this_xsec.read(numin=numin, numax=numax, dnu=dnu)
+        this_xsec.read(UV, numin=numin, numax=numax, dnu=dnu)
         var_xc[i,:] = this_xsec.cross_cm2_per_gram() / 10.0  # convert cm2/g to m2/kg
         # del this_xsec
 
@@ -132,7 +132,7 @@ def read_netcdf_pt(fpath:str):
     -------
     np.ndarray
         Sorted pressure values [bar]
-    np.ndarray 
+    np.ndarray
         Sorted temperature values [K]
     """
 

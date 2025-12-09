@@ -1,4 +1,4 @@
-# General utilities 
+# General utilities
 
 import os
 import numpy as np
@@ -17,6 +17,7 @@ dirs["dace"]   = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
 dirs["cia"]    = os.path.join(dirs["data"]     , "cia/" )
+dirs["moleculesUV"]    = os.path.join(dirs["tools"]     , "moleculesUV/" )
 
 if not os.path.exists(dirs["output"]):
     raise Exception("Output folder '%s' not found"%dirs["output"])
@@ -34,7 +35,7 @@ def wl2wn(wl:float) -> float:
         return float("inf")
     else:
         return 10000000.0 / wl
-    
+
 # Check iterable is strictly ascending
 def is_ascending(arr):
     l = len(arr)
@@ -42,7 +43,7 @@ def is_ascending(arr):
         return True
     for i in range(1,l):
         if not arr[i] >= arr[i-1]:
-            return False 
+            return False
     return True
 
 # Check if array is unique (no repeated values)
@@ -80,7 +81,7 @@ def find_pt_close(arr_p, arr_t, target_p, target_t):
     dclose = dists[iclose]
 
     return iclose, dclose, arr_p[iclose], arr_t[iclose]
-    
+
 # Check if output folder exists
 def check_output_exists():
     return os.path.exists( dirs["output"]  )
@@ -111,20 +112,20 @@ def checksum(filename:str):
 
 # Check that the environment is configured
 def checkenv():
-    from shutil import which 
+    from shutil import which
     if which("prep_spec") is not None:
         return True
     else:
-        raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")    
+        raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")
 
 # Map absorber names to their IDs (see radiance_core/gas_list_pcf.f90)
-gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3", 
-            "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a", 
-            "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb", 
-            "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5", 
-            "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF", 
-            "cis-OSSO", "trans-OSSO", "OSO-S", "CH3CHO", "CH3OOH", "CH3COCH3", "CH3COCHO", 
-            "CHOCHO", "C2H5CHO", "HOCH2CHO", "C2H5COCH3", "MVK", "MACR", "PAN", "CH3ONO2", 
+gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3",
+            "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a",
+            "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb",
+            "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5",
+            "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF",
+            "cis-OSSO", "trans-OSSO", "OSO-S", "CH3CHO", "CH3OOH", "CH3COCH3", "CH3COCHO",
+            "CHOCHO", "C2H5CHO", "HOCH2CHO", "C2H5COCH3", "MVK", "MACR", "PAN", "CH3ONO2",
             "SiO", "SiO2", "Fe", "FeO", "Na2", "NaO", "Mg", "Mg2", "MgO"]
 absorber_id = {}
 for i,g in enumerate(gas_list):
