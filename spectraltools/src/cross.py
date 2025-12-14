@@ -133,7 +133,7 @@ class xsec():
                 print("File not found, shortwave cross-section non-existent, skipping.")
                 return None
 
-        # Upload the wavenumbers and cross-sections in a range of wavelength minimum and the first DACE value (tmp_nu)
+        # Filter and return the wavenumbers and cross-sections in the range between the wavelength minimum and the first DACE value (tmp_nu)
         def listUV(formula:str, tmp_nu:list, wavelength_min=100):
             from astropy import constants as c
 
