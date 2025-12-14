@@ -7,7 +7,7 @@ import os
 import src.utils as utils
 import src.cross as cross
 
-def write_ncdf_from_grid(UV, nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list,
+def write_ncdf_from_grid(UV: bool, nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list,
                          dnu:float=-1, numin:float=0.0, numax:float=np.inf):
     """Write netCDF file containing P, T, nu, and cross-section data.
 
