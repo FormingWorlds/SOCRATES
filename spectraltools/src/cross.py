@@ -302,7 +302,7 @@ class xsec():
 
 
     # Read source file
-    def read(self, UV, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
+    def read(self, UV: bool, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
         match self.source:
             case "dace":   self.readbin(UV, numin=numin, numax=numax, dnu=dnu)
             case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
