@@ -124,7 +124,7 @@ def main():
             t_req.append(t)  # requested temperatures
         else:
             t_drp.append(t)  # dropped temperatures
-    print('run')
+    print("Downloading files from DACE database...")
     # Download files
     dace.download(isotopologue, linelist, linelist_version, p_arr, t_req, outdir)
 
