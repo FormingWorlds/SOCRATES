@@ -305,9 +305,9 @@ class xsec():
     def read(self, UV, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
         match self.source:
             case "dace":   self.readbin(UV, numin=numin, numax=numax, dnu=dnu)
-            #case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
-            #case "exomol": self.readsigma(numin=numin, numax=numax, dnu=dnu)
-            #case "direct": self.readdirect(p,t,nu_arr,k_arr,numin=numin, numax=numax, dnu=dnu)
+            case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
+            case "exomol": self.readsigma(numin=numin, numax=numax, dnu=dnu)
+            case "direct": self.readdirect(p,t,nu_arr,k_arr,numin=numin, numax=numax, dnu=dnu)
         return self
 
     # Return cross-section in units of cm2.molecule-1
