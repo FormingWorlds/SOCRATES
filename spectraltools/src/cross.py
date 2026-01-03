@@ -124,7 +124,7 @@ class xsec():
             path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
 
             if not os.path.exists(path):
-                return None
+                raise Exception("UV is enabled but no folder named moleculesUV was found.")
 
             data = np.loadtxt(path)
             nu_UV = data[:, 0]
@@ -367,7 +367,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="xsec_wvl_", xmin=None, xmax=1000):
+    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="xsec_wvl_", xmin=None, xmax=None):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
