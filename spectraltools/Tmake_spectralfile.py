@@ -16,16 +16,17 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"         # Source database (DO NOT CHANGE)
-    vols = ["H2S", "SO2", "H2", "CO", "CH4", "HCN", "H2S", "N2O", "N2", "NH3", "O3", "O2"]   # List of gases
+    vols = ["H2O", "CO2", "SO2", "H2", "CO", "CH4", "HCN", "H2S", "N2O", "N2", "NH3", "O3", "O2"]   # List of gases
     alias = "Test"          # Alias for this spectral file
-    UV = True               # Including UV wavenumbers and cross-sections
-    nband = 96              # Number of wavenumber bands
-    drops = True            # include water droplet scattering?
-    method = 3              # band selection method
-    numax = 100000.0        # clip to this maximum wavenumber [cm-1]
-    numin = 1.0             # clip to this minimum wavenumber [cm-1]
-    dnu   = 1.0             # downsample to this wavenumber resolution [cm-1]
-    preNC = False           # use pre-existing netCDF files in output/ if they are found
+    UV = True               # Includes the UV range wavenumbers and cross-sections
+    nband = 96            # Number of wavenumber bands
+    drops = True            # Include water droplet scattering?
+    method = 3              # Band selection method
+    numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
+    numin = 1.0             # Clip to this minimum wavenumber [cm-1]
+    dnu   = 1.0             # Downsample to this wavenumber resolution [cm-1]
+    preNC = False           # Use pre-existing netCDF files in output/ if they are found
+    xaxis = 'wavelength'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
 
     #tgt_p = np.logspace(-3.5, 3, 30)
     #tgt_t = np.linspace(100.0, 2895.0, 30)
@@ -96,7 +97,7 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
         temp_xc.read(UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot(yunits=0, xmin=1, xmax=1e6)
+        temp_xc.plot(alias, UV, xaxis, yunits=0)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())

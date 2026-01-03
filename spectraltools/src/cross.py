@@ -71,7 +71,7 @@ class xsec():
         return self
 
     # Read DACE bin file
-    def readbin(self, UV, numin=0.0, numax=np.inf, dnu=10):
+    def readbin(self, UV:bool, numin=0.0, numax=np.inf, dnu=0.0):
 
         if not (self.source == "dace"):
             print("WARNING: Cannot execute readbin because source (%s) is not DACE" % self.source)
@@ -120,56 +120,38 @@ class xsec():
 
         ### UV ADD ON ###
         # Reads the UV files from the moleculesUV folder
-        def readUV(formula:str):
-            try:
-                path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
-                data = np.loadtxt(path)
-                wavenumber = data[:, 0]
-                xsec = data[:, 1]
-                return wavenumber, xsec
+        def readUV(formula:str, tmp_nu:list, tmp_k:list, wavelength_min=100):
+            path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
 
-            # If the file is not found then it skips for that molecule.
-            except FileNotFoundError:
-                print("File not found, shortwave cross-section non-existent, skipping.")
+            if not os.path.exists(path):
                 return None
 
-        # Filter and return the wavenumbers and cross-sections in the range between the wavelength minimum and the first DACE value (tmp_nu)
-        def listUV(formula:str, tmp_nu:list, wavelength_min=100):
-            from astropy import constants as c
+            data = np.loadtxt(path)
+            nu_UV = data[:, 0]
+            xsec_UV = data[:, 1]
 
+            # Filter and return the wavenumbers and cross-sections in the range between the
+            # wavelength minimum (range start) and the first DACE value (tmp_nu)
+            wavenumber_min = 1e7/wavelength_min
+            mask = (nu_UV <= wavenumber_min) & (nu_UV >= tmp_nu[-1])
+
+            nu_new = nu_UV[mask]
+            xsec_new = xsec_UV[mask]
+
+            nu_new = nu_new.tolist()
+            xsec_new = xsec_new.tolist()
+
+            # Join new UV values to the DACE values
+            final_wavenumber = tmp_nu + nu_new
+            final_xsec = tmp_k + xsec_new
+
+            return final_wavenumber, final_xsec
+
+        if UV:
             try:
-                wavenumber, xsec = readUV(formula)
-                nu_UV = np.array(wavenumber)
-                xsec_UV = np.array(xsec)
-
-                wavenumber_min = 1e7/wavelength_min # Wavelength to wavenumber
-                condition = (nu_UV <= wavenumber_min) & (nu_UV >= tmp_nu[-1])
-
-                nu_new = nu_UV[condition]
-                xsec_new = xsec_UV[condition]
-                return nu_new.tolist(), xsec_new.tolist()
-
+                tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k)
             except TypeError:
-                return None
-
-        # Join new UV values to the DACE values
-        def fullspectra(tmp_nu:list, tmp_k:list):
-            try:
-                nu_UV, xsec_UV = listUV(self.form, tmp_nu)
-                final_wavenumber = tmp_nu + nu_UV # Adding to the DACE tmp_nu wavenumbers
-                final_xsec = tmp_k + xsec_UV # Adding to the DACE tmp_k cross-sections
-                return final_wavenumber, final_xsec
-
-            except TypeError:
-                return None
-
-        if UV == True:
-            # Wavenumbers and cross-sections complete
-            try:
-                tmp_nu, tmp_k = fullspectra(tmp_nu, tmp_k)
-
-            except TypeError:
-                i = 0
+                print("Skipping.")
 
         self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=self.k_clip, a_max=None)
         self.arr_nu = np.array(tmp_nu, dtype=float)
@@ -302,7 +284,7 @@ class xsec():
 
 
     # Read source file
-    def read(self, UV: bool, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
+    def read(self, UV:bool, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
         match self.source:
             case "dace":   self.readbin(UV, numin=numin, numax=numax, dnu=dnu)
             case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
@@ -385,7 +367,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, yunits=1, fig=None, ax=None, show=True, saveout="plot_xsec_wavenumber", xmin=None, xmax=1e4, label="xsec"):
+    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="xsec_wvl_", xmin=None, xmax=1000):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
@@ -396,23 +378,6 @@ class xsec():
 
         lw=0.4
         col = 'k'
-
-        # Crop data
-        if (xmin == None):
-            xmin = self.numin
-        else:
-            xmin = max(xmin, self.numin)
-        xmin_idx = np.argmin( abs(self.arr_nu-xmin))
-        if (xmax == None):
-            xmax = self.numax
-        else:
-            xmax = min(xmax, self.numax)
-        xmax_idx = np.argmin( abs(self.arr_nu-xmax))
-        xlim = [xmin, xmax]
-
-        if xmin > xmax:
-            print("WARNING: Encountered invalid xlimits:", xlim)
-        ax.set_xlim(xlim)
 
         if yunits == 0:
             yarr = self.cross_cm2_per_gram()
@@ -426,30 +391,78 @@ class xsec():
         else:
             raise Exception("Invalid unit choice for plot")
 
-        xarr = self.get_nu()[xmin_idx:xmax_idx]
-        yarr = yarr[xmin_idx:xmax_idx]
+        if xaxis == 'wavelength':
+            # Crop data
+            if (xmin == None):
+                xmin = self.numax # The minimum value in wavelength is the maximum value in wavenumber
+            else:
+                xmin = min(1e7/xmin, self.numax)
+            xmin_idx = np.argmin( abs(self.arr_nu-xmin))
+            if (xmax == None):
+                xmax = self.numin # The maximum value in wavelength is the minimum value in wavenumber
+            else:
+                xmax = max(1e7/xmax, self.numin)
+            xmax_idx = np.argmin( abs(self.arr_nu-xmax))
+            xlim = [xmin, xmax]
 
-        wvb_tot = xarr.tolist()
+            if xmax > xmin:
+                print("WARNING: Encountered invalid xlimits:", xlim)
 
-        # Plotting in wavelength units
-        wvl = []
-        for b in wvb_tot:
-            wvl.append(1e7/b)
+            xarr = self.get_nu()[xmax_idx:xmin_idx]
+            yarr = yarr[xmax_idx:xmin_idx]
 
-        ax.plot(wvl, yarr, lw=lw, color=col)
+            xarr = 1e7/xarr
+            xmax = 1e7/xmax
+            xmin = 1e7/xmin
+
+            ax.set_xlabel("Wavelength [nm]", fontsize=18)
+
+        elif xaxis == 'wavenumber':
+            # Crop data
+            if (xmin == None):
+                xmin = self.numin
+            else:
+                xmin = max(xmin, self.numin)
+            xmin_idx = np.argmin( abs(self.arr_nu-xmin))
+            if (xmax == None):
+                xmax = self.numax
+            else:
+                xmax = min(xmax, self.numax)
+            xmax_idx = np.argmin( abs(self.arr_nu-xmax))
+            xlim = [xmin, xmax]
+
+            if xmin > xmax:
+                print("WARNING: Encountered invalid xlimits:", xlim)
+
+            xarr = self.get_nu()[xmin_idx:xmax_idx]
+            yarr = yarr[xmin_idx:xmax_idx]
+
+            ax.set_xlabel("Wavenumber [cm-1]", fontsize=18)
+
+        else:
+            raise ValueError(f"Unknown axis parameter: {xaxis}")
+
+        ax.plot(xarr, yarr, lw=lw, color=col)
         ax.set_yscale('log')
         ax.set_ylabel(ylbl, fontsize=18)
-        ax.set_xlim(100, 750)
-        ax.set_xlabel("Wavelength [nm]", fontsize=18)
-        plt.xticks(fontsize=18)
-        plt.yticks(fontsize=18)
+        ax.set_xlim(xmin, xmax)
+        ax.tick_params(axis='x', labelsize=18)
+        ax.tick_params(axis='y', labelsize=18)
 
-        title = self.form #+ " : %.3e bar, %.2f K" % (self.p, self.t) -> Useful for plotting without the UV
+        if UV == True:
+            title = self.form
+        else:
+            title = self.form + " : %.3e bar, %.2f K" % (self.p, self.t)
+
         ax.set_title(title, fontsize=20)
 
         if len(saveout) > 0:
-            save_path = os.path.join(utils.dirs["output"], saveout)
+            path = os.path.join(utils.dirs["output"]+alias+'/plots')
+            os.makedirs(path, exist_ok=True)
+
+            save_path = os.path.join(path, saveout)
             print("Saving plot to '%s'"%save_path)
+
             utils.rmsafe(save_path)
             fig.savefig(save_path+self.form, bbox_inches="tight")
             show=True
