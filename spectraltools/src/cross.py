@@ -124,7 +124,7 @@ class xsec():
             path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
 
             if not os.path.exists(path):
-                raise Exception("UV is enabled but no folder named moleculesUV was found.")
+                return None
 
             data = np.loadtxt(path)
             nu_UV = data[:, 0]
