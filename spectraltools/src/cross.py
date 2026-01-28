@@ -120,7 +120,7 @@ class xsec():
 
         ### UV ADD ON ###
         # Reads the UV files from the moleculesUV folder
-        def readUV(formula:str, tmp_nu:list, tmp_k:list, wavelength_min=100):
+        def readUV(formula:str, tmp_nu:list, tmp_k:list, res:float, wavelength_min=100):
             path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
 
             if not os.path.exists(path):
@@ -129,6 +129,11 @@ class xsec():
             data = np.loadtxt(path)
             nu_UV = data[:, 0]
             xsec_UV = data[:, 1]
+
+            check = abs(nu_UV[0]-nu_UV[1])
+
+            if not np.isclose(check, res):
+                raise Exception("Wavenumber resolution mismatch. Either file size is wrong, or resolution is not %g cm-1" % res)
 
             # Filter and return the wavenumbers and cross-sections in the range between the
             # wavelength minimum (range start) and the first DACE value (tmp_nu)
@@ -149,7 +154,7 @@ class xsec():
 
         if UV:
             try:
-                tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k)
+                tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k, res)
             except TypeError:
                 print("Skipping.")
 
@@ -367,7 +372,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="xsec_wvl_", xmin=None, xmax=None):
+    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="plot_", xmin=None, xmax=1000):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
@@ -444,10 +449,10 @@ class xsec():
 
         ax.plot(xarr, yarr, lw=lw, color=col)
         ax.set_yscale('log')
-        ax.set_ylabel(ylbl, fontsize=18)
+        ax.set_ylabel(ylbl, fontsize=14)
         ax.set_xlim(xmin, xmax)
-        ax.tick_params(axis='x', labelsize=18)
-        ax.tick_params(axis='y', labelsize=18)
+        ax.tick_params(axis='x', labelsize=14)
+        ax.tick_params(axis='y', labelsize=14)
 
         if UV == True:
             title = self.form
@@ -464,7 +469,7 @@ class xsec():
             print("Saving plot to '%s'"%save_path)
 
             utils.rmsafe(save_path)
-            fig.savefig(save_path+self.form, bbox_inches="tight")
+            fig.savefig(save_path+self.form, bbox_inches="tight", dpi=200)
             show=True
             plt.close()
 

@@ -19,7 +19,7 @@ def main():
     vols = ["H2O", "CO2", "SO2", "H2", "CO", "CH4", "HCN", "H2S", "N2O", "N2", "NH3", "O3", "O2"]   # List of gases
     alias = "Test"          # Alias for this spectral file
     UV = True               # Includes the UV range wavenumbers and cross-sections
-    nband = 96            # Number of wavenumber bands
+    nband = 16              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
@@ -131,7 +131,6 @@ def main():
     # ===========
     # Get nu array for required range and resolution (also using last absorber)
     nu_arr = cross.xsec(vols[-1], source, dace.list_files(formula_path)[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
-    #nu_arr = np.concatenate((np.array(range(0, 283)), nu_arr), axis=0
 
     # ===========
     # Determine bands

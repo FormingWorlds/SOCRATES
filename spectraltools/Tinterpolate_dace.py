@@ -46,59 +46,59 @@ def main():
     #t_lims = (50.0, 2900.0)
     #outdir = utils.dirs["dace"] + "/CH4/"
 
-    isotopologue = '14N2'
-    linelist = 'WCCRMT'
-    linelist_version = 1.0
-    t_lims = (600.0, 4500.0)
-    outdir = utils.dirs["dace"] + "/N2/"
+    #isotopologue = '14N2'
+    #linelist = 'WCCRMT'
+    #linelist_version = 1.0
+    #t_lims = (600.0, 4500.0)
+    #outdir = utils.dirs["dace"] + "/N2/"
 
-    # isotopologue = '16O2'
-    # linelist = 'HITRAN2020'
-    # linelist_version = 1.0
-    # t_lims = (50.0, 4500.0)
-    # outdir = utils.dirs["dace"] + "/O2/"
+    #isotopologue = '16O2'
+    #linelist = 'HITRAN2020'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 4500.0)
+    #outdir = utils.dirs["dace"] + "/O2/"
 
-    # isotopologue = '16O3'
-    # linelist = 'HITRAN2020'
-    # linelist_version = 1.0
-    # t_lims = (50.0, 3500.0)
-    # outdir = utils.dirs["dace"] + "/O3/"
+    #isotopologue = '16O3'
+    #linelist = 'HITRAN2020'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 3500.0)
+    #outdir = utils.dirs["dace"] + "/O3/"
 
-    # isotopologue = '14N2-16O'
-    # linelist = 'HITEMP2019'
-    # linelist_version = 1.0
-    # t_lims = (50.0, 4500.0)
-    # outdir = utils.dirs["dace"] + "/N2O/"
+    #isotopologue = '14N2-16O'
+    #linelist = 'HITEMP2019'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 4500.0)
+    #outdir = utils.dirs["dace"] + "/N2O/"
 
-    # isotopologue = '14N-1H3'
-    # linelist = 'CoYuTe'
-    # linelist_version = 2.0
-    # t_lims = (50.0, 1900.0)
-    # outdir = utils.dirs["dace"] + "/NH3/"
+    #isotopologue = '14N-1H3'
+    #linelist = 'CoYuTe'
+    #linelist_version = 2.0
+    #t_lims = (50.0, 1900.0)
+    #outdir = utils.dirs["dace"] + "/NH3/"
 
-    # isotopologue = '16O-1H'
-    # linelist = 'HITEMP2020'
-    # linelist_version = 1.0
-    # t_lims = (50.0, 8900.0)
-    # outdir = utils.dirs["dace"] + "/OH/"
+    #isotopologue = '16O-1H'
+    #linelist = 'HITEMP2020'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 8900.0)
+    #outdir = utils.dirs["dace"] + "/OH/"
 
-    # isotopologue = '1H2-32S'
-    # linelist = 'AYT2'
-    # linelist_version = 2.0
-    # t_lims = (50.0, 2900.0)
-    # outdir = utils.dirs["dace"] + "/H2S/"
+    #isotopologue = '1H2-32S'
+    #linelist = 'AYT2'
+    #linelist_version = 2.0
+    #t_lims = (50.0, 2900.0)
+    #outdir = utils.dirs["dace"] + "/H2S/"
 
-    # isotopologue = '1H-12C-14N'
-    # linelist = 'Harris'
-    # linelist_version = 2.0
-    # t_lims = (50.0, 2900.0)
-    # outdir = utils.dirs["dace"] + "/HCN/"
+    #isotopologue = '1H-12C-14N'
+    #linelist = 'Harris'
+    #linelist_version = 2.0
+    #t_lims = (50.0, 2900.0)
+    #outdir = utils.dirs["dace"] + "/HCN/"
 
-    # isotopologue = '32S-16O2'
-    # linelist = 'ExoAmes'
-    # linelist_version = 2.0
-    # t_lims = (50.0, 1900.0)
-    # outdir = utils.dirs["dace"] + "/SO2/"
+    isotopologue = '32S-16O2'
+    linelist = 'ExoAmes'
+    linelist_version = 2.0
+    t_lims = (50.0, 1900.0)
+    outdir = utils.dirs["dace"] + "/SO2/"
 
     # -------------------
     # Na, NaO, Fe, FeO, FeH, K, SiO, SiO2, PH3, provided already by SOCRATES

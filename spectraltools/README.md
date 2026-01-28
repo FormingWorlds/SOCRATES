@@ -18,6 +18,8 @@ These tools all operate by storing the spectral absorption cross-section (versus
 
 **Plotting**. For every molecule, a plot is created with wavelength in the x-axis and cross-section in the y-axis. It can be changed by modifying the xaxis (`Tmake_spectralfile.py`).
 
+**Existing Spectral Files**. Read `INFOSpectralFiles.md` for details and how to download and use existing spectral files. Contains: number of bands, absorbers and continua used and sources. Honeyside is the suggested file for magma world simulations (common absorbers and up-to-date DACE opacities). For synthetic observations, high-resolution files are recommended (4096 resolution).
+
 ### Content
 
 | Tool                     | Description   |
