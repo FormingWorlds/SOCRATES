@@ -16,10 +16,10 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"         # Source database (DO NOT CHANGE)
-    vols = ["H2O", "CO2", "SO2", "H2", "CO", "CH4", "HCN", "H2S", "N2O", "N2", "NH3", "O3", "O2"]   # List of gases
+    vols = ["H2O", "CO2", "SO2", "H2S", "H2", "CO", "CH4", "HCN", "N2O", "N2", "NH3", "O3"]   # List of gases
     alias = "Test"          # Alias for this spectral file
     UV = True               # Includes the UV range wavenumbers and cross-sections
-    nband = 16              # Number of wavenumber bands
+    nband = 256             # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
