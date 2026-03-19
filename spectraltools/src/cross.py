@@ -118,13 +118,18 @@ class xsec():
                 tmp_k.append(k_read[i])
                 nulast= nu
 
-        ### UV ADD ON ###
+        ### UV ADD-ON ###
         # Reads the UV files from the moleculesUV folder
         def readUV(formula:str, tmp_nu:list, tmp_k:list, res:float, wavelength_min=100):
-            path = os.path.join(utils.dirs["moleculesUV"], formula+'.txt')
 
+            # Check if folder exists
+            folder = os.path.join(utils.dirs["moleculesUV"])
+            if not os.path.exists(folder):
+                raise Exception("Folder missing, create a new moleculesUV folder")
+
+            path = os.path.join(folder, formula+'.txt')
             if not os.path.exists(path):
-                return None
+                return print("No UV file, skipping.")
 
             data = np.loadtxt(path)
             nu_UV = data[:, 0]
@@ -138,10 +143,27 @@ class xsec():
             # Filter and return the wavenumbers and cross-sections in the range between the
             # wavelength minimum (range start) and the first DACE value (tmp_nu)
             wavenumber_min = 1e7/wavelength_min
-            mask = (nu_UV <= wavenumber_min) & (nu_UV >= tmp_nu[-1])
 
-            nu_new = nu_UV[mask]
-            xsec_new = xsec_UV[mask]
+            ## If the minimum wavelength is bigger than the first value of the UV file, then
+            ## cut at that minimum
+            if nu_UV[-1] < wavelength_min:
+                mask = (nu_UV <= wavenumber_min) & (nu_UV >= tmp_nu[-1])
+
+                nu_new = nu_UV[mask]
+                xsec_new = xsec_UV[mask]
+
+            ## If the minimum wavelength is smaller than the first value of the UV file, then
+            ## pad that gap with a very small number
+            else:
+                nu_add = np.arange(nu_UV[-1], wavenumber_min, 0.01)
+                xsec_add = np.full(nu_add.size, 1e-27)
+
+                nu_UV = np.concatenate((nu_UV, nu_add))
+                xsec_UV = np.concatenate((xsec_UV, xsec_add))
+                mask = (nu_UV <= wavenumber_min) & (nu_UV >= tmp_nu[-1])
+
+                nu_new = nu_UV[mask]
+                xsec_new = xsec_UV[mask]
 
             nu_new = nu_new.tolist()
             xsec_new = xsec_new.tolist()
@@ -156,7 +178,7 @@ class xsec():
             try:
                 tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k, res)
             except TypeError:
-                print("Skipping.")
+                None
 
         self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=self.k_clip, a_max=None)
         self.arr_nu = np.array(tmp_nu, dtype=float)
@@ -372,7 +394,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, alias:str, UV:bool, xaxis:str, yunits=1, fig=None, ax=None, show=True, saveout="plot_", xmin=None, xmax=1000):
+    def plot(self, alias:str, UV:bool, xaxis:str, lim:list, yunits=1, fig=None, ax=None, show=True, saveout="plot_"):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
@@ -383,6 +405,7 @@ class xsec():
 
         lw=0.4
         col = 'k'
+        xmin, xmax = lim
 
         if yunits == 0:
             yarr = self.cross_cm2_per_gram()
@@ -411,7 +434,7 @@ class xsec():
             xlim = [xmin, xmax]
 
             if xmax > xmin:
-                print("WARNING: Encountered invalid xlimits:", xlim)
+                print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
 
             xarr = self.get_nu()[xmax_idx:xmin_idx]
             yarr = yarr[xmax_idx:xmin_idx]
@@ -421,6 +444,7 @@ class xsec():
             xmin = 1e7/xmin
 
             ax.set_xlabel("Wavelength [nm]", fontsize=18)
+            ax.set_xlim(xmin, xmax)
 
         elif xaxis == 'wavenumber':
             # Crop data
@@ -437,12 +461,13 @@ class xsec():
             xlim = [xmin, xmax]
 
             if xmin > xmax:
-                print("WARNING: Encountered invalid xlimits:", xlim)
+                print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
 
             xarr = self.get_nu()[xmin_idx:xmax_idx]
             yarr = yarr[xmin_idx:xmax_idx]
 
             ax.set_xlabel("Wavenumber [cm-1]", fontsize=18)
+            ax.set_xlim(xmin, xmax)
 
         else:
             raise ValueError(f"Unknown axis parameter: {xaxis}")
@@ -450,7 +475,6 @@ class xsec():
         ax.plot(xarr, yarr, lw=lw, color=col)
         ax.set_yscale('log')
         ax.set_ylabel(ylbl, fontsize=14)
-        ax.set_xlim(xmin, xmax)
         ax.tick_params(axis='x', labelsize=14)
         ax.tick_params(axis='y', labelsize=14)
 

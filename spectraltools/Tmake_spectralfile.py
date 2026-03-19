@@ -16,23 +16,24 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "dace"         # Source database (DO NOT CHANGE)
-    vols = ["H2O", "CO2", "SO2", "H2S", "H2", "CO", "CH4", "HCN", "N2O", "N2", "NH3", "O3"]   # List of gases
+    vols = ["CH4", "CO", "CO2", "H2", "H2O", "H2S", "HCN", "N2", "N2O", "NH3", "O3", "SO2"]   # List of gases
     alias = "Test"          # Alias for this spectral file
     UV = True               # Includes the UV range wavenumbers and cross-sections
-    nband = 256             # Number of wavenumber bands
+    nband = 16              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 1.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 1.0             # Downsample to this wavenumber resolution [cm-1]
     preNC = False           # Use pre-existing netCDF files in output/ if they are found
-    xaxis = 'wavelength'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
+    xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
+    lim = [None, None]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
 
     #tgt_p = np.logspace(-3.5, 3, 30)
     #tgt_t = np.linspace(100.0, 2895.0, 30)
 
-    tgt_p = np.logspace(-3.5, 3, 5)
-    tgt_t = np.linspace(100.0, 2895.0, 5)
+    tgt_p = np.logspace(-3.5, 3, 10)
+    tgt_t = np.linspace(100.0, 2895.0, 10)
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
     # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
@@ -97,7 +98,7 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
         temp_xc.read(UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot(alias, UV, xaxis, yunits=0)
+        temp_xc.plot(alias, UV, xaxis, lim, yunits=0)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
