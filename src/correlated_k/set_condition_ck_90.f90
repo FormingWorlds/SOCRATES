@@ -222,6 +222,8 @@ SUBROUTINE set_condition_ck_90 &
 !   Loop variable
   INTEGER :: j
 !   Loop variable
+  LOGICAL :: l_reverse
+!   Flag for reversing order of bands
   LOGICAL :: l_finish
 !   Flag for ending input of p and T
   LOGICAL :: l_file
@@ -639,10 +641,12 @@ CONTAINS
           RETURN
         ENDIF
       ELSE
+        l_reverse=.false.
         IF (first_band > last_band) THEN
           i_swap=first_band
           first_band=last_band
           last_band=i_swap
+          l_reverse=.true.
         ENDIF
 !       Check limits.
         IF ( (first_band < 1) .OR. &
@@ -658,37 +662,32 @@ CONTAINS
           IF (l_fit_line_data .OR. l_fit_cont_data) THEN
 !           Make the list of valid bands for this absorber.
             n_selected_band=0
-            DO i=first_band, last_band
-!              DO j=1, n_band_absorb(i)
-!                IF (i_index == index_absorb(j, i)) THEN
-                  n_selected_band = n_selected_band+1
-                  list_band(n_selected_band) = i
-!                ENDIF
-!              ENDDO
-            ENDDO
+            IF (l_reverse) THEN
+              DO i=last_band, first_band, -1
+                n_selected_band = n_selected_band+1
+                list_band(n_selected_band) = i
+              END DO
+            ELSE
+              DO i=first_band, last_band
+                n_selected_band = n_selected_band+1
+                list_band(n_selected_band) = i
+              END DO
+            END IF
           ELSE IF (l_fit_frn_continuum) THEN
 !           Make the list of valid bands for this continuum.
             n_selected_band=0
             DO i=first_band, last_band
-              DO j=1, n_band_continuum(i)
-                IF (index_continuum(i, j) == IP_frn_continuum) THEN
-                  n_selected_band = n_selected_band+1
-                  list_band(n_selected_band) = i
-                ENDIF
-              ENDDO
-            ENDDO
+              n_selected_band = n_selected_band+1
+              list_band(n_selected_band) = i
+            END DO
           ELSE IF (l_fit_self_continuum) THEN
 !           Make the list of valid bands for this continuum.
             n_selected_band=0
             DO i=first_band, last_band
-              DO j=1, n_band_continuum(i)
-                IF (index_continuum(i, j) == IP_self_continuum) THEN
-                  n_selected_band = n_selected_band+1
-                  list_band(n_selected_band) = i
-                ENDIF
-              ENDDO
-            ENDDO
-          ENDIF
+              n_selected_band = n_selected_band+1
+              list_band(n_selected_band) = i
+            END DO
+          END IF
           EXIT
         ENDIF
       ENDIF

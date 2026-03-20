@@ -13,7 +13,7 @@ character(len=*), parameter, private :: ModuleName = 'SOCRATES_SET_DIAG'
 contains
 
 subroutine set_diag(diag, control, dimen, spectrum, &
-  atm, cld, mcica_data, aer, bound, radout, &
+  atm, cld, mcica_data, aer, bound, radout, radout_clean, &
   n_profile, n_layer, profile_list, n_layer_stride, n_tile, &
   layer_heat_capacity, layer_heat_capacity_1d, &
   l_invert, l_profile_last)
@@ -69,7 +69,7 @@ type(StrAer),       intent(in) :: aer
 type(StrBound),     intent(in) :: bound
 
 ! Output fields from core radiation code:
-type(StrOut),       intent(in) :: radout
+type(StrOut),       intent(in) :: radout, radout_clean
 
 integer, intent(in) :: n_profile
 !   Number of columns to operate on
@@ -92,7 +92,7 @@ logical, intent(in), optional :: l_profile_last
 !   Loop over profiles is last in input fields and diagnostics
 
 
-integer :: i, ii, l, ll, k, list(n_profile)
+integer :: i, ii, l, ll, j, k, list(n_profile)
 !   Loop variables
 integer :: layer_offset, level_offset, stride_layer
 !   Offset to loop counters to allow indexing in inverted order
@@ -254,6 +254,27 @@ call sum_flux_channels(diag%flux_down_clear, radout%flux_down_clear, &
 call sum_flux_channels(diag%flux_up_clear, radout%flux_up_clear, &
                   surf=diag%flux_up_clear_surf, &
                    toa=diag%flux_up_clear_toa)
+call sum_flux_channels(diag%flux_direct_clean, radout_clean%flux_direct, &
+                  surf=diag%flux_direct_clean_surf, &
+                   toa=diag%flux_direct_clean_toa)
+call sum_flux_channels(diag%flux_down_clean, radout_clean%flux_down, &
+                  surf=diag%flux_down_clean_surf, &
+                   toa=diag%flux_down_clean_toa)
+call sum_flux_channels(diag%flux_up_clean, radout_clean%flux_up, &
+                  surf=diag%flux_up_clean_surf, &
+                   toa=diag%flux_up_clean_toa)
+call sum_flux_channels(diag%flux_direct_clear_clean, &
+               radout_clean%flux_direct_clear, &
+                  surf=diag%flux_direct_clear_clean_surf, &
+                   toa=diag%flux_direct_clear_clean_toa)
+call sum_flux_channels(diag%flux_down_clear_clean, &
+               radout_clean%flux_down_clear, &
+                  surf=diag%flux_down_clear_clean_surf, &
+                   toa=diag%flux_down_clear_clean_toa)
+call sum_flux_channels(diag%flux_up_clear_clean, &
+               radout_clean%flux_up_clear, &
+                  surf=diag%flux_up_clear_clean_surf, &
+                   toa=diag%flux_up_clear_clean_toa)
 
 call sum_tile_channels(diag%flux_up_tile, radout%flux_up_tile)
 call sum_tile_channels(diag%flux_up_blue_tile, radout%flux_up_blue_tile)
@@ -269,6 +290,45 @@ if (associated(diag%flux_down_blue_surf)) then
       = real(radout%flux_down_blue_surf(l), RealExt)
   end do
 end if
+call set_flux_bands(diag%flux_direct_band, radout%flux_direct_band)
+call set_flux_bands(diag%flux_down_band, radout%flux_down_band)
+call set_flux_bands(diag%flux_up_band, radout%flux_up_band)
+call set_flux_bands(diag%flux_direct_clear_band, radout%flux_direct_clear_band)
+call set_flux_bands(diag%flux_down_clear_band, radout%flux_down_clear_band)
+call set_flux_bands(diag%flux_up_clear_band, radout%flux_up_clear_band)
+call set_flux_bands(diag%flux_direct_clean_band, radout_clean%flux_direct_band)
+call set_flux_bands(diag%flux_down_clean_band, radout_clean%flux_down_band)
+call set_flux_bands(diag%flux_up_clean_band, radout_clean%flux_up_band)
+call set_flux_bands(diag%flux_direct_clear_clean_band, &
+            radout_clean%flux_direct_clear_band)
+call set_flux_bands(diag%flux_down_clear_clean_band, &
+            radout_clean%flux_down_clear_band)
+call set_flux_bands(diag%flux_up_clear_clean_band, &
+            radout_clean%flux_up_clear_band)
+call sum_surf_weight_bands(diag%flux_direct_uv_surf, radout%flux_direct_band)
+call sum_surf_weight_bands(diag%flux_down_uv_surf, radout%flux_down_band)
+call sum_surf_weight_bands(diag%flux_up_uv_surf, radout%flux_up_band)
+call sum_surf_weight_bands(diag%flux_direct_uv_clear_surf, &
+                           radout%flux_direct_clear_band)
+call sum_surf_weight_bands(diag%flux_down_uv_clear_surf, &
+                           radout%flux_down_clear_band)
+call sum_surf_weight_bands(diag%flux_up_uv_clear_surf, &
+                           radout%flux_up_clear_band)
+
+!------------------------------------------------------------------------------
+! Photolysis rates
+!------------------------------------------------------------------------------
+do k=1, spectrum%photol%n_pathway
+  call sum_photol_channels(diag%photolysis(k)%rate, &
+                           radout%photolysis_rate, k)
+  call sum_photol_channels(diag%photolysis(k)%rate_clear, &
+                           radout%photolysis_rate_clear, k)
+  call sum_photol_channels(diag%photolysis(k)%rate_clean, &
+                           radout_clean%photolysis_rate, k)
+  call sum_photol_channels(diag%photolysis(k)%rate_clear_clean, &
+                           radout_clean%photolysis_rate_clear, k)
+end do
+call sum_photol_channels_all(diag%photolysis_rate, radout%photolysis_rate)
 
 !------------------------------------------------------------------------------
 ! Cloud diagnostics
@@ -612,6 +672,160 @@ end subroutine sum_tile_channels
 
 
 !------------------------------------------------------------------------------
+subroutine set_flux_bands(field, field_bands)
+
+  implicit none
+
+  real(RealExt), intent(inout), pointer :: field(:, :, :)
+  real(RealK), intent(in), allocatable :: field_bands(:, :, :)
+  integer :: k_lower, k_upper, k_dim
+  integer :: i_lower, i_upper, i_dim
+
+  if (associated(field)) then
+    if (l_last) then
+      i_dim = 1
+      k_dim = 2
+    else
+      i_dim = 2
+      k_dim = 3
+    end if
+    k_lower = max(lbound(field, k_dim), 1)
+    k_upper = min(ubound(field, k_dim), spectrum%basic%n_band)
+    i_lower = max(lbound(field, i_dim), 0)
+    i_upper = min(ubound(field, i_dim), n_layer)
+
+    if (l_last) then
+      do l=1, n_profile
+        do k=k_lower, k_upper
+          do i=lbound(field, i_dim), i_lower-1
+            field(i, k, list(l)) = 0.0_RealExt
+          end do
+          do i=i_upper+1, ubound(field, i_dim)
+            field(i, k, list(l)) = 0.0_RealExt
+          end do
+        end do
+      end do
+    else
+      do k=k_lower, k_upper
+        do i=lbound(field, i_dim), i_lower-1
+          do l=1, n_profile
+            field(list(l), i, k) = 0.0_RealExt
+          end do
+        end do
+        do i=i_upper+1, ubound(field, i_dim)
+          do l=1, n_profile
+            field(list(l), i, k) = 0.0_RealExt
+          end do
+        end do
+      end do
+    end if
+    if (l_last) then
+      do k=k_lower, k_upper
+        do i=i_lower, i_upper
+          ii = abs(level_offset-i)
+          do l=1, n_profile
+            field(i, k, list(l)) = real(field_bands(l, ii, k), RealExt)
+          end do
+        end do
+      end do
+    else
+      do k=k_lower, k_upper
+        do i=i_lower, i_upper
+          ii = abs(level_offset-i)
+          do l=1, n_profile
+            field(list(l), i, k) = real(field_bands(l, ii, k), RealExt)
+          end do
+        end do
+      end do
+    end if
+  end if
+
+end subroutine set_flux_bands
+
+
+!------------------------------------------------------------------------------
+subroutine sum_surf_weight_bands(field, field_bands)
+
+  implicit none
+
+  real(RealExt), intent(inout), pointer :: field(:)
+  real(RealK), intent(in), allocatable :: field_bands(:, :, :)
+
+  if (associated(field)) then
+    do l=1, n_profile
+      field(list(l)) = 0.0_RealExt
+    end do
+    do k=1, spectrum%basic%n_band
+      if (control%weight_diag(k) > 0.0) then
+        do l=1, n_profile
+          field(list(l)) = field(list(l)) &
+            + real(control%weight_diag(k) * field_bands(l, n_layer, k), RealExt)
+        end do
+      end if
+    end do
+  end if
+
+end subroutine sum_surf_weight_bands
+
+
+!------------------------------------------------------------------------------
+subroutine sum_photol_channels(field, field_channels, i_pathway)
+
+  implicit none
+
+  real(RealExt), intent(inout), pointer :: field(:, :)
+  real(RealK), intent(in), allocatable :: field_channels(:, :, :, :)
+  integer, intent(in) :: i_pathway
+
+  real(RealK), allocatable :: photol(:, :)
+
+  if (associated(field)) then
+    allocate(photol(n_profile, n_layer))
+    photol=0.0_RealK
+    do j=1, control%n_channel
+      do i=1, n_layer
+        do l=1, n_profile
+          photol(l, i) = photol(l, i) + field_channels(l, i, i_pathway, j)
+        end do
+      end do
+    end do
+    call set_layer_prop(field, photol)
+    deallocate(photol)
+  end if
+
+end subroutine sum_photol_channels
+
+
+!------------------------------------------------------------------------------
+subroutine sum_photol_channels_all(field, field_channels)
+
+  implicit none
+
+  real(RealExt), intent(inout), pointer :: field(:, :, :)
+  real(RealK), intent(in), allocatable :: field_channels(:, :, :, :)
+
+  real(RealK), allocatable :: photol(:, :, :)
+
+  if (associated(field)) then
+    allocate(photol(n_profile, n_layer, spectrum%photol%n_pathway))
+    photol=0.0_RealK
+    do j=1, control%n_channel
+      do k=1, spectrum%photol%n_pathway
+        do i=1, n_layer
+          do l=1, n_profile
+            photol(l, i, k) = photol(l, i, k) + field_channels(l, i, k, j)
+          end do
+        end do
+      end do
+    end do
+    call set_3d_prop(field, photol)
+    deallocate(photol)
+  end if
+
+end subroutine sum_photol_channels_all
+
+
+!------------------------------------------------------------------------------
 subroutine set_cloud_prop(field, cld_field1, cld_field2, cld_field3)
 
   implicit none
@@ -823,6 +1037,69 @@ subroutine set_layer_prop(field, field_in)
   end if
 
 end subroutine set_layer_prop
+
+
+!------------------------------------------------------------------------------
+subroutine set_3d_prop(field, field_in)
+
+  implicit none
+
+  real(RealExt), intent(inout), pointer :: field(:, :, :)
+  real(RealK), intent(in), allocatable :: field_in(:, :, :)
+  integer :: k_lower, k_upper, k_dim
+  integer :: i_lower, i_upper, i_dim
+
+  if (associated(field)) then
+    if (l_last) then
+      i_dim = 1
+      k_dim = 2
+    else
+      i_dim = 2
+      k_dim = 3
+    end if
+    k_lower = max(lbound(field, k_dim), 1)
+    k_upper = min(ubound(field, k_dim), size(field_in, 3))
+    i_lower = max(lbound(field, i_dim), 1)
+    i_upper = min(ubound(field, i_dim), n_layer)
+
+    if (l_last) then
+      do l=1, n_profile
+        do k=k_lower, k_upper
+          do i=lbound(field, i_dim), i_lower-1
+            field(i, k, list(l)) = 0.0_RealExt
+          end do
+          do i=i_lower, i_upper
+            ii = abs(layer_offset-i)
+              field(i, k, list(l)) = real(field_in(l, ii, k), RealExt)
+          end do
+          do i=i_upper+1, ubound(field, i_dim)
+            field(i, k, list(l)) = 0.0_RealExt
+          end do
+        end do
+      end do
+    else
+      do k=k_lower, k_upper
+        do i=lbound(field, i_dim), i_lower-1
+          do l=1, n_profile
+            field(list(l), i, k) = 0.0_RealExt
+          end do
+        end do
+        do i=i_lower, i_upper
+          ii = abs(layer_offset-i)
+          do l=1, n_profile
+            field(list(l), i, k) = real(field_in(l, ii, k), RealExt)
+          end do
+        end do
+        do i=i_upper+1, ubound(field, i_dim)
+          do l=1, n_profile
+            field(list(l), i, k) = 0.0_RealExt
+          end do
+        end do
+      end do
+    end if
+  end if
+
+end subroutine set_3d_prop
 
 
 !------------------------------------------------------------------------------

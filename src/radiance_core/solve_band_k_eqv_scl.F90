@@ -96,7 +96,7 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
   USE def_spherical_geometry, ONLY: StrSphGeo
   USE rad_pcf, ONLY: ip_solar, ip_infra_red, ip_spherical_harmonic,     &
                      ip_two_stream, ip_surf_alb_diff, ip_ir_gauss,      &
-                     ip_cloud_mcica, ip_scatter_hybrid
+                     ip_cloud_mcica, ip_scatter_hybrid, ip_scatter_full
   USE diffusivity_factor, ONLY: diffusivity_factor_minor
   USE vectlib_mod, ONLY: exp_v
   USE yomhook, ONLY: lhook, dr_hook
@@ -1055,6 +1055,7 @@ SUBROUTINE solve_band_k_eqv_scl(ierr &
     ELSE
       i_scatter_method = i_scatter_method_band
     END IF
+    IF (i_scatter_method <= 0) i_scatter_method = ip_scatter_full
 
 !   Store the ESFT weight for future use.
     esft_weight=w_abs_esft(iex, i_abs)

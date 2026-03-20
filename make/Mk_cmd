@@ -1,16 +1,15 @@
-# Generated automatically
-# System: Linux norma1.intra.astro.rug.nl 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Oct 31 13:55:05 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux 
-# Date: Mon Dec  8 02:01:11 PM CET 2025 
- 
-FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC  -c 
-LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC  
-LIBLINK         = /usr/bin/ar rvu 
-INCCDF_PATH     = /usr/include -I/usr/lib64/gfortran/modules 
-LIBCDF_PATH     = netcdff 
-LIBCDF_NAME     = netcdff 
-OMPARG          = -fopenmp 
- 
-LIBSUFFIX       = a 
- 
-.SUFFIXES: $(SUFFIXES) .f90 
- 
+#
+# Pathnames for compilers and global options for naming files
+#
+FORTCOMP        = gfortran -O -c
+LINK            = gfortran -O
+LIBLINK         = ar rvu
+INCCDF_PATH     = /usr/include
+LIBCDF_PATH     = /usr/lib
+LIBCDF_NAME     = netcdff
+OMPARG          = -fopenmp
+FLAGS_ODEPACK   = -w -std=legacy -fallow-argument-mismatch
+
+LIBSUFFIX       = a
+
+.SUFFIXES: $(SUFFIXES) .f90

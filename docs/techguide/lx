@@ -1,0 +1,4 @@
+pdflatex socrates_techguide
+bibtex socrates_techguide
+pdflatex socrates_techguide
+pdflatex socrates_techguide

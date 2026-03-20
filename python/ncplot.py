@@ -113,7 +113,7 @@ else:
         ax2.set_title('Top & Mid atmosphere spectra')
         ax2.set_xlim(right=xlim)
     elif (name == 'aflx'):
-        ax2.set_ylabel('Actinic Flux (W m$^{-2} m$^{-1})')
+        ax2.set_ylabel('Actinic Flux (W m$^{-2}$ m$^{-1}$)')
         ax2.set_yscale('symlog')
         e_layer = int(layers/2)
         e_height = -np.log(p[e_layer]/max(p))*CONST
@@ -124,7 +124,7 @@ else:
         ax2.plot(wl, mid_spec, color='green', label='Mid atmos')
         ax2.set_title('Top & Mid atmosphere spectra')
     elif (name == 'hrts'):
-        ax2.set_ylabel('Heating rate (K day$^{-1} m$^{-1})')
+        ax2.set_ylabel('Heating rate (K day$^{-1}$ m$^{-1}$)')
         e_layer = int(layers/2)
         e_height = -np.log(p[e_layer]/max(p))*CONST
         ax1.plot([min(vmean),max(vmean)], [e_height,e_height], color='green')

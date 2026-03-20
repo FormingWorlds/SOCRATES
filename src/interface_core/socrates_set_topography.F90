@@ -19,7 +19,7 @@ contains
 ! resolved topographic features for high-resolution weather prediction,
 ! https://doi.org/10.1002/qj.956
 
-subroutine set_topography(n_profile, n_horiz_ang, n_horiz_layer, &
+subroutine set_topography(n_profile, pi, n_horiz_ang, n_horiz_layer, &
   grad_x, grad_y, grad_aspect, horizon_angle, horizon_aspect, &
   slope_angle, slope_aspect, skyview)
 
@@ -27,7 +27,6 @@ use realtype_rd, only: RealExt
 use errormessagelength_mod, only: errormessagelength
 use ereport_mod, only: ereport
 use rad_pcf, only: i_normal, i_err_fatal
-use rad_ccf, only: pi
 use missing_data_mod, only: rmdi
 use yomhook,  only: lhook, dr_hook
 use parkind1, only: jprb, jpim
@@ -36,6 +35,7 @@ implicit none
 
 ! Dimensions
 integer, intent(in) :: n_profile
+real(RealExt), intent(in) :: pi
 integer, intent(in), optional :: n_horiz_ang, n_horiz_layer
 
 ! Input ancillary data

@@ -193,7 +193,7 @@ subroutine illuminate( &
         deallocate(horiz_ang, horiz_asp)
       else
         call solinc(n_profile, cos_zen, sol_azimuth, &
-          slope_aspect, slope_angle, orog_corr)
+          slope_asp, slope_ang, orog_corr)
       end if
       orographic_correction(1:n_profile) = real(orog_corr, RealExt)
       deallocate(slope_ang, slope_asp, orog_corr)

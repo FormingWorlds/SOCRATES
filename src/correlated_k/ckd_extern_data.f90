@@ -11,7 +11,7 @@ MODULE ckd_extern_data
 ! Description:
 !   This module defines arrays used by the CKD continuum model.
 !   These arrays would usually be defined with the code, but
-!   are to beig for all compilation on all machines, so a 
+!   are too big for compilation on all machines, so a 
 !   process of reading in is adopted.
 !
 !- End of header
@@ -36,18 +36,20 @@ MODULE ckd_extern_data
    REAL  (RealK) :: table_inc
 !    Increment along table
 !
-   REAL  (RealK), Pointer, Dimension(:) :: c
+   REAL  (RealK), Pointer, Dimension(:) :: c => NULL()
 !    Continuum coefficients
+   REAL  (RealK), Pointer, Dimension(:) :: texp => NULL()
+!    Temperature exponent
 !
   END TYPE StrCKDFld
 !
 !
 !
-  TYPE (StrCKDFld) :: c_foreign_h2o_296 
+  TYPE (StrCKDFld) :: c_foreign_h2o_296
 !   Foreign-broadened coefficients for the CKD continuum
-  TYPE (StrCKDFld) :: c_self_h2o_260 
+  TYPE (StrCKDFld) :: c_self_h2o_260
 !   Self-broadened coefficients for the CKD continuum at 260 K
-  TYPE (StrCKDFld) :: c_self_h2o_296 
+  TYPE (StrCKDFld) :: c_self_h2o_296
 !   Self-broadened coefficients for the CKD continuum at 296 K
 !
 END MODULE ckd_extern_data

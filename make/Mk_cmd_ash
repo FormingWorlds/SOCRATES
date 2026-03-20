@@ -8,6 +8,7 @@ INCCDF_PATH     = /usr/include
 LIBCDF_PATH     = /usr/lib
 LIBCDF_NAME     = netcdff
 OMPARG          = -fopenmp
+FLAGS_ODEPACK   = -w -std=legacy -fallow-argument-mismatch
 
 LIBSUFFIX       = a
 

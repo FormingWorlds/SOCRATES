@@ -6,9 +6,9 @@ Ccorr_k \fB\-D\fR \fIhitran\-par\-file\fR | \fB\-BD\fR \fIbespoke\-par\-file\fR 
         \fB\-UVX\fR \fIuvxsc\-file\fR | \fB\-CIA\fR \fIhitran\-cia\-file\fR
         \fB\-s\fR \fIspectral\-file\fR [\fB\-I\fR \fIinstrument\-file\fR]
         \fB\-R\fR \fIfirst\-band\fR \fIlast\-band\fR \fB\-F\fR \fIpt\-file\fR  [\fB\-r\fR \fIref\-pt\-file\fR]
-        \fB\-lo\fR \fIgas\fR | [\fB\-l\fR \fIgas\fR \fImax\-path\fR |
+        \fB\-lo\fR \fIgas\fR | \fB\-l\fR \fIgas\fR \fImax\-path\fR |
         \fB\-ct\fR \fIgas1\fR \fIgas2\fR \fImax\-path\fR [\fB\-cw\fR \fIgas\fR \fImax\-path\fR]
-        \fB\-n\fR \fIk_terms\fR \fB| \-t\fR \fItol\fR \fB| \-b\fR \fItol\fR]
+        \fB\-n\fR \fIk_terms\fR \fB| \-t\fR \fItol\fR \fB| \-b\fR \fItol\fR
         \fB\-p|\-q|\-d|-p2|\-q2|\-d2|-lk\fR
         [\fB\-k\fR] [\fB\-x\fR \fIfilename\fR] \fB\-i\fR \fIincrement\fR
         [\fB\-c\fR \fIwavenumber\fR] [\fB\-lp\fR \fIline-profile\fR] [\fB\-sb\fR \fIfilename\fR]
@@ -160,11 +160,11 @@ Include self-broadening with number fractions of the gas specified in \fIfilenam
 
 .TP
 \fB\-f\fR \fIfilename\fR
-Generate foreign-broadened continuum data: \fIfilename\fR = pathname of file containing the foreign-broadened CKD data.
+Generate foreign-broadened continuum data: \fIfilename\fR = pathname of file containing the foreign-broadened CKD data: can be original CKD text format or a netCDF file in the MT_CKD format used for HITRAN.
 
 .TP
 \fB\-e\fR \fIname1\fR \fIname2\fR
-Generate self-broadened continuum data: \fIname1\fR = pathname of file containing the self-broadened CKD data at 296K, \fIname2\fR = pathname of file containing the self-broadened CKD data at 260K.
+Generate self-broadened continuum data: \fIname1\fR = pathname of file containing the self-broadened CKD data at 296K, \fIname2\fR = pathname of file containing the self-broadened CKD data at 260K (if using the original CKD text format) or the netCDF file containing the temperature exponent for the MT_CKD HITRAN format. Note, when using the netCDF MT_CKD HITRAN format file, the same file should be given for both.
 
 .TP
 \fB\-C\fR \fIn1\fR \fIn2\fR \fIn3\fR

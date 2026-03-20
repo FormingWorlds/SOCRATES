@@ -1,0 +1,220 @@
+The following programs can be used to generate input data for the radiance and two-stream code. As in the previous chapter the names of the Fortran programs are listed. Man pages for the corresponding scripts (where available) are then provided. 
+
+\begin{description}
+
+\item[{\tt raw\_input}]
+: This is a possibly convenient way of making CDL-files specifying the
+atmospheric state. We first need an input file. The input file
+contains a number of {\sl profiles} beginning and ending with the
+directives {\tt *PROFILE} and {\tt *END} (see {\tt examples/prsc/input}).
+After the directive {\tt *PROFILE},
+a line listing the variables to be supplied in that profile followed
+by the appropriate unit in brackets follows. {\tt NONE} is often used
+for dimensionless quantities, such as mass mixing ratios. After this
+line the numerical values follow in their correct columns, though the
+vertical order is not important: the program will sort the lines
+itself. The headers for the columns and the units are in the file
+{\tt src/modules\_gen/input\_head\_pcf.f90}. The program requests a
+{\sl basename} which
+is used to construct output files. The name of the output file consists
+of the basename, followed by an underscore, followed by the number of
+the profile, followed by a dot and finally by a suffix identifying the
+contents, as also defined in {\tt input\_head\_pcf.f90}.
+Each profile must
+contain the same number of vertical levels, so we would require separate
+profiles for the surface data and the atmospheric levels, as in the example.
+In the present context you can say yea or nay to the removal of missing
+data as there won't be any.
+
+\item[{\tt prep\_opt\_profile}]
+: Initially at least, it is likely that the code will be run with specified
+profiles of optical properties, rather than with parameterisations of
+these properties, so a program is required to take the optical properties
+on given levels and format them for input. Averaged scattering properties
+must therefore be generated on a number of atmospheric levels using the
+preprocessing programs described in the previous chapter. A file is then
+set up containing on each line a pressure
+level and the name of a file of averaged scattering properties.
+{\tt prep\_opt\_profile} takes in this file , the latitude and longitude of
+the point and writes a CDL file containing the reformatted data.
+This program has not been extended to work for multiple points, but there is
+an IDL/python routine available ({\tt ncout\_opt\_prop} for creating
+multicolumn netCDF files of prescribed optical properties.
+
+\item[{\tt interp}, {\tt interp\_cdf}]
+: Interpolate a field to the pressure levels given by a grid-file. Input
+files can be in CDL or netCDF format. The variable found in the grid-file
+will not matter as only the pressure levels will be used. The type of 
+interpolation must be specified from 1 of 8 options.
+
+A man page for Cinterp is provided.
+
+\item[{\tt samson2cdl}]
+: This program generates {\sc CDL}-files from {\sc SAMSON}-files. Again we
+describe the script
+\begin{verbatim}
+Csamson2cdl -o new.t -u "K" -n ta -l "TEMPERATURE" old.t
+\end{verbatim}
+Here we have a {\sc SAMSON}-file, {\tt old.t} which is converted to a
+{\sc CDL}-file {\tt new.t}. We need to specify a unit {\bf -u} and a
+{\sl long-name} {\bf -l}: quotes are required if there are spaces in
+the strings, but are optional otherwise. A name is required for the array.
+Normally, this is the same as the suffix, but the use of {\tt ta} for
+temperature seems standard with {\sc CDL}-files, so in this case I have
+followed the convention.
+
+\item[{\tt cdl2cdf}]
+: Converts CDL input files to netCDF. The script has two modes of operation as outlined  below.  Either  a  single file can be converted, or all files with a given basename.
+
+\smallskip
+
+{\tt Ccdl2cdf [-o} {\em output-file}{\tt ]} {\em input-file}
+
+{\tt Ccdl2cdf -a} {\em basename}
+
+\smallskip
+
+This program will convert files that are readable by {\tt l\_run\_cdl} where the generic routine, {\tt ncgen}, may not work.
+
+\item[{\tt cdf2cdl}]
+: Converts netCDF input files to CDL. The options for the script, {\tt Ccdf2cdl}, are the same as for {\tt Ccdl2cdf}. Man pages are available for both of these scripts.
+
+\end{description}
+
+Man pages follow formatted using {\tt man -t}.
+
+\includepdf[pages=-]{Cinterp.pdf}
+\includepdf[pages=-]{Ccdl2cdf.pdf}
+\includepdf[pages=-]{Ccdf2cdl.pdf}
+
+\section{Creating multicolumn netCDF input files}
+
+A number of IDL and python utilities are available to create netCDF files in the required format from arrays of data. These can be found in {\tt \$RAD\_DIR/idl/} and {\tt \$RAD\_DIR/python/}. At present, the following routines are available:
+
+\begin{description}
+
+\item[{\tt ncout\_surf} (in {\tt nctools})] : Program to create netCDF files of surface albedo weights. This can be called within IDL with the syntax:
+
+\begin{verbatim}
+ncout_surf, file, lon, lat, basis, alb
+\end{verbatim}
+
+Normally 'file' will have the extension .surf, and 'basis' = 1.
+'alb' should then be an array of surface albedo values or a single value.
+
+\item[{\tt ncout\_spectral\_surf} (in {\tt nctools})] : Program to create netCDF files of surface albedos per band. Called with the syntax:
+
+\begin{verbatim}
+ncout_spectral_surf, file, lon, lat, bands, alb
+\end{verbatim}
+
+Normally 'file' will have the extension .surf. 'bands' is the number bands.
+'alb' should then be an array of surface albedo values for the bands.
+
+\item[{\tt ncout2d} (in {\tt nctools})] : Program to create netCDF files of single level fields. Called with the syntax:
+
+\begin{verbatim}
+ncout2d, file, lon, lat, val, $
+           name=name, longname=longname, units=units
+\end{verbatim}
+
+For example, to create a file of solar irradiance:
+
+\begin{verbatim}
+ncout2d, 'out.stoa', lon, lat, [1365.0], $
+           longname='Solar Irradiance', units='WM-2'
+\end{verbatim}
+
+where lon and lat are arrays (the optional argument 'name' is missing here and will be set from the file extension, i.e. name='stoa').
+
+\item[{\tt ncout3d} (in {\tt nctools})] : Program to create netCDF files of 3d fields on pressure levels. Called with the syntax:
+
+\begin{verbatim}
+ncout3d, file, lon, lat, p, val, $
+           name=name, longname=longname, units=units
+\end{verbatim}
+
+For example, to create a temperature file:
+
+\begin{verbatim}
+ncout3d, 'out.t', lon, lat, p, t, $
+           longname='Temperature', units='K'
+\end{verbatim}
+
+where lon, lat, p, and t are arrays (the optional argument 'name' is missed out as before and will be set from the file extension, i.e. name='t').
+
+\item[{\tt ncout\_opt\_prop} (in {\tt nctools})] : Program to create netCDF files of prescribed optical properties on pressure levels. Called with the syntax:
+
+\begin{verbatim}
+ncout_opt_prop, file, lon, lat, p, bands, absp, scat, phf
+\end{verbatim}
+
+For example:
+
+\begin{verbatim}
+ncout_opt_prop, 'out.op_soot', lon, lat, p, 6, absp, scat, phf
+\end{verbatim}
+
+where lon, lat, p, absp, scat and phf are arrays.
+
+\item[{\tt ncout\_view} (in {\tt nctools})] : Program to create netCDF ".view" files. Called with the syntax:
+
+\begin{verbatim}
+ncout_view, file, lon, lat, direction, level, pol, azim, rlev
+\end{verbatim}
+
+\item[{\tt ncout\_tl}] : Program to create netCDF file of temperature on levels (.tl file). This is extrapolated from the temperature in layers (.t file), and the surface temperature (.tstar) if available. Called with the syntax:
+
+\begin{verbatim}
+ncout_tl, basename
+\end{verbatim}
+
+where basename is the file name of the temperature file without the suffix, e.g. {\tt 'out'}.
+
+\item[{\tt ncprofiles}] : Creates many of the files needed by the radiation code using standard default values. This script uses a template file (.t by default) to define lon, lat, and p and then calls the above routines with given values. These should be edited as required. The calling syntax is:
+
+\begin{verbatim}
+ncprofiles, basename
+\end{verbatim}
+
+\item[{\tt ncplot}] : Plots a mean profile of the variable in the supplied file against height (calculated from pressure assuming an isothermal atmosphere). Called with the syntax:
+
+\begin{verbatim}
+ncplot, file
+\end{verbatim}
+
+\end{description}
+
+Input and output netCDF files can be modified using standard netCDF utilities, and viewed using, for example, {\tt ncview}.
+
+\section{Calculating horizon angles for LFRic}
+
+\begin{figure}[bht]
+\begin{center}
+\includegraphics[width=14cm]{interp_halo.pdf}
+\caption{\label{fig:interp_halo} Representation of adjacent cubed-sphere panels with poles at points A and B. Angles depicted are used to interpolate to point C in the halo of the right-hand panel.
+}
+\end{center}
+\end{figure}
+
+The utility {\tt calc\_horizon\_angles} can be used to calculate horizon angles in 16 directions for an LFRic orographic ancillary file. This works with UGRID data for both local-area and global cubed-sphere meshes.
+
+A supplied netCDF orography ancillary is read to provide unfiltered surface altitude (or filtered surface altitude data as a fallback). Also read from the file are the longitudes and latitudes of faces and nodes and face-node connectivity variables. The face-node connectivity is used to construct a simple 2D grid for local area models or six separate 2D grids for each panel of a cubed-sphere.
+
+For the case of a cubed-sphere, the 2D grids for each panel are extended into a halo using interpolated data from surrounding panels. The points in the halo follow a grid that continues the great circles of the 2D grid for the given panel. The halo points therefore fall between the grid points of the adjacent panel. Figure \ref{fig:interp_halo} demonstrates the spherical geometry for interpolation to an example point $C$ in the halo for the right hand panel centred on $A$.
+
+It should be noted that the grid lines for the cubed sphere all follow great circles. For the two panels displayed in figure \ref{fig:interp_halo}, the vertical grid lines are all equally spaced great circles converging on poles in the panels above and below (that are not shown). The horizontal grid lines of the right-hand panel converge to a pole ($B$) at the centre of the left hand panel, while the grid lines of the left-hand panel converge to a pole ($A$) at the centre of the right-hand panel.
+
+The angle $i$ is 1.5 regularly-spaced grid points from $A$ and easily determined from the global model resolution (which determines the total number of grid-points around the great circle). The angle $i'$ represents the number of grid-points of the left-hand panel that $C$ will be from the centre line. Spherical trigonometry shows that:
+\begin{equation}
+\tan{i'} = \tan{i} / \tan{j}
+\end{equation}
+The angle $i'$ is converted back to model grid points again using the fact that the grid is spaced evenly around a great circle from the point $B$. This provides weighting factors to interpolate the surface altitude at point $C$ from the two adjacent grid points in this line of the halo. The latitude and longitude at point $C$ should ideally be calculated by following a great circle between the latitude and longitude of the two adjacent grid points, but given the angles are small in this case (just the grid resolution) it is sufficient to simply interpolate them here.
+
+The horizon angles and aspects are then calculated for 16 directions aligned with the 2D grid as described in Manners et. al. (2012) Radiative transfer over resolved topographic features for high-resolution weather prediction, DOI:10.1002/qj.956. For a cubed-sphere the directions perpendicular to the grid are exact great circles as required when considering shadows from incoming solar irradiance. The diagonals will introduce some minor curvature but this is less severe than for a latitude-longitude grid at high latitudes and the error introduced in the direction of shadows is not significant. 
+
+Horizon angles and aspects on the 2D grid (for each panel in the case of the cubed-sphere) are mapped back to the original mesh and written to the orography ancillary file.
+
+Man page follows formatted using {\tt man -t}.
+
+\includepdf[pages=-]{calc_horizon_angles.pdf}

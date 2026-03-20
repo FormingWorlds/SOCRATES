@@ -61,7 +61,7 @@ SUBROUTINE make_block_17(Sp, Sol, ierr)
   CHARACTER (LEN=3) :: frequency
   INTEGER :: ncid, varid, dimid_time, dimid_wlen, time_len, wlen_len
   INTEGER :: band, sub_band, number_term, index_absorb
-  INTEGER :: sub_bands(Sp%Dim%nd_band)
+  INTEGER :: sub_bands(Sp%Dim%nd_band), band_sort(Sp%Dim%nd_band)
   INTEGER :: n_times, yearstart=imdi, monthstart, daystart
   INTEGER, ALLOCATABLE :: calyear(:), calmonth(:), calday(:), seconds(:)
   LOGICAL :: l_monthly
@@ -71,6 +71,13 @@ SUBROUTINE make_block_17(Sp, Sol, ierr)
                              Sp%Dim%nd_band)
   REAL (RealK) :: wave_inc
 
+  INTERFACE
+    SUBROUTINE map_heap_func(a, map)
+      USE realtype_rd, ONLY: RealK
+      REAL(RealK), INTENT(IN), DIMENSION(:) :: a
+      INTEGER, INTENT(OUT), DIMENSION(:) :: map
+    END SUBROUTINE map_heap_func
+  END INTERFACE
 
   IF ( .NOT. Sp%Basic%l_present(17) ) THEN
     sub_bands=0
@@ -138,9 +145,12 @@ SUBROUTINE make_block_17(Sp, Sol, ierr)
        DEALLOCATE(Sp%Var%wavelength_sub_band)
     ALLOCATE(Sp%Var%index_sub_band( 2, Sp%Dim%nd_sub_band ))
     ALLOCATE(Sp%Var%wavelength_sub_band( 0:2, Sp%Dim%nd_sub_band ))
-    
+
+    CALL map_heap_func(Sp%Basic%wavelength_short(1:Sp%Basic%n_band), &
+      band_sort(1:Sp%Basic%n_band))
     sub_band=1
-    DO band=1, Sp%Basic%n_band
+    DO j=1, Sp%Basic%n_band
+      band=band_sort(j)
       IF (sub_bands(band) == 1) THEN
         Sp%Var%index_sub_band(1, sub_band) = band
         Sp%Var%index_sub_band(2, sub_band) = 0
@@ -239,7 +249,7 @@ SUBROUTINE make_block_17(Sp, Sol, ierr)
       END IF
     CASE (6)
       WRITE(*, '(a)') 'Enter location of data file:'
-      READ(*, *, IOSTAT=ios) cmip6_file
+      READ(*, '(a)', IOSTAT=ios) cmip6_file
       ! Open the file for reading
       CALL nf(nf90_open(TRIM(cmip6_file),NF90_NOWRITE,ncid))
       ! Get number of times

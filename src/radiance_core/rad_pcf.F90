@@ -262,6 +262,14 @@ INTEGER, PARAMETER :: ip_cloud_split_ice_water   = 9
 !   regions divided into ice and water components
 
 ! ------------------------------------------------------------------
+! treatment of cloud entrapment of flux between layers
+! ------------------------------------------------------------------
+INTEGER, PARAMETER :: ip_max_entrapment  = 1
+!   Maximum entrapment
+INTEGER, PARAMETER :: ip_zero_entrapment = 2
+!   Zero entrapment using 'Hogan' solvers
+
+! ------------------------------------------------------------------
 ! treatment of in-cloud horizontal water content inhomogeneity
 ! ------------------------------------------------------------------
 INTEGER, PARAMETER :: ip_homogeneous       = 0

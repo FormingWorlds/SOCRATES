@@ -8,10 +8,28 @@
 module socrates_def_diag
 
 use realtype_rd, only: RealExt
+use gas_list_pcf, only: npd_pathway
 
 implicit none
 
+type :: StrPhotol
+  real(RealExt), pointer :: rate(:,:) => null()
+  ! Photolysis rate, s-1 (n_profile, n_layer)
+  real(RealExt), pointer :: rate_clear(:,:) => null()
+  ! Clear-sky photolysis rate, s-1 (n_profile, n_layer)
+  real(RealExt), pointer :: rate_clean(:,:) => null()
+  ! Clean-air photolysis rate, s-1 (n_profile, n_layer)
+  real(RealExt), pointer :: rate_clear_clean(:,:) => null()
+  ! Clear-clean photolysis rate, s-1 (n_profile, n_layer)
+end type StrPhotol
+
 type :: StrDiag
+
+type(StrPhotol) :: photolysis(npd_pathway)
+! Photolysis diagnostics
+
+real(RealExt), pointer :: photolysis_rate(:,:,:) => null()
+! Photolysis rate, s-1 (n_profile, n_layer, n_pathway)
 
 real(RealExt), pointer :: heating_rate(:,:) => null()
 ! Heating rate, Ks-1 (n_profile, n_layer)
@@ -33,6 +51,24 @@ real(RealExt), pointer :: flux_down_clear(:,:) => null()
 
 real(RealExt), pointer :: flux_up_clear(:,:) => null()
 ! Clear-sky upwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_direct_clean(:,:) => null()
+! Clean-air (aerosol free) direct downwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_down_clean(:,:) => null()
+! Clean-air downwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_up_clean(:,:) => null()
+! Clean-air upwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_direct_clear_clean(:,:) => null()
+! Clear-clean direct downwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_down_clear_clean(:,:) => null()
+! Clear-clean downwards flux, Wm-2 (n_profile, 0:n_layer)
+
+real(RealExt), pointer :: flux_up_clear_clean(:,:) => null()
+! Clear-clean upwards flux, Wm-2 (n_profile, 0:n_layer)
 
 real(RealExt), pointer :: flux_up_tile(:,:) => null()
 ! Upwards flux on tiles, Wm-2 (n_profile, n_tile)
@@ -58,11 +94,50 @@ real(RealExt), pointer :: flux_down_clear_surf(:) => null()
 real(RealExt), pointer :: flux_up_clear_surf(:) => null()
 ! Clear-sky upwards surface flux, Wm-2 (n_profile)
 
+real(RealExt), pointer :: flux_direct_clean_surf(:) => null()
+! Clean-air direct flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_clean_surf(:) => null()
+! Clean-air downwards flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_clean_surf(:) => null()
+! Clean-air upwards flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_clear_clean_surf(:) => null()
+! Clear-clean direct surface flux, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_clear_clean_surf(:) => null()
+! Clear-clean downwards surface flux, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_clear_clean_surf(:) => null()
+! Clear-clean upwards surface flux, Wm-2 (n_profile)
+
 real(RealExt), pointer :: flux_direct_blue_surf(:) => null()
 ! Direct blue flux at the surface, Wm-2 (n_profile)
 
 real(RealExt), pointer :: flux_down_blue_surf(:) => null()
 ! Total downward blue flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_uv_surf(:) => null()
+! Direct UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_uv_surf(:) => null()
+! Downwards UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_uv_surf(:) => null()
+! Upwards UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_uv_clear_surf(:) => null()
+! Clear-sky direct UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_uv_clear_surf(:) => null()
+! Clear-sky downwards UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_uv_clear_surf(:) => null()
+! Clear-sky upwards UV flux at the surface, Wm-2 (n_profile)
+
+real(RealExt) :: wavelength_uv = 3.2e-07_RealExt
+! Upper wavelength boundary for the UV flux diagnostics, defaults to 320nm
 
 real(RealExt), pointer :: flux_direct_toa(:) => null()
 ! Direct downwards flux at top-of-atmosphere, Wm-2 (n_profile)
@@ -81,6 +156,60 @@ real(RealExt), pointer :: flux_down_clear_toa(:) => null()
 
 real(RealExt), pointer :: flux_up_clear_toa(:) => null()
 ! Clear-sky upwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_clean_toa(:) => null()
+! Clean-air direct downwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_clean_toa(:) => null()
+! Clean-air downwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_clean_toa(:) => null()
+! Clean-air upwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_clear_clean_toa(:) => null()
+! Clear-clean direct downwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_down_clear_clean_toa(:) => null()
+! Clear-clean downwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_up_clear_clean_toa(:) => null()
+! Clear-clean upwards flux at top-of-atmosphere, Wm-2 (n_profile)
+
+real(RealExt), pointer :: flux_direct_band(:,:,:) => null()
+! Direct downwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_down_band(:,:,:) => null()
+! Downwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_up_band(:,:,:) => null()
+! Upwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_direct_clear_band(:,:,:) => null()
+! Clear-sky direct flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_down_clear_band(:,:,:) => null()
+! Clear-sky downwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_up_clear_band(:,:,:) => null()
+! Clear-sky upwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_direct_clean_band(:,:,:) => null()
+! Clean-air direct flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_down_clean_band(:,:,:) => null()
+! Clean-air downwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_up_clean_band(:,:,:) => null()
+! Clean-air upwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_direct_clear_clean_band(:,:,:) => null()
+! Clear-clean direct flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_down_clear_clean_band(:,:,:) => null()
+! Clear-clean downwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
+
+real(RealExt), pointer :: flux_up_clear_clean_band(:,:,:) => null()
+! Clear-clean upwards flux per band, Wm-2 (n_profile, 0:n_layer, n_band)
 
 real(RealExt), pointer :: total_cloud_cover(:) => null()
 ! Total cloud cover (n_profile)

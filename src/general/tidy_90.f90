@@ -666,11 +666,13 @@ CONTAINS
           trans_column_gas(j)=SUM(Spectrum%Gas%w(1:n_k, i_band, i_gas) &
             *EXP(-Spectrum%Gas%k(1:n_k, i_band, i_gas)*column_gas(i_gas)))
         END DO
-        CALL map_heap_func(trans_column_gas(1:n_band_absorb), &
-          map(1:n_band_absorb))
-        Spectrum%Gas%index_absorb(1:n_band_absorb, i_band) = &
-            Spectrum%Gas%index_absorb(map(1:n_band_absorb), i_band)
-        trans_major_gas = trans_column_gas(map(1))
+        IF (n_band_absorb > 0) THEN
+          CALL map_heap_func(trans_column_gas(1:n_band_absorb), &
+            map(1:n_band_absorb))
+          Spectrum%Gas%index_absorb(1:n_band_absorb, i_band) = &
+              Spectrum%Gas%index_absorb(map(1:n_band_absorb), i_band)
+          trans_major_gas = trans_column_gas(map(1))
+        END IF
         IF (n_band_absorb > 1) THEN
           IF (-2.0_RealK*LOG(trans_column_gas(map(2))) &
             > -LOG(trans_major_gas)) THEN

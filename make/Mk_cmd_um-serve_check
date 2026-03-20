@@ -8,6 +8,7 @@ LIBLINK         = ar rvu
 INCCDF_PATH     = /usr/include
 LIBCDF_PATH     = /usr/lib
 LIBCDF_NAME     = netcdff
+FLAGS_ODEPACK   = -w
 
 LIBSUFFIX       = a
 

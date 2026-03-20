@@ -28,7 +28,7 @@ SUBROUTINE solve_band_without_gas(ierr                                  &
 !                 Precalculated angular arrays
     , ia_sph_mm, cg_coeff, uplm_zero, uplm_sol                          &
 !                 Treatment of scattering
-    , i_scatter_method                                                  &
+    , i_scatter_method_band                                             &
 !                 Options for solver
     , i_solver                                                          &
 !                 Spectral region
@@ -86,8 +86,9 @@ SUBROUTINE solve_band_without_gas(ierr                                  &
   USE def_ss_prop,  ONLY: str_ss_prop
   USE def_qy,       ONLY: StrQy
   USE def_spherical_geometry, ONLY: StrSphGeo
-  USE rad_pcf, ONLY: ip_infra_red, ip_solar, ip_two_stream, ip_ir_gauss,&
-                     ip_spherical_harmonic
+  USE rad_pcf, ONLY: ip_infra_red, ip_solar, ip_two_stream, ip_ir_gauss, &
+                     ip_spherical_harmonic, ip_scatter_hybrid, &
+                     ip_scatter_full
   USE yomhook, ONLY: lhook, dr_hook
   USE parkind1, ONLY: jprb, jpim
   USE augment_radiance_mod, ONLY: augment_radiance
@@ -222,7 +223,7 @@ SUBROUTINE solve_band_without_gas(ierr                                  &
 
 !                 Treatment of scattering
   INTEGER, INTENT(IN) ::                                                &
-      i_scatter_method
+      i_scatter_method_band
 !       Method of treating scattering
 
 !                 Options for solver
@@ -382,6 +383,8 @@ SUBROUTINE solve_band_without_gas(ierr                                  &
 !       Loop variables
   INTEGER :: iex, iex_minor(1)
 !       Dummy integers for k-term
+  INTEGER :: i_scatter_method
+!       Method of treating scattering
   INTEGER, PARAMETER ::                                                 &
       n_k_term_inner_dummy = 1                                          &
 !       Number of monochromatic calculations in inner loop (dummy here)
@@ -507,6 +510,12 @@ SUBROUTINE solve_band_without_gas(ierr                                  &
       k_null(l, i)=0.0e+00_RealK
     END DO
   END DO
+
+  IF (i_scatter_method_band == ip_scatter_hybrid) THEN
+    i_scatter_method = ip_scatter_full
+  ELSE
+    i_scatter_method = i_scatter_method_band
+  END IF
 
 
   CALL monochromatic_radiance(ierr                                      &

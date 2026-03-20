@@ -17,14 +17,15 @@ subroutine set_control(control, diag, spectrum, l_set_defaults, &
   l_rescale, l_ir_source_quad, l_mixing_ratio, &
   l_aerosol, l_aerosol_mode, l_aerosol_ccn, &
   l_tile, l_flux_ground, l_flux_tile, n_tile, n_cloud_layer, n_aer_mode, &
-  isolir, i_scatter_method, &
-  i_cloud_representation, i_overlap, i_inhom, i_mcica_sampling, &
+  isolir, i_scatter_method, i_gas_overlap, &
+  i_cloud_representation, i_overlap, i_inhom, &
+  i_cloud_entrapment, i_mcica_sampling, &
   i_st_water, i_cnv_water, i_st_ice, i_cnv_ice, i_drop_re )
 
 use def_control, only: StrCtrl, allocate_control
 use socrates_def_diag, only: StrDiag
 use def_spectrum, only: StrSpecData
-use realtype_rd, only: RealK
+use realtype_rd, only: RealK, RealExt
 use ereport_mod, only: ereport
 use errormessagelength_mod, only: errormessagelength
 use missing_data_mod, only: imdi
@@ -36,14 +37,18 @@ use rad_pcf, only: &
   ip_cloud_split_homogen, ip_cloud_split_ice_water, &
   ip_max_rand, ip_rand, ip_exponential_rand, ip_homogeneous, &
   ip_scaling, ip_mcica, ip_cairns, ip_cloud_ice_water, ip_cloud_mcica, &
+  ip_zero_entrapment, ip_max_entrapment, &
   ip_no_scatter_abs, ip_no_scatter_ext, ip_solver_no_scat, &
   ip_solver_homogen_direct, ip_scatter_approx, ip_solver_mix_app_scat, &
-  ip_solver_homogen_direct, ip_solver_mix_direct_hogan, ip_cloud_mix_max, &
-  ip_cloud_part_corr, ip_cloud_mix_random, ip_solver_triple_app_scat, &
+  ip_solver_homogen_direct, ip_solver_mix_direct, ip_solver_mix_direct_hogan, &
+  ip_cloud_mix_max, ip_cloud_part_corr, ip_cloud_mix_random, &
+  ip_solver_triple_app_scat, ip_solver_triple, &
   ip_solver_triple_hogan, ip_cloud_triple, ip_cloud_part_corr_cnv, &
   ip_cloud_clear, ip_scale_ses2, ip_overlap_mix_ses2, ip_re_external, &
   i_normal, i_err_fatal
+use gas_list_pcf, only: npd_gases, npd_products
 use def_mcica, only: ip_mcica_optimal_sampling
+use socrates_set_spectrum, only: set_weight_blue
 
 implicit none
 
@@ -64,12 +69,13 @@ logical, intent(in), optional :: l_set_defaults, &
 
 integer, intent(in), optional :: n_tile, n_cloud_layer, n_aer_mode
 
-integer, intent(in), optional :: isolir, i_scatter_method, &
-  i_cloud_representation, i_overlap, i_inhom, i_mcica_sampling, &
+integer, intent(in), optional :: isolir, i_scatter_method, i_gas_overlap, &
+  i_cloud_representation, i_overlap, i_inhom, &
+  i_cloud_entrapment, i_mcica_sampling, &
   i_st_water, i_cnv_water, i_st_ice, i_cnv_ice, i_drop_re
 
 ! Local variables
-integer :: i
+integer :: i, k
 integer :: ierr = i_normal
 character (len=*), parameter :: RoutineName = 'SET_CONTROL_DEFAULTS'
 character (len=errormessagelength) :: cmessage
@@ -102,10 +108,13 @@ if (present(l_flux_ground)) control%l_flux_ground = l_flux_ground
 ! Integer options
 if (present(isolir)) control%isolir = isolir
 if (present(i_scatter_method)) control%i_scatter_method = i_scatter_method
+if (present(i_gas_overlap)) control%i_gas_overlap = i_gas_overlap
 if (present(i_cloud_representation)) &
   control%i_cloud_representation = i_cloud_representation
 if (present(i_overlap)) control%i_overlap = i_overlap
 if (present(i_inhom)) control%i_inhom = i_inhom
+if (present(i_cloud_entrapment)) &
+  control%i_cloud_entrapment = i_cloud_entrapment
 if (present(i_mcica_sampling)) control%i_mcica_sampling = i_mcica_sampling
 if (present(i_st_water)) control%i_st_water = i_st_water
 if (present(i_cnv_water)) control%i_cnv_water = i_cnv_water
@@ -115,6 +124,25 @@ if (present(i_drop_re)) control%i_drop_re = i_drop_re
 
 
 ! Diagnostic options
+control%l_flux_direct_band = associated(diag%flux_direct_band)
+control%l_flux_down_band = associated(diag%flux_down_band)
+control%l_flux_up_band = associated(diag%flux_up_band)
+control%l_flux_direct_clear_band = associated(diag%flux_direct_clear_band)
+control%l_flux_down_clear_band = associated(diag%flux_down_clear_band)
+control%l_flux_up_clear_band = associated(diag%flux_up_clear_band)
+
+control%l_photolysis_rate = associated(diag%photolysis_rate)
+do k=1, spectrum%photol%n_pathway
+  if (associated(diag%photolysis(k)%rate)) &
+    control%l_photolysis_rate = .true.
+  if (associated(diag%photolysis(k)%rate_clear)) &
+    control%l_photolysis_rate_clear = .true.
+  if (associated(diag%photolysis(k)%rate_clean)) &
+    control%l_photolysis_rate_clean = .true.
+  if (associated(diag%photolysis(k)%rate_clear_clean)) &
+    control%l_photolysis_rate_clear_clean = .true.
+end do
+
 if (associated(diag%flux_direct_clear)      .or. &
     associated(diag%flux_down_clear)        .or. &
     associated(diag%flux_up_clear)          .or. &
@@ -123,14 +151,65 @@ if (associated(diag%flux_direct_clear)      .or. &
     associated(diag%flux_up_clear_surf)     .or. &
     associated(diag%flux_direct_clear_toa)  .or. &
     associated(diag%flux_down_clear_toa)    .or. &
-    associated(diag%flux_up_clear_toa) ) then
+    associated(diag%flux_up_clear_toa)      .or. &
+    control%l_flux_direct_clear_band        .or. &
+    control%l_flux_down_clear_band          .or. &
+    control%l_flux_up_clear_band            .or. &
+    control%l_photolysis_rate_clear) then
   control%l_clear = .true.
 end if
+
+if (associated(diag%flux_direct_clean)      .or. &
+    associated(diag%flux_down_clean)        .or. &
+    associated(diag%flux_up_clean)          .or. &
+    associated(diag%flux_direct_clean_surf) .or. &
+    associated(diag%flux_down_clean_surf)   .or. &
+    associated(diag%flux_up_clean_surf)     .or. &
+    associated(diag%flux_direct_clean_toa)  .or. &
+    associated(diag%flux_down_clean_toa)    .or. &
+    associated(diag%flux_up_clean_toa)      .or. &
+    associated(diag%flux_direct_clean_band) .or. &
+    associated(diag%flux_down_clean_band)   .or. &
+    associated(diag%flux_up_clean_band)     .or. &
+    control%l_photolysis_rate_clean) then
+  control%l_clean = .true.
+end if
+
+if (associated(diag%flux_direct_clear_clean)      .or. &
+    associated(diag%flux_down_clear_clean)        .or. &
+    associated(diag%flux_up_clear_clean)          .or. &
+    associated(diag%flux_direct_clear_clean_surf) .or. &
+    associated(diag%flux_down_clear_clean_surf)   .or. &
+    associated(diag%flux_up_clear_clean_surf)     .or. &
+    associated(diag%flux_direct_clear_clean_toa)  .or. &
+    associated(diag%flux_down_clear_clean_toa)    .or. &
+    associated(diag%flux_up_clear_clean_toa)      .or. &
+    associated(diag%flux_direct_clear_clean_band) .or. &
+    associated(diag%flux_down_clear_clean_band)   .or. &
+    associated(diag%flux_up_clear_clean_band)     .or. &
+    control%l_photolysis_rate_clear_clean) then
+  control%l_clear_clean = .true.
+end if
+
 if (associated(diag%flux_up_blue_tile)     .or. &
     associated(diag%flux_direct_blue_surf) .or. &
     associated(diag%flux_down_blue_surf) ) then
   control%l_blue_flux_surf = .true.
 end if
+
+if (associated(diag%flux_direct_uv_surf)) &
+          control%l_flux_direct_band = .true.
+if (associated(diag%flux_down_uv_surf)) &
+          control%l_flux_down_band = .true.
+if (associated(diag%flux_up_uv_surf)) &
+          control%l_flux_up_band = .true.
+if (associated(diag%flux_direct_uv_clear_surf)) &
+          control%l_flux_direct_clear_band = .true.
+if (associated(diag%flux_down_uv_clear_surf)) &
+          control%l_flux_down_clear_band = .true.
+if (associated(diag%flux_up_uv_clear_surf)) &
+          control%l_flux_up_clear_band = .true.
+
 if (associated(diag%aerosol_optical_depth)) then
   control%l_aerosol_absorption_band = .true.
   control%l_aerosol_scattering_band = .true.
@@ -141,6 +220,7 @@ end if
 if (associated(diag%aerosol_asymmetry_scat)) then
   control%l_aerosol_asymmetry_band = .true.
 end if
+
 if (associated(diag%cloud_absorptivity) .or. &
     associated(diag%cloud_weight_absorptivity)) then
   control%l_cloud_absorptivity = .true.
@@ -212,6 +292,7 @@ if (present(l_set_defaults)) then
       call set_int_default(control%i_cloud_representation, ip_cloud_off)
       call set_int_default(control%i_overlap, ip_max_rand)
       call set_int_default(control%i_inhom, ip_homogeneous)
+      call set_int_default(control%i_cloud_entrapment, ip_zero_entrapment)
       call set_int_default(control%i_mcica_sampling, ip_mcica_optimal_sampling)
       call set_int_default(control%i_drop_re, ip_re_external)
       if (present(n_cloud_layer)) then
@@ -239,11 +320,12 @@ if (present(l_set_defaults)) then
         else
           if (control%i_scatter_method == ip_scatter_approx) then
             control%i_solver       = ip_solver_mix_app_scat
-            control%i_solver_clear = ip_solver_homogen_direct
+          else if (control%i_cloud_entrapment == ip_max_entrapment) then
+            control%i_solver       = ip_solver_mix_direct
           else
             control%i_solver       = ip_solver_mix_direct_hogan
-            control%i_solver_clear = ip_solver_homogen_direct
           end if
+          control%i_solver_clear = ip_solver_homogen_direct
           if (control%i_overlap == ip_max_rand) then
             control%i_cloud = ip_cloud_mix_max
           else if (control%i_overlap == ip_exponential_rand) then
@@ -263,11 +345,12 @@ if (present(l_set_defaults)) then
         end if
         if (control%i_scatter_method == ip_scatter_approx) then
           control%i_solver       = ip_solver_triple_app_scat
-          control%i_solver_clear = ip_solver_homogen_direct
+        else if (control%i_cloud_entrapment == ip_max_entrapment) then
+          control%i_solver       = ip_solver_triple
         else
           control%i_solver       = ip_solver_triple_hogan
-          control%i_solver_clear = ip_solver_homogen_direct
         end if
+        control%i_solver_clear = ip_solver_homogen_direct
         if (control%i_overlap == ip_max_rand) then
           control%i_cloud = ip_cloud_triple
         else if (control%i_overlap == ip_exponential_rand) then
@@ -332,6 +415,7 @@ if (present(spectrum)) then
   end if
   do i = 1, spectrum%basic%n_band
     control%weight_band(i)           = 1.0_RealK
+    control%weight_diag(i)           = 0.0_RealK
     control%i_scatter_method_band(i) = control%i_scatter_method
     control%i_gas_overlap_band(i)    = control%i_gas_overlap
     if (any(spectrum%gas%i_scale_fnc(i,:) == ip_scale_ses2)) then
@@ -339,6 +423,26 @@ if (present(spectrum)) then
       control%i_gas_overlap_band(i)  = ip_overlap_mix_ses2
     end if
   end do
+
+  ! UV flux diagnostics
+  if (control%isolir == ip_solar) then
+    if (associated(diag%flux_direct_uv_surf) .or. &
+        associated(diag%flux_down_uv_surf) .or. &
+        associated(diag%flux_up_uv_surf) .or. &
+        associated(diag%flux_direct_uv_clear_surf) .or. &
+        associated(diag%flux_down_uv_clear_surf) .or. &
+        associated(diag%flux_up_uv_clear_surf)) then
+      call set_weight_blue(spectrum, control%weight_diag, diag%wavelength_uv)
+    end if
+    if (associated(diag%flux_direct_uv_clear_surf) .or. &
+        associated(diag%flux_down_uv_clear_surf) .or. &
+        associated(diag%flux_up_uv_clear_surf)) then
+      do i = 1, spectrum%basic%n_band
+        control%l_clear_band(i) = control%weight_diag(i) > 0.0
+      end do
+    end if
+  end if
+
 end if
 
 if (present(n_tile)) then

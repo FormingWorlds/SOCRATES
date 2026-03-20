@@ -12,7 +12,7 @@ implicit none
 character(len=*), parameter, private :: ModuleName = 'SOCRATES_SET_ATM'
 contains
 
-subroutine set_atm(atm, dimen, spectrum, n_profile, n_layer, &
+subroutine set_atm(atm, control, dimen, spectrum, n_profile, n_layer, &
   profile_list, n_layer_stride, n_level_stride, &
   p_layer, t_layer, mass, density, p_level, t_level, r_layer, r_level, &
   p_layer_1d, t_layer_1d, mass_1d, density_1d, p_level_1d, t_level_1d, &
@@ -69,6 +69,7 @@ subroutine set_atm(atm, dimen, spectrum, n_profile, n_layer, &
   l_invert, l_profile_last, l_debug, i_profile_debug)
 
 use def_atm,      only: StrAtm, allocate_atm
+use def_control,  only: StrCtrl
 use def_dimen,    only: StrDim
 use def_spectrum, only: StrSpecData
 use realtype_rd,  only: RealK, RealExt
@@ -87,6 +88,9 @@ implicit none
 
 ! Atmospheric properties:
 type(StrAtm),      intent(out) :: atm
+
+! Control options:
+type(StrCtrl),   intent(inout) :: control
 
 ! Dimensions:
 type(StrDim),      intent(in)  :: dimen
@@ -406,6 +410,7 @@ do i_gas=1, spectrum%gas%n_absorb
         atm%gas_mix_ratio(l, i, i_gas) = 0.0_RealK
       end do
     end do
+    call set_photol_only()
   end select
 end do
 
@@ -605,14 +610,28 @@ contains
           atm%gas_mix_ratio(l, i, i_gas) = real(mix_ratio, RealK)
         end do
       end do
+      if (mix_ratio < epsilon(1.0_RealK)) call set_photol_only()
     case(ip_zero)
       do i=1, n_layer
         do l=1, n_profile
           atm%gas_mix_ratio(l, i, i_gas) = 0.0_RealK
         end do
       end do
+      call set_photol_only()
     end select
   end subroutine set_gas_mix_ratio
+
+
+  subroutine set_photol_only()
+    implicit none
+
+    do i=1, spectrum%photol%n_pathway
+      if (spectrum%photol%pathway_absorber(i) == i_gas) then
+        ! Mixing ratio is zero but photolysis rates are required
+        control%l_photol_only(spectrum%gas%type_absorb(i_gas)) = .true.
+      end if
+    end do
+  end subroutine set_photol_only
 
 end subroutine set_atm
 end module socrates_set_atm

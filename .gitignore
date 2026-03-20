@@ -32,3 +32,4 @@ __pycache__
 .idea
 *.pyc
 .pytest_cache
+bin/

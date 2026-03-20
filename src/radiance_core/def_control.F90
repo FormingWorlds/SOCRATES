@@ -210,16 +210,9 @@ TYPE StrCtrl
 !   Flag for absorption by peroxyacetyl nitrate (PAN)
   LOGICAL :: l_ch3ono2                                            = .FALSE.
 !   Flag for absorption by methylnitrate
-  LOGICAL :: l_sio                                                = .FALSE.
-  LOGICAL :: l_sio2                                               = .FALSE.
-  LOGICAL :: l_fe                                                 = .FALSE.
-  LOGICAL :: l_feo                                                = .FALSE.
-  LOGICAL :: l_na2                                                = .FALSE.
-  LOGICAL :: l_nao                                                = .FALSE.
-  LOGICAL :: l_mg                                                 = .FALSE.
-  LOGICAL :: l_mg2                                                = .FALSE.
-  LOGICAL :: l_mgo                                                = .FALSE.
 
+  LOGICAL :: l_include_gas(npd_gases)                             = .FALSE.
+!   Flags to treat radiative effect of gases
   LOGICAL :: l_photol_only(npd_gases)                             = .FALSE.
 !   Flags to treat gases for photolysis only, ignoring affect on flux
 
@@ -238,6 +231,8 @@ TYPE StrCtrl
 !   Type of ice crystal in convective clouds
   INTEGER :: i_inhom                                              = imdi
 !   Method of treating cloud water content variability
+  INTEGER :: i_cloud_entrapment                                   = imdi
+!   Method of treating cloud entrapment of flux between layers
   INTEGER :: i_mcica_sampling                                     = imdi
 !   Method of sampling sub-grid cloud using MCICA
   INTEGER :: i_overlap                                            = imdi
@@ -365,6 +360,10 @@ TYPE StrCtrl
 ! Switches for diagnostic output
   LOGICAL :: l_clear                                              = .FALSE.
 !   Calculate clear-sky fluxes
+  LOGICAL :: l_clean                                              = .FALSE.
+!   Calculate clean-air fluxes
+  LOGICAL :: l_clear_clean                                        = .FALSE.
+!   Calculate clear-clean fluxes
   LOGICAL :: l_flux_div                                           = .FALSE.
 !   Calculate flux divergence
   LOGICAL :: l_blue_flux_surf                                     = .FALSE.
@@ -417,6 +416,10 @@ TYPE StrCtrl
 !   Calculate photolysis rates per channel
   LOGICAL :: l_photolysis_rate_clear                              = .FALSE.
 !   Calculate clear-sky photolysis rates per channel
+  LOGICAL :: l_photolysis_rate_clean                              = .FALSE.
+!   Calculate clean-air photolysis rates per channel
+  LOGICAL :: l_photolysis_rate_clear_clean                        = .FALSE.
+!   Calculate clear-clean photolysis rates per channel
   LOGICAL :: l_photolysis_div                                     = .FALSE.
 !   Calculate flux divergence for photolysis
   LOGICAL :: l_photolysis_div_clear                               = .FALSE.

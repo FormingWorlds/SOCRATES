@@ -53,7 +53,7 @@ do l=1, 2
   ! Convert from standard format for continua: cm2 molec-1 atm-1 to
   ! format used with MT_CKD and Socrates: cm3 molec-1 (atm-1) * 1.0e-20
   ! Conversion involves dividing by the "radiation field term" which
-  ! Socrates will include in the routine caviar_continuum_v1_0.f90.
+  ! Socrates will include in the routine h2o_continuum.f90.
   c_self(4:) = data(2,2:)*1.0E+20_RealK / &
     (data(1,2:) * TANH(data(1,2:) * 100.0_RealK*c2/(2.0_RealK*t(l))))
   c_self(3) = 0.0_RealK

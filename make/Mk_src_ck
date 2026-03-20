@@ -4,7 +4,6 @@
 
 SOURCE_CK =	adjust_path.f90 \
 		bi_interp.f90 \
-		caviar_continuum_v1_0.f90 \
 		ckd_extern_data.f90 \
 		ck_parm_acf.f90 \
 		ck_fit_pcf.f90 \
@@ -14,6 +13,7 @@ SOURCE_CK =	adjust_path.f90 \
 		exponent_fit_90.f90 \
 		func_scale_90.f90 \
 		func_scale_derivative_90.f90 \
+		h2o_continuum.f90 \
 		hitran_cnst.f90 \
 		line_prof_corr_mod.f90 \
 		offset_residual_trans_acf.f90 \

@@ -24,7 +24,7 @@ PROGRAM dat2xsc
   INTEGER :: xsc_res
 
   CHARACTER (LEN=256) :: infile, outfile, arg
-  LOGICAL :: l_infile, l_outfile
+  LOGICAL :: l_infile, l_outfile, l_offset
   
   REAL (RealK), ALLOCATABLE :: in_dat(:, :)
   REAL (RealK), ALLOCATABLE :: in_data(:)
@@ -35,6 +35,7 @@ PROGRAM dat2xsc
 
   l_infile = .FALSE.
   l_outfile = .FALSE.
+  l_offset = .FALSE.
   i = 0
   DO
     i=i+1
@@ -45,6 +46,8 @@ PROGRAM dat2xsc
       i=i+1
       CALL get_command_argument(i, arg)
       READ(arg, *) temperature
+    CASE ('--offset','--eric')
+      l_offset = .TRUE.
     CASE default
       IF (l_infile) THEN
         ! If the input file has been provided, the second file is
@@ -60,7 +63,7 @@ PROGRAM dat2xsc
   END DO
   IF (.NOT.l_outfile) THEN
     WRITE(iu_err, '(a)') &
-      'Usage: dat2xsc [-t <temperature>] infile.dat outfile.[uv]xsc'
+      'Usage: dat2xsc [-t <temperature>] [--offset] infile.dat outfile.[uv]xsc'
     STOP
   END IF
 
@@ -101,19 +104,31 @@ PROGRAM dat2xsc
   ALLOCATE ( out_wn(2, data_length) )
 
 ! Construct the wavelngth bin limits to be used for each XSC record
-  jj = 1
-  out_wn(1,jj) = (in_wn(jj) + in_wn(jj+1))/2.0
-  out_wn(2,jj) = 2.0*in_wn(jj) - out_wn(1,jj)
-  DO jj = 2, data_length-1
+  IF (l_offset) THEN
+    ! The wavelengths in the .dat file designate the start of the bin
+    DO jj = 1, data_length-1
+      out_wn(1,jj) = in_wn(jj+1)
+      out_wn(2,jj) = in_wn(jj)
+    END DO
+    jj = data_length
+    out_wn(1,jj) = 2.0*in_wn(jj) - in_wn(jj-1)
+    out_wn(2,jj) = in_wn(jj)
+  ELSE
+    ! The wavelengths in the .dat file designate point values
+    ! or the centre of the bin
+    jj = 1
     out_wn(1,jj) = (in_wn(jj) + in_wn(jj+1))/2.0
+    out_wn(2,jj) = 2.0*in_wn(jj) - out_wn(1,jj)
+    DO jj = 2, data_length-1
+      out_wn(1,jj) = (in_wn(jj) + in_wn(jj+1))/2.0
+      out_wn(2,jj) = (in_wn(jj-1) + in_wn(jj))/2.0
+    END DO
+    jj = data_length
     out_wn(2,jj) = (in_wn(jj-1) + in_wn(jj))/2.0
-  END DO
-  jj = data_length
-  out_wn(2,jj) = (in_wn(jj-1) + in_wn(jj))/2.0
-  out_wn(1,jj) = 2.0*in_wn(jj) - out_wn(2,jj)
+    out_wn(1,jj) = 2.0*in_wn(jj) - out_wn(2,jj)
+  END IF
 
 ! Convert wavelength in nm to wavenumber in cm-1
-  in_wn = 1.0e7_RealK/in_wn
   out_wn = 1.0e7_RealK/out_wn
 
   ! Construct common XSC header information

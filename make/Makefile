@@ -6,15 +6,12 @@
 
 
 # Default target:
-all: TARGET_GEN TARGET_CK TARGET_SCAT TARGET_AUX TARGET_COSP
+all: TARGET_GEN TARGET_CK TARGET_SCAT TARGET_AUX TARGET_COSP TARGET_FLEXCHEM
 cdl: TARGET_SCAT AUX_CDL
 cdf: TARGET_GEN AUX_CDF TARGET_CK
 
 # Compilers and suffixes:
 include Mk_cmd
-
-# Pattern Matching Rules
-include Mk_pattern
 
 #-----------------------------------------------------------------------
 # Source code for each sub-package of the suite.
@@ -29,8 +26,12 @@ include Mk_src_radcore
 include Mk_src_scat
 include Mk_src_nlte
 include Mk_src_cosp
+include Mk_src_flexchem
 
 #-----------------------------------------------------------------------
+# Pattern Matching Rules
+include Mk_pattern
+
 # Special Targets
 include Mk_special
 
@@ -88,6 +89,13 @@ cosplib.$(LIBSUFFIX): \
 	   $(MODULES_COSP:.f90=.o) \
 	   $(SOURCE_COSP:.f90=.o)
 
+flexchemlib.$(LIBSUFFIX): \
+	   $(SOURCE_FLEXCHEM:.f90=.o) \
+	   $(SOURCE_ODEPACK:.f=.o)
+	$(LIBLINK) flexchemlib.$(LIBSUFFIX) \
+	   $(SOURCE_FLEXCHEM:.f90=.o) \
+	   $(SOURCE_ODEPACK:.f=.o)
+
 #-----------------------------------------------------------------------
 # Construction of main programs.
 include Mk_target_gen
@@ -95,3 +103,4 @@ include Mk_target_ck
 include Mk_target_scat
 include Mk_target_aux
 include Mk_target_cosp
+include Mk_target_flexchem

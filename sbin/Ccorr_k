@@ -310,6 +310,7 @@ fi
 echo $MON_FILE >> /tmp/ck.$$
 if [ "$N_OMP_THREADS" ]
   then echo $N_OMP_THREADS >> /tmp/ck.$$
+       export OMP_NUM_THREADS=$N_OMP_THREADS
 else
   echo 1 >> /tmp/ck.$$
 fi

@@ -192,6 +192,7 @@ n_nu_written=0
 ! Read each file and write data to output file sequentially
 do j=1, n_file_in
   i = nu_order(j)
+  write(*,'(a)') trim(file_in(i))
   call nf(nf90_open(trim(file_in(i)),NF90_NOWRITE,ncidin_lbl))
 
   call nf(nf90_inq_varid(ncidin_lbl,'nu',varid))
@@ -233,6 +234,7 @@ do j=1, n_file_in
 end do
 
 call nf(nf90_close(ncidout_lbl))
+write(*,'(a)') 'Written concatenated file: '//trim(file_out)
 
 contains
 
