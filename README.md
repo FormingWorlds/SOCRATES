@@ -36,62 +36,53 @@ Questions are encouraged in the Simulation Systems
 Please be aware of and follow the Simulation Systems
 [AI Policy.](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html)
 
-## Contents
-0. Licence
-1. What's included?
-2. Compiling the source code externally
-3. Running the code
-4. Tested compilers
-5. Contributors
-6. Adding a new gas
+## What's included?
 
+The Socrates package contains the following directories:
+src/ make/ data/ examples/ idl/ python/ man/ sbin/ docs/
 
-### 0) BSD 3-Clause licence
+`src/` contains the source code in Fortran 2018 (.f90) and a few remaining
+in fixed Fortran format (.f).
 
-(C) Crown copyright Met Office. All rights reserved.    
-For further details please refer to the file COPYRIGHT.txt which you should have received as part of this distribution.
-
-
-### 1) What's included?
-
-`src/` contains the source code in Fortran 95 (.f90) and a few remaining in Fortran 77 (.f).
-
-`make/` contains the Makefile which then accesses the various `Mk_*` files.
+`make/` contains the Makefile which then accesses the various Mk_*
+files.
 
 `sbin/` contains scripts that can be used to run the fortran routines.
 
-`man/` contains man pages for scripts in sbin/. For example, running `man Cl_run_cdf` will give options for that script. 
+`man/` contains man pages for scripts in sbin/. For example, running
+`man Cl_run_cdf` will give options for that script.
 
-`examples/` and `data/` provide test input for the radiation code. See the CONTENTS in each directory under `examples/` for instructions.
+`examples/` and `data/` provide test input for the radiation code.
+See the CONTENTS in each directory under examples/ for instructions.
 
-`idl/` and `python/` contain scripts to generate atmospheric profiles etc in netCDF format to be used as input for the radiation code (`l_run_cdf`).
+`idl/` and `python/` contain scripts to generate atmospheric profiles etc
+in netCDF format to be used as input for the radiation code (l_run_cdf).
 
 `docs/` contain the user guide and technical guide for the Socrates code.
 
-`spectraltools/` contains new addons to the code which allow for streamlined and flexible creation of spectral files from precomputed cross-sections.
+## Compiling the source code within the Met Office
 
-### 2) Compiling the source code externally
+For users within the Met Office simply run the command:
 
-The following commands can be run to build the suite and setup your path to the executables and man pages:
+`./build_code`
 
-1. `./configure`   
-2. `./build_code`             
-3. `source ./set_rad_env`      
+to compile the entire suite. To setup your path to the executables
+and man pages you should then source the following file:
 
-### 3) Running the code
+`. ./set_rad_env`
 
-Once you have set your path to the man pages (see section 2/3) you can find up-to-date instructions for running the following routines:
+Individual programs can also be compiled using the build_code script
+(build_code will take as an argument the target to pass to the makefile).
 
-Two-stream and spherical harmonics radiance codes using netCDF or text CDL input files:
+For example, to build the routines that don't require netCDF:
 
-* `man Cl_run_cdf`
-* `man Cl_run_cdl`
+`./build_code cdl`
 
-A Mie scattering code for determining optical properties of aerosol and cloud particles:
+To build just the two-stream/radiance code (netCDF version):
 
-* `man Cscatter`
+`./build_code l_run_cdf`
 
-A correlated-k code for the calculation of gaseous absorption coefficients for the spectral files either directly from HITRAN .par or .xsc databases or line-by-line absorption coefficients in a netCDF input file:
+## Compiling the source code externally
 
 For external users it should only be necessary to edit the file
 make/Mk_cmd to allow compilation of the code on your system. FORTCOMP
@@ -107,7 +98,7 @@ your path to the executables and man pages:
 
 See previous section for building individual routines.
 
-### Compilation of scripts in sbin
+## Compilation of scripts in sbin
 
 There are a small number of utilities in sbin/ which are written
 in C and require compilation. A Makefile has been provided:
@@ -115,7 +106,7 @@ in C and require compilation. A Makefile has been provided:
 `cd $RAD_SCRIPT`\
 `make`
 
-### Running the code
+## Running the code
 
 Once you have set your path to the man pages (see section 2/3) you can
 find up-to-date instructions for running the following routines:
@@ -144,16 +135,26 @@ Auxillary routines for format conversion, interpolation etc:
 `man Ccdl2cdf`\
 `man Cinterp`
 
-These scripts are a command line interface to interactive routines in the `bin/` directory. These routines may be run directly if desired (eg. l_run_cdf).
+These scripts are a command line interface to interactive routines in
+the bin/ directory. These routines may be run directly if desired (eg.
+l_run_cdf).
 
-It is very useful to study the examples/ directory for common usage of the code.
+It is very useful to study the examples/ directory for common usage
+of the code.
 
-
-### 4) Tested compilers
+## Tested compilers
 
 The full suite has been tested with the following compilers:
-* Intel ifort 17.0.7    
-* GNU gfortran 9.4.0
+
+Intel ifort 19\
+GCC gfortran 12.2
+
+To use these compilers within the Met Office run, respectively:\
+`./build_code azure_ifort19`\
+`./build_code azure_gfortran12`
+
+On the Monsoon3 collaboration machine:\
+`./build_code monsoon3_gfortran12`
 
 
 ## Adding a new gas
