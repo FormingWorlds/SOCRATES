@@ -119,14 +119,40 @@ def checkenv():
         raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")
 
 # Map absorber names to their IDs (see radiance_core/gas_list_pcf.f90)
-gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3",
-            "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a",
-            "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb",
-            "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5",
-            "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF",
-            "cis-OSSO", "trans-OSSO", "OSO-S", "CH3CHO", "CH3OOH", "CH3COCH3", "CH3COCHO",
-            "CHOCHO", "C2H5CHO", "HOCH2CHO", "C2H5COCH3", "MVK", "MACR", "PAN", "CH3ONO2",
-            "SiO", "SiO2", "Fe", "FeO", "Na2", "NaO", "Mg", "Mg2", "MgO"]
+# gas_list = ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2", "NH3",
+#             "HNO3", "N2", "CFC11", "CFC12", "CFC113", "HCFC22", "HFC125", "HFC134a",
+#             "CFC114", "TiO ", "VO", "H2", "He", "OCS", "Na", "K", "FeH", "CrH", "Li", "Rb",
+#             "Cs", "PH3", "C2H2", "HCN", "H2S", "Ar", "_air", "O", "N", "NO3", "N2O5",
+#             "HONO", "HO2NO2", "H2O2", "C2H6", "CH3 ", "H2CO ", "HO2", "HDO", "HCl", "HF",
+#             "cis-OSSO", "trans-OSSO", "OSO-S", "CH3CHO", "CH3OOH", "CH3COCH3", "CH3COCHO",
+#             "CHOCHO", "C2H5CHO", "HOCH2CHO", "C2H5COCH3", "MVK", "MACR", "PAN", "CH3ONO2",
+#             "SiO", "SiO2", "Fe", "FeO", "Na2", "NaO", "Mg", "Mg2", "MgO"]
+
+
+gas_list = []
+gas_list_pcf = os.path.join(dirs["socrates"], "src", "radiance_core", "gas_list_pcf.F90")
+with open(gas_list_pcf, "r") as f:
+    gas_list_raw = f.readlines()
+read_start = False
+for line in gas_list_raw:
+    # beginning of list of gases
+    if "PARAMETER :: header_gas(npd_gases)" in line:
+        if read_start:
+            raise Exception("Unexpected start of gas list in '%s'"%gas_list_pcf)
+        read_start = True
+        continue
+
+    # end of list of gases
+    if read_start and line.endswith("/)\n"):
+        read_start = False
+        break
+
+    # middle of list of gases
+    if read_start:
+        line_splt = line.strip().replace(" ","").replace("'","").replace("&","").split(',')
+        gas_list.extend([s for s in line_splt if len(s) > 0])
+print(gas_list)
+
 absorber_id = {}
 for i,g in enumerate(gas_list):
     absorber_id[g] = "%d"%(i+1)
