@@ -453,7 +453,8 @@ INTEGER, PARAMETER :: hitran_number(npd_gases) = (/ &
   0,   & ! 71: HCO
   0,   & ! 72: N2O4
   48,  & ! 73: C2N2
-  (0, i=ip_n2h4, npd_gases) /)
+  0 ,  & ! 74: N2H4
+  0   /) ! 75: N2H3
 
 ! Maximum number of specified HITRAN isotopes for a given absorber
 INTEGER, PARAMETER :: npd_isotopes = 3
@@ -508,7 +509,41 @@ REAL (RealK), PARAMETER :: depolarization_factor(npd_gases) = (/ &
   0.0279_RealK,  & ! Dry air
   0.0_RealK,     & ! O
   0.0_RealK,     & ! N
- (0.0_RealK, i=ip_no3, npd_gases) /)
+  0.0_RealK,     & ! 41: NO3
+  0.0_RealK,     & ! 42: N2O5
+  0.0_RealK,     & ! 43: HONO
+  0.0_RealK,     & ! 44: HO2NO2
+  0.0_RealK,     & ! 45: H2O2
+  0.0_RealK,     & ! 46: C2H6
+  0.0_RealK,     & ! 47: CH3
+  0.0_RealK,     & ! 48: H2CO
+  0.0_RealK,     & ! 49: HO2
+  0.0_RealK,     & ! 50: HDO
+  0.0_RealK,     & ! 51: HCl
+  0.0_RealK,     & ! 52: HF
+  0.0_RealK,     & ! 53: cis-OSSO
+  0.0_RealK,     & ! 54: trans-OSSO
+  0.0_RealK,     & ! 55: OSO-S
+  0.0_RealK,     & ! 56: CH3CHO
+  0.0_RealK,     & ! 57: CH3OOH
+  0.0_RealK,     & ! 58: CH3COCH3
+  0.0_RealK,     & ! 59: CH3COCHO
+  0.0_RealK,     & ! 60: CHOCHO
+  0.0_RealK,     & ! 61: C2H5CHO
+  0.0_RealK,     & ! 62: HOCH2CHO
+  0.0_RealK,     & ! 63: C2H5COCH3
+  0.0_RealK,     & ! 64: MVK
+  0.0_RealK,     & ! 65: MACR
+  0.0_RealK,     & ! 66: PAN
+  0.0_RealK,     & ! 67: CH3ONO2
+  0.0_RealK,     & ! 68: C2H3
+  0.0_RealK,     & ! 69: C2H4
+  0.0_RealK,     & ! 70: OH
+  0.0_RealK,     & ! 71: HCO
+  0.0_RealK,     & ! 72: N2O4
+  0.0_RealK,     & ! 73: C2N2
+  0.0_RealK,     & ! 74: N2H4
+  0.0_RealK     /) ! 75: N2H3
 
 ! Minimum wavelength to consider Rayleigh scattering
 REAL (RealK), PARAMETER :: rayleigh_cutoff(npd_gases) = (/ &
@@ -525,7 +560,68 @@ REAL (RealK), PARAMETER :: rayleigh_cutoff(npd_gases) = (/ &
   0.0_RealK,       & ! NH3
   0.0_RealK,       & ! HNO3
   79.8E-09_RealK,  & ! N2 ( threshold for N2 -> N2+ )
- (0.0_RealK, i=ip_cfc11, npd_gases) /)
+  0.0_RealK,       & ! 14: CFC11
+  0.0_RealK,       & ! 15: CFC12
+  0.0_RealK,       & ! 16: CFC113
+  0.0_RealK,       & ! 17: HCFC22
+  0.0_RealK,       & ! 18: HFC125
+  0.0_RealK,       & ! 19: HFC134a
+  0.0_RealK,       & ! 20: CFC114
+  0.0_RealK,       & ! 21: TiO
+  0.0_RealK,       & ! 22: VO
+  0.0_RealK,       & ! 23: H2
+  0.0_RealK,       & ! 24: He
+  0.0_RealK,       & ! 25: OCS
+  0.0_RealK,       & ! 26: Na
+  0.0_RealK,       & ! 27: K
+  0.0_RealK,       & ! 28: FeH
+  0.0_RealK,       & ! 29: CrH
+  0.0_RealK,       & ! 30: Li
+  0.0_RealK,       & ! 31: Rb
+  0.0_RealK,       & ! 32: Cs
+  0.0_RealK,       & ! 33: PH3
+  0.0_RealK,       & ! 34: C2H2
+  0.0_RealK,       & ! 35: HCN
+  0.0_RealK,       & ! 36: H2S
+  0.0_RealK,       & ! 37: Ar
+  0.0_RealK,       & ! 38: Dry air
+  0.0_RealK,       & ! 39: O
+  0.0_RealK,       & ! 40: N
+  0.0_RealK,       & ! 41: NO3
+  0.0_RealK,       & ! 42: N2O5
+  0.0_RealK,       & ! 43: HONO
+  0.0_RealK,       & ! 44: HO2NO2
+  0.0_RealK,       & ! 45: H2O2
+  0.0_RealK,       & ! 46: C2H6
+  0.0_RealK,       & ! 47: CH3
+  0.0_RealK,       & ! 48: H2CO
+  0.0_RealK,       & ! 49: HO2
+  0.0_RealK,       & ! 50: HDO
+  0.0_RealK,       & ! 51: HCl
+  0.0_RealK,       & ! 52: HF
+  0.0_RealK,       & ! 53: cis-OSSO
+  0.0_RealK,       & ! 54: trans-OSSO
+  0.0_RealK,       & ! 55: OSO-S
+  0.0_RealK,       & ! 56: CH3CHO
+  0.0_RealK,       & ! 57: CH3OOH
+  0.0_RealK,       & ! 58: CH3COCH3
+  0.0_RealK,       & ! 59: CH3COCHO
+  0.0_RealK,       & ! 60: CHOCHO
+  0.0_RealK,       & ! 61: C2H5CHO
+  0.0_RealK,       & ! 62: HOCH2CHO
+  0.0_RealK,       & ! 63: C2H5COCH3
+  0.0_RealK,       & ! 64: MVK
+  0.0_RealK,       & ! 65: MACR
+  0.0_RealK,       & ! 66: PAN
+  0.0_RealK,       & ! 67: CH3ONO2
+  0.0_RealK,       & ! 68: C2H3
+  0.0_RealK,       & ! 69: C2H4
+  0.0_RealK,       & ! 70: OH
+  0.0_RealK,       & ! 71: HCO
+  0.0_RealK,       & ! 72: N2O4
+  0.0_RealK,       & ! 73: C2N2
+  0.0_RealK,       & ! 74: N2H4
+  0.0_RealK       /) ! 75: N2H3
 
 ! Maximum number of photolysis products for a given absorber
 INTEGER, PARAMETER :: npd_products = 9

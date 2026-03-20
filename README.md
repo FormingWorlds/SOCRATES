@@ -159,10 +159,7 @@ On the Monsoon3 collaboration machine:\
 
 ## Adding a new gas
 
-This has to be done manually and will require editing a lot of files. The easiest thing to 
-do is to search for the gas "ho2no2" across all files and copy what you see. Always add
-new gases to the end of the existing lists. This will require changing function calls, 
-various hardcoded arrays and variables. You should expect to edit these files:
+This has to be done manually and will require editing a lot of files. The easiest thing to do is to search for the gas "ho2no2" across all files and copy what you see. Always add new gases to the end of the existing lists. This will require changing function calls, various hardcoded arrays and variables. You should expect to edit these files:
 * `julia/src/SOCRATES_C.f90`
 * `julia/src/SOCRATES.jl`
 * `spectraltools/src/phys.py`
@@ -172,6 +169,7 @@ various hardcoded arrays and variables. You should expect to edit these files:
 * `src/radiance_core/def_control.F90`
 * `src/radiance_core/gas_list_pcf.F90`
 
+You should also make sure to avoid the 'lazy' way to extend FORTRAN arrays where remaining values are filled in bulk, because the `generate_wrappers.jl` script will not be able to parse the FORTRAN source code.
 
 ## References
 * [1]  https://code.metoffice.gov.uk/trac/socrates
