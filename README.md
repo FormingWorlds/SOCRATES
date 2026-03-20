@@ -155,3 +155,24 @@ To use these compilers within the Met Office run, respectively:\
 
 On the Monsoon3 collaboration machine:\
 `./build_code monsoon3_gfortran12`
+
+
+## Adding a new gas
+
+This has to be done manually and will require editing a lot of files. The easiest thing to do is to search for the gas "ho2no2" across all files and copy what you see. Always add new gases to the end of the existing lists. This will require changing function calls, various hardcoded arrays and variables. You should expect to edit these files:
+* `julia/src/SOCRATES_C.f90`
+* `julia/src/SOCRATES.jl`
+* `spectraltools/src/phys.py`
+* `spectraltools/src/utils.py`
+* `src/interface_core/socrates_set_spectrum.F90`
+* `src/modules_gen/input_head_pcf.f90`
+* `src/radiance_core/def_control.F90`
+* `src/radiance_core/gas_list_pcf.F90`
+
+You should also make sure to avoid the 'lazy' way to extend FORTRAN arrays where remaining values are filled in bulk, because the `generate_wrappers.jl` script will not be able to parse the FORTRAN source code.
+
+## References
+* [1]  https://code.metoffice.gov.uk/trac/socrates
+* [2]  https://doi.org/10.1002/qj.49712253107
+* [3]  https://doi.org/10.1051/0004-6361/201323169
+* [4]  https://doi.org/10.5194/gmd-16-5601-2023
