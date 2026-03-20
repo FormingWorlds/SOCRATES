@@ -10,6 +10,12 @@ fi
 err=0
 
 echo ---
+echo "Checking calc_horizon_angles utility:"
+cd orog
+./run_me || err=1
+cd ../
+
+echo ---
 echo "Checking HITRAN Total Internal Partition Sums:"
 cd tips
 ./run_me || err=1
@@ -18,7 +24,7 @@ cd ../
 echo ---
 echo "Testing spectral file creation for photolysis:"
 cd sp_uv
-./run_me_sp || err=1
+./run_me_sp_411rd || err=1
 cd ../
 
 echo ---
@@ -68,7 +74,7 @@ cd ../
 echo ---
 echo "Testing Cscatter for generating cloud ice parametrisations:"
 cd ice_crystals
-./run_me || err=1
+./run_2022 || err=1
 cd ../
 
 echo ---
