@@ -93,8 +93,8 @@ contains
         l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
         l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
         l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-        l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, l_all_gases, &
-        wavelength_blue) bind(C, name='PS_set_spectrum')   
+        l_pan, l_ch3ono2, &
+        l_all_gases, wavelength_blue) bind(C, name='PS_set_spectrum')   
     
         implicit none
             
@@ -115,7 +115,7 @@ contains
             l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
             l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
             l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-            l_pan, l_ch3ono2, l_sio, l_sio2, l_fe, l_feo, l_na2, l_nao, l_mg, l_mg2, l_mgo, & 
+            l_pan, l_ch3ono2, &
             l_all_gases
         
         real(c_double), intent(in), optional :: wavelength_blue
@@ -210,15 +210,6 @@ contains
             l_macr        = logical(l_macr     ), &
             l_pan         = logical(l_pan      ), &
             l_ch3ono2     = logical(l_ch3ono2  ), &
-            l_sio         = logical(l_sio      ), &
-            l_sio2        = logical(l_sio2     ), &
-            l_fe          = logical(l_fe       ), & 
-            l_feo         = logical(l_feo      ), & 
-            l_na2         = logical(l_na2      ), & 
-            l_nao         = logical(l_nao      ), & 
-            l_mg          = logical(l_mg       ), & 
-            l_mg2         = logical(l_mg2      ), & 
-            l_mgo         = logical(l_mgo      ), & 
             l_all_gases   = logical(l_all_gases), &
             wavelength_blue = wavelength_blue )
 
