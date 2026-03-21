@@ -1,6 +1,6 @@
 # Generated automatically
 # System: Linux delphinium 6.19.8-200.fc43.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Mar 13 22:06:06 UTC 2026 x86_64 GNU/Linux 
-# Date: Fri 20 Mar 14:42:48 GMT 2026 
+# Date: Sat 21 Mar 19:36:59 GMT 2026 
  
 FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch  -c 
 LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch  

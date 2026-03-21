@@ -37,10 +37,10 @@ include("../gen/StrOut_JL.jl")
 # StrCtrl
 # radiance_core/def_control.F90
 ##############################################
- 
+
 """
     StrCtrl
-    
+
 Opaque pointer to Fortran struct defined in
 `radiance_core/def_control.F90`
 
@@ -56,8 +56,8 @@ Create and delete using:
 function allocate_control(control::StrCtrl, sp::StrSpecData)
     ccall(
         (:PS_allocate_control, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid},),
         control.cptr, sp.cptr,
     )
     return nothing
@@ -72,7 +72,7 @@ end
 """
     StrSpecData
 
-handle StrSpecData to the Fortran struct defined in 
+handle StrSpecData to the Fortran struct defined in
 `radiance_core/def_spectrum.F90`
 
 """
@@ -80,8 +80,8 @@ handle StrSpecData to the Fortran struct defined in
 function read_spectrum(file_spectral::AbstractString, spectrum::StrSpecData)
     ccall(
         (:PS_read_spectrum, libSOCRATES_C),
-        Cvoid, 
-        (Cstring, Ptr{Cvoid},), 
+        Cvoid,
+        (Cstring, Ptr{Cvoid},),
         file_spectral, spectrum.cptr
     )
     return nothing
@@ -159,16 +159,7 @@ function set_spectrum(;
     l_macr     ::Union{Bool, Ptr{Nothing}} = C_NULL,
     l_pan      ::Union{Bool, Ptr{Nothing}} = C_NULL,
     l_ch3ono2  ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_sio      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_sio2     ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_fe       ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_feo      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_na2      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_nao      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_mg       ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_mg2      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_mgo      ::Union{Bool, Ptr{Nothing}} = C_NULL,
-    l_all_gasses::Union{Bool, Ptr{Nothing}} = C_NULL,
+    l_all_gases::Union{Bool, Ptr{Nothing}} = C_NULL,
     wavelength_blue::Union{Float64, Ptr{Nothing}} = C_NULL,
 )
 
@@ -176,21 +167,12 @@ function set_spectrum(;
 
     ccall(
         (:PS_set_spectrum, libSOCRATES_C),
-        Cvoid, 
+        Cvoid,
         (
             Ref{Cint},
             Ptr{Cvoid},
             Cstring,
             Cstring,
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
-            Ref{Cuchar},
             Ref{Cuchar},
             Ref{Cuchar},
             Ref{Cuchar},
@@ -264,82 +246,73 @@ function set_spectrum(;
         spectrum === C_NULL ? C_NULL : spectrum.cptr,
         spectrum_name,
         spectral_file,
-        l_h2o        ,
-        l_co2        ,
-        l_o3         ,
-        l_n2o        ,
-        l_co         ,
-        l_ch4        ,
-        l_o2         ,
-        l_no         ,
-        l_so2        ,
-        l_no2        ,
-        l_nh3        ,
-        l_hno3       ,
-        l_n2         ,
-        l_cfc11      ,
-        l_cfc12      ,
-        l_cfc113     ,
-        l_hcfc22     ,
-        l_hfc125     ,
-        l_hfc134a    ,
-        l_cfc114     ,
-        l_tio        ,
-        l_vo         ,
-        l_h2         ,
-        l_he         ,
-        l_ocs        ,
-        l_na         ,
-        l_k          ,
-        l_feh        ,
-        l_crh        ,
-        l_li         ,
-        l_rb         ,
-        l_cs         ,
-        l_ph3        ,
-        l_c2h2       ,
-        l_hcn        ,
-        l_h2s        ,
-        l_ar         ,
-        l_o          ,
-        l_n          ,
-        l_no3        ,
-        l_n2o5       ,
-        l_hono       ,
-        l_ho2no2     ,
-        l_h2o2       ,
-        l_c2h6       ,
-        l_ch3        ,
-        l_h2co       ,
-        l_ho2        ,
-        l_hdo        ,
-        l_hcl        ,
-        l_hf         ,
-        l_cosso      ,
-        l_tosso      ,
-        l_yosos      ,
-        l_ch3cho     ,
-        l_ch3ooh     ,
-        l_ch3coch3   ,
-        l_ch3cocho   ,
-        l_chocho     ,
-        l_c2h5cho    ,
-        l_hoch2cho   ,
-        l_c2h5coch3  ,
-        l_mvk        ,
-        l_macr       ,
-        l_pan        ,
-        l_ch3ono2    ,
-        l_sio        ,
-        l_sio2       ,
-        l_fe         ,
-        l_feo        ,
-        l_na2        ,
-        l_nao        ,
-        l_mg         ,
-        l_mg2        ,
-        l_mgo        ,
-        l_all_gasses,
+        l_h2o,
+        l_co2,
+        l_o3,
+        l_n2o,
+        l_co,
+        l_ch4,
+        l_o2,
+        l_no,
+        l_so2,
+        l_no2,
+        l_nh3,
+        l_hno3,
+        l_n2,
+        l_cfc11,
+        l_cfc12,
+        l_cfc113,
+        l_hcfc22,
+        l_hfc125,
+        l_hfc134a,
+        l_cfc114,
+        l_tio,
+        l_vo,
+        l_h2,
+        l_he,
+        l_ocs,
+        l_na,
+        l_k,
+        l_feh,
+        l_crh,
+        l_li,
+        l_rb,
+        l_cs,
+        l_ph3,
+        l_c2h2,
+        l_hcn,
+        l_h2s,
+        l_ar,
+        l_o,
+        l_n,
+        l_no3,
+        l_n2o5,
+        l_hono,
+        l_ho2no2,
+        l_h2o2,
+        l_c2h6,
+        l_ch3,
+        l_h2co,
+        l_ho2,
+        l_hdo,
+        l_hcl,
+        l_hf,
+        l_cosso,
+        l_tosso,
+        l_yosos,
+        l_ch3cho,
+        l_ch3ooh,
+        l_ch3coch3,
+        l_ch3cocho,
+        l_chocho,
+        l_c2h5cho,
+        l_hoch2cho,
+        l_c2h5coch3,
+        l_mvk,
+        l_macr,
+        l_pan,
+        l_ch3ono2,
+        l_all_gases,
         wavelength_blue === C_NULL ? C_NULL : Ref{Cdouble}(wavelength_blue),
     )
 
@@ -350,10 +323,10 @@ end
 # StrDim
 # radiance_core/def_dimen.F90
 ##############################################
-""" 
+"""
     StrDim
 
-handle to the Fortran struct defined in 
+handle to the Fortran struct defined in
 `radiance_core/def_dimen.F90`.
 """
 
@@ -366,8 +339,8 @@ handle to the Fortran struct defined in
 function allocate_atm(atm::StrAtm, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_atm, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         atm.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -376,8 +349,8 @@ end
 function deallocate_atm(atm::StrAtm)
     ccall(
         (:PS_deallocate_atm, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         atm.cptr,
     )
     return nothing
@@ -392,8 +365,8 @@ end
 function allocate_cld(cld::StrCld, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_cld, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         cld.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -402,8 +375,8 @@ end
 function deallocate_cld(cld::StrCld)
     ccall(
         (:PS_deallocate_cld, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         cld.cptr,
     )
     return nothing
@@ -412,8 +385,8 @@ end
 function allocate_cld_prsc(cld::StrCld, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_cld_prsc, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         cld.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -422,8 +395,8 @@ end
 function deallocate_cld_prsc(cld::StrCld)
     ccall(
         (:PS_deallocate_cld_prsc, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         cld.cptr,
     )
     return nothing
@@ -438,8 +411,8 @@ end
 function allocate_aer(aer::StrAer, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_aer, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         aer.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -448,8 +421,8 @@ end
 function deallocate_aer(aer::StrAer)
     ccall(
         (:PS_deallocate_aer, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         aer.cptr,
     )
     return nothing
@@ -458,8 +431,8 @@ end
 function allocate_aer_prsc(aer::StrAer, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_aer_prsc, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         aer.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -468,8 +441,8 @@ end
 function deallocate_aer_prsc(aer::StrAer)
     ccall(
         (:PS_deallocate_aer_prsc, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         aer.cptr,
     )
     return nothing
@@ -483,8 +456,8 @@ end
 function allocate_bound(bound::StrBound, dimen::StrDim, sp::StrSpecData)
     ccall(
         (:PS_allocate_bound, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid},),
         bound.cptr, dimen.cptr, sp.cptr,
     )
     return nothing
@@ -493,8 +466,8 @@ end
 function deallocate_bound(bound::StrBound)
     ccall(
         (:PS_deallocate_bound, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         bound.cptr,
     )
     return nothing
@@ -508,8 +481,8 @@ end
 function deallocate_out(radout::StrOut)
     ccall(
         (:PS_deallocate_out, libSOCRATES_C),
-        Cvoid, 
-        (Ptr{Cvoid},), 
+        Cvoid,
+        (Ptr{Cvoid},),
         radout.cptr,
     )
     return nothing
@@ -524,7 +497,7 @@ function radiance_calc(
 )
     ccall(
         (:PS_radiance_calc, libSOCRATES_C),
-        Cvoid, 
+        Cvoid,
         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
         control.cptr, dimen.cptr, spectrum.cptr, atm.cptr, cld.cptr, aer.cptr, bound.cptr, radout.cptr,
     )
@@ -553,8 +526,8 @@ function dump_spectrum(spectrum)
     for p in propertynames(spectrum)
         ps = getproperty(spectrum, p)
         println("  $p: $ps")
-        dump_properties(stdout, ps, sp="    ")        
-    end    
+        dump_properties(stdout, ps, sp="    ")
+    end
     return nothing
 end
 
@@ -571,7 +544,7 @@ end
 function test_double_ref(din::Union{Float64, Ptr{Nothing}} = C_NULL)
     # dout = ccall((:PS_test_double_ref, libSOCRATES_C), Cdouble, (Ref{Cdouble}, ), din)
 
-    # TODO -  Ref{Cdouble} apparently can't be set to C_NULL, so 
+    # TODO -  Ref{Cdouble} apparently can't be set to C_NULL, so
     # we have to pass the argument as Ptr{Cvoid}
     # cf Ref{Cuchar} (Fortran c_bool <-> C99 _Bool ) which can be set to C_NULL
     din_C = din === C_NULL ? C_NULL : Ref{Cdouble}(din)
