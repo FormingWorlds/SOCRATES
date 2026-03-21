@@ -1,0 +1,84 @@
+
+Before the main code can be run it is necessary to build a spectral file.
+A number of programs are used in building the spectral file and detailed
+descriptions are given in the next chapter. These programs can be run 
+interactively or using UNIX scripts. This process is somewhat involved:
+it may be most helpful to read the general discussion here first, then to
+read carefully through the examples in the directory {\tt \$RAD\_DIR/examples}
+making continual reference to the descriptions of programs found in the next
+chapter.
+
+The first step in this process is to design a spectrum, choosing the number
+of spectral bands and the wavelengths which delimit them, the absorbers
+which are active in each of the bands, the possible types of continua, and
+the types of aerosols which are to be included. These data are entered into a 
+skeletal spectral file using the program {\tt prep\_spec} (see the example
+in section~\ref{sec:ex_spf}).
+
+Having created the skeletal spectral file, the spectral data for 
+different spectral
+processes have to be generated. The procedure for each process is
+self-contained and there is no need to consider processes in any particular
+order, except that gaseous absorption and continuum absorption must
+be considered together.
+
+The correlated-$k$ method may be used to
+generate data for line and continuum absorption. There is one program, 
+{\tt corr\_k} which generates both the line and the continuum data, though
+it must be run separately for each process. An example use of this
+program can be found in {\tt \$RAD\_DIR/examples/corr\_k}.
+
+Aerosols, cloud droplets and ice crystals all introduce scattering effects
+for which 
+parametrizations are required. The scattering properties of spherical
+particles may be calculated from a Mie scattering code. For non-spherical
+ice crystals, the use of predefined databases of propeties is preferred.
+The scattering code for spherical particles is called {\tt scatter}. This
+is a fairly general code which will generate single scattering properties at
+a range of specified wavelngths, integrated over a distribution of sizes.
+In the case of aerosols a parametrization of the effects of humidity due
+to D.~L.~Roberts is available. The normal scattering algorithm is a Mie
+scattering code based on that given by Bohren and Huffman. Data for ice
+crystals may be generated from this code if they are modelled as spheres,
+but in general databases of scattering propeties should be used.
+
+These monochromatic single-scattering data, whether generated from the Mie
+code or from the non-spherical code, must be averaged across bands and
+possibly parametrized before being included in the spectral file. The
+output from several runs of the scattering program may be concatenated to
+make one large file for input to the program for averaging scattering data,
+{\tt scatter\_average},
+each sub-file being termed a block: this makes it possible, for example, to
+feed in data generated with different effective radii for fitting. The 
+program reads each block of data, averages the single scattering properties
+across the bands of a spectral file and then fits a parametrization to these
+averaged properties if required.
+
+Once these files have been generated, the data must be inserted into the
+spectral file: this is also done with the program {\tt prep\_spec} which allows
+the user to append data to an existing spectral file, or to generate a new
+file from an old one. On entry into the program the user is presented with
+a menu of block numbers from which to select an action to make blocks of
+that number. As well as providing gaseous or scattering data if they are 
+required, the user can calculate the fraction of
+the solar spectrum in each band, the Rayleigh scattering coefficients, the
+surface properties, or a polynomial fit to the Planck function in each
+band as required. There is no necessity to produce blocks of every type:
+for example, if one did not wish to consider Rayleigh scattering in the
+radiation code, there would be no need to calculate the scattering
+coefficients. Of course, for solar calculations the fraction of the solar
+spectrum in each band must be calculated, and for infra-red calculations a
+fit to the Planck function is required. It is perfectly possible to add to
+a spectral file at a later date, so one might have a spectral file including
+gaseous and droplet data and now wish to add aerosol data: this file could
+be used together with Mie data to run {\tt scatter\_average} to generate
+averaged aerosol scattering properties, and these properties could then be
+appended to the file. The minimum permissible content of a spectral file is
+that which is produced when {\tt prep\_spec} is first run. We have previously
+called this the skeletal spectral file, though this term should not be taken to
+imply that it has any special and peculiar form.
+
+Once the spectral file has been produced the radiation code can be run.
+Note again that it is not necessary to generate a spectral file every time
+the code is to be run. They may be kept in a library and used as appropriate.
+Some standard files are kept in the directory {\tt \$RAD\_DATA/spectra}.

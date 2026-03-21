@@ -1,0 +1,270 @@
+
+{\sl This algorithm has not yet been coded into the radiance code, 
+but represents a more efficient treatment of the core of the algorithm.}
+
+We start from the expression for the amplitude of each spherical harmonic 
+for a fixed azimuthal order $m$ in a layer of optical dept $\bar\tau$
+in the form
+\begin{equation}
+I_{l}= \sum_{k=1}^N u_k^- (-1)^{l+m} V_{lk} e^{-\tau/\mu_k} 
++u_k^+ V_{lk} e^{-(\bar\tau-\tau)/\mu_k} +G_l
+\end{equation}
+where $\tau$ is the local optical depth extending from 0 at the top to 
+$\bar\tau$ at the bottom. $G$ is the source function and $2N$ polar orders
+are retained, starting with $l=$.
+Introducing the reduced index $r=l+1-m$, $r=1,\ldots,2N$, the equations
+may be reindexed as
+\begin{equation}
+I_r=\sum_{k=1}^N u_k^- (-1)^{r+1} V_{rk} e^{-\tau/\mu_k} +u_k^+ V_{rk} 
+e^{-(\bar\tau-\tau)/\mu_k} +G_r.
+\end{equation}
+Collecting alternate terms of the eigenvector, we define
+\begin{equation}
+W_{sk}=\{ V_{rk}: r=2s-1, s=1,\ldots,N\}
+\end{equation}
+and
+\begin{equation}
+U_{sk}=\{ V_{rk}: r=2s, s=1,\ldots,N\}.
+\end{equation}
+Defining $\theta_k=e^{-\bar\tau/\mu_k}$, the amplitude at the top of the 
+layer is
+\begin{equation}
+I_r=\sum_{k=1}^N u_k^- (-1)^{r+1} V_{rk} + u_k^+ V_{rk} \theta_k +\hat G_r,
+\end{equation}
+where the hat on $G$ denotes its evaluation at the top of the layer;
+while at the bottom of the layer
+\begin{equation}
+I_r=\sum_{k=1}^N u_k^- (-1)^{r+1} V_{rk} \theta_k + u_k^+ V_{rk} +\check G_r,
+\end{equation}
+where the ha\v cek denotes a value at the bottom of the layer.
+
+The orthogonality relations between the eigenvectors give
+\begin{equation}
+\sum_{r=1}^{2N} s_r V_{rk} V_{rk'} =\delta_{kk'}
+\end{equation}
+and
+\begin{equation}
+\sum_{r=1}^{2N} s_r (-1)^{r+1} V_{rk} V_{rk'} =0.
+\end{equation}
+By taking the sum and the difference we deduce that
+\begin{equation}
+\sum_{r \;\mbox{odd}}^{2N} s_r V_{rk} V_{rk'} =\delta_{kk'},
+\end{equation}
+or with the obvious identifications:
+\begin{equation}
+\sum_{s=1}^{N} \rho_s W_{sk} W_{sk'} =\delta_{kk'}.
+\end{equation}
+Similarly, from the even terms
+\begin{equation}
+\sum_{s=1}^{N} \sigma_s U_{sk} U_{sk'} =\delta_{kk'}.
+\end{equation}
+
+At the top we impose Marshak's condition, that the inner product
+with harmonics of odd parity, taken over the downward hemisphere,
+should vanish if there is no incident radiation:
+\begin{equation}
+\sum_{l} \int_{\Omega_-} Y_L^{m*} I_{lm} Y_l^m \, d\omega =0
+\end{equation}
+where $L+m$ is odd. This gives
+\begin{equation}
+{1\over 2} I_l \delta_{Ll} + \sum_l {1\over 2} \tilde M_{Ll} I_l =0
+\end{equation}
+where
+\begin{equation}
+{1\over 2} \tilde M_{Ll} =\int_{\Omega_-} Y_L^{m*} Y_l^m \, d\omega.
+\end{equation}
+Defining $M_{sp}=\tilde M_{2s+1-m,2p-m}$ we have
+\begin{equation}
+\begin{split}
+\sum_{k=1}^N & \left [ u_k^- (-1) U_{sk} + u_k^+ U_{sk} \theta_k \right ] + \hat{\bar G_s} \\
+&+ \sum_{p=1}^N M_{sp} \left\{ \sum_{k=1}^N \left [ u_k^- (-1) W_{pk} + u_k^+ 
+W_{pk} \theta_k \right ] + \hat{ G'_p} \right \},
+\end{split}
+\end{equation}
+where $\bar G$ denotes even terms of $G$ and $G'$ odd terms.
+
+The equations may then be cast in a block matrix form:
+\begin{gather}
+\begin{bmatrix}
+-U_1+MW_1 &  (U_1+MW_1) \theta_1 &0&0&0&0&\ldots  \\
+W_1 \theta_1 &W_1&-W_2&-W_2 \theta_2&0&0&\ldots \\
+-U_1 \theta_1 & U_1 & U_2 & -U_2\theta_2 &0&0&\ldots \\
+0& 0 & W_2 \theta_2 &W_2&-W_3&-W_3 \theta_2 &\ldots \\
+0& 0 & -U_2 \theta_2 & U_2 & U_3 & -U_3\theta_2 &\ldots \\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ddots
+\end{bmatrix}
+\begin{bmatrix}
+u_1^- \\ u_1^+ \\ u_2^- \\ u_2^+ \\ u_3^- \\ u_3^+ \\ \vdots
+\end{bmatrix}
+=
+\begin{bmatrix}
+g_0 \\ h_1 \\ g_1 \\ h_2 \\ g_2 \\ h_3 \\ \vdots \\
+\end{bmatrix}
+\end{gather}
+
+The second and third rows refer to conditions at the bottom of the first
+layer and may be simplified to eliminate elements most distant from the 
+diagonal. After premultilpying the second row by $\theta_1^{-1} W_1^T 
+\rho_1$ and the third by $U_1\theta_1$, subtraction gives
+
+\begin{equation}
+\begin{bmatrix}
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+1 & \theta_1^{-1} & -\theta_1^{-1} W_1^T \rho_1 W_2 & -\theta_1^{-1} W_1^T 
+\rho_1 W_2 \theta_2 & \ldots \\
+0 & 2U_1 & U_2-U_1W_1^T \rho_1 W_2 & -(U_2+U_1W_1^T \rho_1 W_2) \theta_2 \\
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+\end{bmatrix}
+\begin{bmatrix}
+\vdots \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\vdots \\
+\theta_1^{-1} W_1^T \rho_1 h_1 \\ g_1 +U_1 W_1^T \rho_1 h_1 \\
+\vdots \\
+\end{bmatrix}
+\end{equation}
+
+Premultiplying the new form of the third row by $({1/2}) U_1^T \sigma_1$ we
+obtain
+\begin{equation}
+\begin{bmatrix}
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+0 & 1 & {1\over 2} (U_1^T \sigma_1 U_2 - W_1^T \rho_1 W_2 ) &
+-{1\over 2} (U_1^T \sigma_1 U_2 + W_1^T \rho_1 W_2 ) \\
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+\end{bmatrix}
+\begin{bmatrix}
+\vdots \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\vdots \\
+{1\over 2} (U_1^T \sigma_1 g_1 + W_1^T \rho_1 h_1 ) \\
+\vdots \\
+\end{bmatrix}
+\end{equation}
+Similarly, by eliminating the fourth entry of the original 
+second row we obtain
+\begin{equation}
+\begin{bmatrix}
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+-{1\over 2} (W_2^T \rho_2 W_1 + U_2^T \sigma_2 U_1 ) &
+-{1\over 2} (W_2^T \rho_2 W_1 - U_2^T \sigma_2 U_1 ) & 1 &0 \\
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+\end{bmatrix}
+\begin{bmatrix}
+\vdots \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\vdots \\
+-{1\over 2} (W_2^T \rho_2 h_1 + U_2^T \sigma_2 g_1 ) \\
+\vdots \\
+\end{bmatrix}
+\end{equation}
+
+Coding these equations in reversed order yields two rows of the form
+\begin{equation}
+\begin{bmatrix}
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+0 &1 & A_1 & B_1 \\
+D_1 & C_1 & 1 &0 \\
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+\end{bmatrix}
+\begin{bmatrix}
+\vdots \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\vdots \\
+x_1 \\ y_1 \\
+\vdots \\
+\end{bmatrix}
+\end{equation}
+where
+\begin{gather}
+A_1 ={1\over 2} (P-Q) \qquad B_1 = -{1\over 2} (P+Q) \theta_2 \\
+C_1 ={1\over 2} (R-S) \qquad D_1 = -{1\over 2} (R+S) \theta_1 \\
+x_1 ={1\over 2} (U_1^T \sigma_1 g_1 + W_1^T \rho_1 h_1 ) \qquad
+y_1 =-{1\over 2} (W_2^T \rho_2 h_1 + U_2^T \sigma_2 g_1 ).
+\end{gather}
+where in turn
+\begin{gather}
+P=U_1^T \sigma_1 U_2 \qquad Q=W_1^T \rho_1 W_2 \\
+R=U_2^T \sigma_2 U_1 \qquad S=W_2^T \rho_2 W_1 \\
+\end{gather}
+Furthermore,
+\begin{equation}
+R=P^{-1} \qquad S=Q^{-1}
+\end{equation}
+From the recurrence relation for the eigenvalues it may also be shown that
+\begin{equation}
+P = \mbox{diag}( \mu_{11}^{-1},  \mu_{21}^{-1}, \mu_{31}^{-1}, \ldots , 
+\mu_{N1}^{-1}) S^T
+\mbox{diag}( \mu_{12},  \mu_{22}, \mu_{32}, \ldots , \mu_{N2})
+\end{equation}
+where the first suffix refers to the eigenvector and the second to the layer.
+Hence,
+\begin{equation}
+R = \mbox{diag}( \mu_{12}^{-1},  \mu_{22}^{-1}, \mu_{32}^{-1}, \ldots , 
+\mu_{N2}^{-1}) S^{-T}
+\mbox{diag}( \mu_{11},  \mu_{21}, \mu_{31}, \ldots , \mu_{N1})
+\end{equation}
+This is efficient computationally, since the the direct evaluation of $P,
+\ldots,S$ would require about $4N^3$ multiplications, but using these formulae
+finding $P$ and $R$ requires $4N^2$ multiplications. Finding $Q$ by inversion
+of $S$ is about equally as expensive as direct calculation, unless further
+advantage can be taken of the structure of the matrices.
+
+A recurrence representing Gaussian elimination can now be defined:
+\begin{align}
+Z_n &= C_n -D_n X_{n-1} \\
+Y_n &= (Z_n^{-1} -A_n)^{-1} \\
+X_n &= -Y_n B_n \\
+z_n &= Q_n \left [ Z_n^{-1} (y_n-D_n z_{n-1}) -x_n \right ]
+\end{align}
+starting with the definitions
+\begin{align}
+X_0 &= - (1- U_1^T \sigma_1 M W_1)^{-1} (1+ U_1^T \sigma_1 M W_1) \theta_1 \\
+z_0 &= - (1- U_1^T \sigma_1 M W_1)^{-1} U_1^T \sigma_1 g_0.
+\end{align}
+
+After forward elimination the equations reduce to
+\begin{equation}
+\begin{bmatrix}
+1 & X_0 & \ldots & \ldots & \ldots \\
+0 & 1 & A_1 & B_1 & \ldots \\
+&0 & 1 & X_1 & \ldots \\
+\ldots &\ldots& \ldots& \ldots& \ldots \\
+\end{bmatrix}
+\begin{bmatrix}
+u_1^- \\ u_1^+ \\ u_2^- \\ \vdots
+\end{bmatrix}
+=
+\begin{bmatrix}
+z_0 \\ x_1 \\ z_1 \\
+\vdots \\
+\end{bmatrix}
+\end{equation}
+establishing a recurrence for back substitution of the form
+\begin{align}
+u_n^+ &= x_n-A_n u_{n+1}^- -B_n u_{n+1}^+ \\
+u_n^- &= z_n-X_n x_n.
+\end{align}
+
+Direct solution of the original block matrix using a banded solver with
+partial pivoting on rows would have a operation count of the order of
+$18 N^3 L$, where $L$ is the number of layers. The dominating operation
+count for this scheme is $6N^3 L$ (comprising two matrix multiplications
+to find S and Q and two matrix multiplications and two inversions in the
+forward recurrence). Since we need keep only the matrices $A$, $B$ and
+$X$ at each level for backward substitution, the memory requirement is
+also reduced by a factor of three.
+
+
+
+
+
+

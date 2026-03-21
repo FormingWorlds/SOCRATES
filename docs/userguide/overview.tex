@@ -1,0 +1,29 @@
+{\sl
+The development of a fully functional F90 version of the radiation code, 
+with the capability to calculate radiances from the existing F77 code is
+a complicated task which cannot happen in one single stage. This manual
+brings together the available evolving documentation on the code. 
+
+The following facts will help to provide orientation.
+
+
+\begin{enumerate}
+\item
+Programs to process atmospheric profiles or to calculate radiation fields
+given spectral files are still largely in F77. Programs to generate basic
+spectral files and correlated $k$-fits are in F90. Code to generate scattering
+data for droplets, aerosols and ice crystals is in transition and not 
+currently operational: for the calculation of radiation from existing spectral
+files this is not a problem.
+
+\item
+Note for use within the Met Office only: 
+The master version of the source code is held as under the project 
+{\tt Full\_Radiation\_Code} under srce, which must be started using the
+view {\tt $\sim$srce/clrad\_doc.srce}. Other projects holding parts
+of the code are for particular purposes or external contracts and should not be
+used as the source. The source code should be extracted as the appropriate
+check-pointed version: normally this will be the latest.
+\end{enumerate}
+}
+

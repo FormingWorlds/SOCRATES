@@ -1,0 +1,131 @@
+\label{sec:ex_spf}
+
+The following is a copy of the script file generated during the production
+of an example spectral file: this is purely illustrative and choices of gases
+and bands have not been made on scientific grounds.
+
+The skeletal spectral file must be prepared first. Here we have selected 
+two bands from 4.4-- 4.5 \um\ and from 4.6 to 4.7 \um, but we wish to excise
+the region from 4.61 -- 4.62 \um\ from the second band for separate treatment.
+What this means in effect is that the two regions 4.60 -- 4.61 \um\ and
+4.62 -- 4.70 \um\ will be treated as one band. (This option is only really
+relevant in a GCM, where, for example, we might have one band covering 
+the whole atmospheric window from 8 -- 12 \um, but would wish to exclude 
+the 9.6 \um\ band of ozone for separate treatment. By doing this we can use only
+one set of $k$-terms for both parts of the band, allowing faster execution.)
+The first and second bands include absorption by water vapour, the second
+also including absorption by carbon dioxide and nitrous oxide, but only
+carbon dioxide is considered in the excluded band. The self and 
+foreign-broadened continua of water vapour are also included, together with 
+two aerosols.
+
+{\small
+\begin{verbatim}
+$ prep_spec
+Enter the name of the spectral file.
+sp_ex
+A new spectral file will be created.
+
+Enter number of spectral bands.
+
+3
+
+Enter number of absorbing gases.
+
+3
+
+Enter the physical types of absorber.
+Enter the identifier for gas      1
+1
+Enter the identifier for gas      2
+4
+Enter the identifier for gas      3
+2
+
+Enter number of aerosols.
+
+2
+
+Enter the physical types of aerosol.
+Enter the identifier for aerosol      1
+3
+Enter the identifier for aerosol      2
+7
+
+For each band in turn specify the limits of the bands in 
+metres, inverse centimetres or microns.
+
+type "m" for metres, "c" for inverse centimetres, or "u" for microns.
+u
+Enter limits for band     1
+4.4 4.5
+Enter limits for band     2
+4.6 4.7
+Enter limits for band     2
+4.61 4.62
+All bands specified.
+
+
+
+
+For each band specify the type numbers of the absorbers
+active in that band.
+To continue input on the next line terminate the line with an &.
+enter '0' if there is no gaseous absorption in the band.
+
+identifiers of absorbers in band        1
+1
+identifiers of absorbers in band        2
+4 1 2
+identifiers of absorbers in band        3
+2
+
+
+For each band, specify the types of the continuum absorbers 
+active in that band.
+To continue input on the next line terminate the line with an &.
+
+
+Enter "0" if there is no continuum absorption in the band.
+
+type numbers of continua in band      1
+1
+type numbers of continua in band      2
+1 2
+type numbers of continua in band      3
+1
+
+
+Do you wish to exclude regions from particular bands? (y/n)
+y
+For each band enter the list of bands to be excluded therefrom.
+To continue input on the next line terminate the line with an &.
+
+Enter '0' if no bands are to be excluded.
+
+bands excluded from band      1
+0
+bands excluded from band      2
+3
+bands excluded from band      3
+0
+
+Select from the following types of data:
+      2.   Block 2: Solar spectrum in each band.
+      3.   Block 3: Rayleigh scattering in each band.
+      5.   Block 5: k-terms and p, T scaling data.
+      6.   Block 6: Thermal source function in each band.
+      9.   Block 9: Continuum extinction and scaling data.
+      10.  Block 10: Droplet parameters in each band.
+      11.  Block 11: Aerosol parameters in each band.
+      12.  Block 12: Ice crystal parameters in each band.
+      -1.  To write spectral file and exit.
+      -2.  To quit without writing spectral file.
+
+
+-1
+\end{verbatim}
+}
+
+Gaseous transmissions should then be generated from spectroscopic data
+using the {\tt corr\_k} program.

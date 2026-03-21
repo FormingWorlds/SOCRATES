@@ -1,0 +1,202 @@
+\label{sec_spectral_var}
+
+For some applications (such as long climate runs of the Met Office Unified Model) it is necessary to account for changes in the solar spectrum and total solar irradiance with time. The proportion of the solar spectrum in each band is provided in block 2 of the shortwave spectral file. Optical properties given in other blocks will also generally be weighted by the underlying solar spectrum so should ideally also change as the solar spectrum changes with time. The most important of these are the spectral weightings given to gaseous absorption coefficients in block 5 and the spectrally weighted averages of the Rayleigh scattering coefficients in block 3. To a certain degree changes in these coefficients with time can now be specified using a look-up table in block 17 of the spectral file.
+
+Block 17 specifies sub-band wavelength ranges for which solar spectral variations may be specified in an accompanying {\tt spectral\_var} file. Sub-bands are generally equivalent to the full bands except for particular cases where the weights for the k-terms of the major gas in the band actually represent a particular wavelength interval within the band. This is best illustrated with reference to the GA7 shortwave spectral file which contains sub-bands for ozone absorption in the ultra-violet. The script which generated these ozone k-terms can be seen in {\tt \$RAD\_DIR/examples/sp\_sw\_jm/mk\_sp\_sw\_6\_jm2}. A 12-band skeleton spectral file has been used where the first 6 bands correspond to band 1 of the GA7 spectral file, and bands 7-8 correspond to band 2 of the GA7 spectral file. A single ozone k-term has been generated for each of the first 8 bands of the 12-band skeleton spectral file. These have then been converted to 6 k-terms for band 1, and 2 k-terms for band 2 of the GA7 file by using the normalised solar spectrum fraction as the k-term weights. Here, we can now specify the original 12 spectral intervals as sub-bands in block 17. With solar spectral variations supplied for each of these sub-bands it is then possible for the code to vary the ozone k-term weights appropriately for the solar spectrum. 
+
+Here we run through the example given in {\tt \$RAD\_DIR/examples/spectral\_var} for the creation of a look-up table of solar spectral variability data. The raw spectral variability data files recommended for CMIP5 are first downloaded:
+
+{\small
+\begin{verbatim}
+wget http://solarisheppa.geomar.de/solarisheppa/sites/default/files/
+              ...                     data/CMIP5/spectra_1610_2000a_21Jan09.txt.gz
+              ...                     data/CMIP5/spectra_1882_2000m_17Dec08.txt.gz
+              ...                     data/CMIP5/spectra_2000_2008m_6May09.txt.gz
+gunzip *.gz
+\end{verbatim}
+}
+
+\noindent The format of these files is understood by the {\tt prep\_spec} program which is then run to create block 17 of the spectral file:
+
+{\small
+\begin{verbatim}
+$ prep_spec
+Enter the name of the spectral file.
+sp_sw_ga7
+Type "a" to append data to the existing file;
+  or "n" to create a new file.
+a
+
+Select from the following types of data:
+      2.   Block 2: Solar spectrum in each band.
+      3.   Block 3: Rayleigh scattering in each band.
+      5.   Block 5: k-terms and p, T scaling data.
+      6.   Block 6: Thermal source function in each band.
+      9.   Block 9: Continuum extinction and scaling data.
+      10.  Block 10: Droplet parameters in each band.
+      11.  Block 11: Aerosol parameters in each band.
+      12.  Block 12: Ice crystal parameters in each band.
+      17.  Block 17: Spectral variability data in sub-bands.
+      -1.  To write spectral file and exit.
+      -2.  To quit without writing spectral file.
+
+
+17
+\end{verbatim}
+}
+
+\noindent For this example block 17 does not yet exist so we need to specify which of the bands can be further sub-divided into sub-bands (if the block does exist then this part is skipped and we can choose to add spectral variability data directly):
+
+{\small
+\begin{verbatim}
+Enter band to be sub-divided (0 to finish): 
+1
+There are     6 major gas k-terms in this band.
+Do you want to divide equally in wavelength (E),
+or provide band limits (L) for each k-term?
+e
+
+Enter band to be sub-divided (0 to finish): 
+2
+There are     2 major gas k-terms in this band.
+Do you want to divide equally in wavelength (E),
+or provide band limits (L) for each k-term?
+l
+Enter band limits (metres): 
+320.e-9 400.e-9
+400.e-9 505.e-9
+
+Enter band to be sub-divided (0 to finish): 
+0
+\end{verbatim}
+}
+
+\noindent Now we deal with the treatment of Rayleigh scattering coefficients for the varying solar spectrum. We may choose to specify time varying Rayleigh coefficients for only some of the sub-bands, so it is necessary for block 17 to contain default values for each sub-band calculated using the original mean solar spectrum used for blocks 2 and 3. Here we specify that only the first 8 sub-bands will have Rayleigh coefficients in the time-varying look-up table (generally variations are only important for the shorter wavelengths).
+
+{\small
+\begin{verbatim}
+A mean solar spectrum is needed for the mean
+Rayleigh coefficients per sub-band:
+
+Enter the name of the file containing the solar irradiance data.
+../../data/solar/lean_12
+
+Is the atmosphere composed of air or H2-He gas (A/H)?
+a
+How many sub-bands will require a varying Rayleigh coefficient:
+8
+\end{verbatim}
+}
+
+\noindent We could have specified 0 here so that no Rayleigh coefficients would be given in the look-up table at all. In that case the default sub-band values would be used, but combined with the appropriate sub-band solar fraction at each time. In the case of band 1 this would still have provided the majority of the variation as the first 6 sub-band values would be appropriately weighted as the spectrum varied.
+
+This completes the creation of block 17 in the main spectral file. The program continues with the addition of spectral variability data for each time. If block 17 had already existed in the spectral file {\tt prep\_spec} would jump directly to this point to allow times to be added to the spectral variability data.
+
+{\small
+\begin{verbatim}
+Number of times / dates to add to spectral data
+272
+Enter format of data file:
+5
+Enter location of data file:
+spectra_1610_2000a_21Jan09.txt
+
+Number of times / dates to add to spectral data
+1416
+Enter format of data file:
+5
+Enter location of data file:
+spectra_1882_2000m_17Dec08.txt
+
+Number of times / dates to add to spectral data
+108
+Enter format of data file:
+5
+Enter location of data file:
+spectra_2000_2008m_6May09.txt
+
+Number of times / dates to add to spectral data
+0
+\end{verbatim}
+}
+
+\noindent Finally, we specify how many of the last times given should be repeated into the future. Here we are using monthly data so by specifying 144 we will have the final 12 years (1997-2008 inclusive: cycle 23) periodically repeated for as long as the model runs.
+
+{\small
+\begin{verbatim}
+How many of the final times / dates should be 
+periodically repeated into the future:
+144
+
+Select from the following types of data:
+      2.   Block 2: Solar spectrum in each band.
+      3.   Block 3: Rayleigh scattering in each band.
+      5.   Block 5: k-terms and p, T scaling data.
+      6.   Block 6: Thermal source function in each band.
+      9.   Block 9: Continuum extinction and scaling data.
+      10.  Block 10: Droplet parameters in each band.
+      11.  Block 11: Aerosol parameters in each band.
+      12.  Block 12: Ice crystal parameters in each band.
+      17.  Block 17: Spectral variability data in sub-bands.
+      -1.  To write spectral file and exit.
+      -2.  To quit without writing spectral file.
+
+
+-1
+\end{verbatim}
+}
+
+\noindent The spectral file produced will now have a block 17 that looks like this:
+
+{\small
+\begin{verbatim}
+*BLOCK: TYPE =   17: SUBTYPE =    0: VERSION =    0
+Specification of sub-bands for spectral variability data.
+Wavelength limits (m) and Rayleigh coefficients at STP (m2/kg).
+Number of spectral sub-bands = 12
+Sub-band Band  k-term     Lower limit         Upper limit       Rayleigh coeff
+    1      1      1     2.000000000E-07     2.200000000E-07     5.411639620E-04
+    2      1      2     2.200000000E-07     2.400000000E-07     3.808912673E-04
+    3      1      3     2.400000000E-07     2.600000000E-07     2.532462086E-04
+    4      1      4     2.600000000E-07     2.800000000E-07     1.841386263E-04
+    5      1      5     2.800000000E-07     3.000000000E-07     1.319010864E-04
+    6      1      6     3.000000000E-07     3.200000000E-07     1.006372358E-04
+    7      2      1     3.200000000E-07     4.000000000E-07     5.509622529E-05
+    8      2      2     4.000000000E-07     5.050000000E-07     2.147544832E-05
+    9      3      0     5.050000000E-07     6.900000000E-07     7.463127997E-06
+   10      4      0     6.900000000E-07     1.190000000E-06     1.639144948E-06
+   11      5      0     1.190000000E-06     2.380000000E-06     1.788411198E-07
+   12      6      0     2.380000000E-06     1.000000000E-05     1.082347954E-08
+*END
+\end{verbatim}
+}
+
+\noindent The mapping from sub-band to true band is provided along with the particular major gas k-term the sub-band applies to. A zero in the k-term column indicates that the sub-band represents the entire true band. 
+
+An additional file called {\tt sp\_sw\_ga7\_var} has also been produced with data in this format (initially annual variation with monthly data beginning from 1882):
+
+{\small
+\begin{verbatim}
+Number of times in look-up table = 1796
+Number of times for periodic repetition = 144
+Number of Rayleigh coefficients given = 8
+Year  Month  Day(of month)  Seconds(since midnight)  TSI(Wm-2 at 1 AU)
+Fraction of solar flux in each sub-band.
+Rayleigh coefficient in the first 8 sub-bands.
+*BEGIN: spectral variability data
+  1610     1     1     0     1.360767554E+03
+ 4.190367994E-04 6.914841802E-04 9.624859423E-04 2.832880852E-03 5.910684856E-03
+ 9.261289946E-03 5.963858761E-02 1.460351240E-01 2.322715146E-01 3.224999155E-01
+ 1.813335685E-01 3.814342695E-02
+ 5.408985990E-04 3.808910747E-04 2.531982401E-04 1.841411970E-04 1.318903129E-04
+ 1.006353079E-04 5.509924875E-05 2.147515176E-05
+  1611     1     1     0     1.360750657E+03
+ 4.187034033E-04 6.911699475E-04 9.621671540E-04 2.832480888E-03 5.910305453E-03
+ 9.260996582E-03 5.963753417E-02 1.460347926E-01 2.322714839E-01 3.225014149E-01
+ 1.813353418E-01 3.814360881E-02
+ 5.408868352E-04 3.808910741E-04 2.531961229E-04 1.841412817E-04 1.318898392E-04
+ 1.006352283E-04 5.509938863E-05 2.147514454E-05
+\end{verbatim}
+}
+
+\noindent When this data is used in the Met Office Unified Model the values at the last date / time before the current timestep will be taken without interpolation.

@@ -1,0 +1,40 @@
+The scattering properties of particles can be calculated directly
+using electromagnetic theory; but even for a shape so simple as
+a sphere this would be prohibitively expensive in a radiation
+code. Therefore, scattering propeties are calculated outside the
+radiation code and represented in a parametrized form within it.
+
+For aerosols, water droplets and ice crystals, the procedure is
+generically similar, although there are subtle nuances. Water
+droplets are spherical and aerosols are at the present time 
+treated as spherical. Over recent years it has become possible
+to treat non-spherical ice crystals and this makes the treatment
+of ice more dissimilar from the other two types of particle.
+
+In any region of the atmosphere there will be a mixture of particles
+of different sizes, so a size ditribution must be considered. For
+water droplets and aerosols, simple analytic distributions such
+as the log-normal or modified gamma distributions are often assumed.
+Size distributions for ice crystals are much less regular and often
+bimodal; we are tending now to use observational size distributions
+to generate scattering data for ice crystals.
+ 
+Having assumed a size distribution, it is necessary to calculate the
+individual scattering properties of particles of a given size before
+avaeraging across the size distribution. In the case of aerosols and
+droplets, Mie scattering calculations are done, but for non-spherical
+ice crystals, it would be too complicated to do these calculations
+all at once and an external database is used. To do Mie calculations,
+a file of refractive indices is required.
+
+The generic procedure, then, is that single scattering propeties are
+generated at a number of frequencies, averaged over a size distribution
+using the program {\tt scatter}. These must then be averaged over the
+bands of the spectral file, weighting with a solar spectrum or a
+Planckian function (and including an instrumental response if necessary).
+In the case of droplets and ice crystals we need to consider a range
+of size distributions and generate a fit in terms of particle size.
+This is done using the program {\tt scatter\_average}.
+
+We shall now consider aerosols, droplets and ice crystals in turn. The
+detailed description of the programs should also be consulted.

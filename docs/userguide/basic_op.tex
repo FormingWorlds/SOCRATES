@@ -1,0 +1,110 @@
+The running of the code can be split into three tasks. First, a spectral 
+file must be produced; next, the physical state of the atmosphere must be 
+expressed in the form of CDL or netCDF files (as defined below), and finally 
+the code can be run to calculate radiances, fluxes and heating rates. A separate
+chapter is allocated to the description of each of these tasks, but here
+it will be useful to make some concise general remarks, beginning
+with a description of the spectral file.
+
+\section{The Spectral File}
+
+Spectral information is read from the {\em spectral file} produced by the
+preprocessor. Once a spectral file has been produced it may be stored for
+future use. A number of standard versions are available in {\tt \$RAD\_DIR/data/spectra/}.
+
+The spectral file is at the heart of the code, and whilst the details of 
+its internal
+structure need not be studied since this file is always written and read by
+special subroutines, some idea of its contents will be helpful.
+The file consists of a number of different blocks of data. Each block
+begins with a line of the form
+
+\begin{flushleft}
+\hspace*{.5in}{\tt *BLOCK: TYPE =    $n_1$: SUBTYPE =     $n_2$: VERSION =     $n_3$}
+\end{flushleft}
+
+and ends with a line of the form
+
+\begin{flushleft}
+\hspace*{.5in}{\tt *END}
+\end{flushleft}
+
+The type number identifies the contents of the block; for example, type 10
+is concerned with the properties of cloud droplets. The subtype is used to
+give a more precise description of the contents of the block; for example
+in the case or block 10 the subtype 1 indicates parametrized optical
+properties whilst the subtype 2 indicates observational data. The version
+number is included to allow the possibility of changing the format of
+the blocks without losing backward compatibility with spectral files
+produced using earlier versions of the code: one simply has different
+input routines for each version. If the code is to be extended it is
+possible to invent new types or subtypes of blocks and to provide routines
+to read them. When the spectral file is read the main input subroutine
+reads the title line as above and calls the correct routine to read the
+rest of the block. Each block holds formatted data, and should therefore
+be fairly readable by the user, should he wish to examine the data.
+
+\section{The Structure of the Input Files}
+
+In the radiation code the atmosphere is divided into a number of homogeneous
+{\em layers} numbered downwards from 1 to $N$, these are bounded by {\em 
+levels} numbered downwards from 0 to $N$. Input data is supplied as 
+representative values in layers (equivalent to theta-levels in the UM).
+
+The file format used is either CDL (ASCII files for use with l\_run\_cdl) 
+or netCDF (binary files for use with l\_run\_cdf). Here, related fields 
+are kept in separate files with a common
+basename and a suffix referring to the contents of the file. For example,
+{\tt xyz.t} will be profiles of atmospheric temperatures and {\tt xyz.ch4}
+would be profiles of mass mixing ratios of methane. The suffixes known
+to the code can be found in {\tt \$RAD\_BIN/input\_head\_pcf.f90}. Each file, 
+whether netCDF or CDL (ASCII version of netCDF), contains a single variable 
+named as the file suffix, with the dimensions given by longitude and latitude 
+in the horizontal (although only a single point for CDL files) and pressure 
+in the vertical. Extra variable attributes, such as longname (eg. Temperature), and units (eg. K) are also given.
+
+To run the code we need to specify the pressure levels which bound the
+layers and representative values of the fields within the layers,
+given as values at the pressures at the mid-points of the
+layers. Pressures are not read from a special file, but are taken from
+the files of other fields, so care is necessary to ensure that all
+profiles are consistent. In the case of infra-red radiation we need to
+specify the temperatures at the edges of the layers: it is therefore
+convenient always to specify the edges of the layers by having a file
+of temperatures at the edges of layers, for which the suffix is {\tt
+.tl}: this will contain $N+1$ rows of data if there are $N$ layers,
+but all other files except those specifying surface (and top of
+atmosphere) conditions will contain $N$ rows of data. The temperatures
+at the mid-points of layers are  read from a file with the suffix {\tt
+.t}. The surface pressure and temperature are set in files with the 
+suffix {\tt .pstar} and {\tt .tstar} respectively. The surface albedo is 
+given in {\tt .surf}. Top of atmosphere solar irradiance and solar zenith 
+angle are given in {\tt .stoa} and {\tt .szen} respectively.
+
+These files constitute the essential information necessary to run the code.
+Depending on the options selected additional files will be required. If
+gaseous absorption is included files of the mass mixing ratios of the gases
+included in the spectral file will be required. If aerosols are to be
+included appropriate mass mixing ratios will again be required. In the case
+of clouds more information is required. A file with the suffix {\tt .clfr}
+specifies the cloud fraction and files with the suffixes {\tt .lwm}, 
+{\tt .re}, {\tt .iwm}, and {\tt .ire} give respectively the mass mixing
+ratios of liquid water, the effective radius of cloud droplets, the mass
+mixing ratio of ice crystals and the effective radius of ice crystals. Additional files will also be needed if radiances are to be calculated.
+
+
+\section{Running the Code}
+
+The code can be run in two ways. The simplest is to run the executable
+interactively replying to the prompts. Fortran programs  {\tt l\_run\_cdl} or
+{\tt l\_run\_cdf} will use this method. An alternative, which is often more
+useful is to use a UNIX script (eg. {\tt Cl\_run\_cdl} or {\tt Cl\_run\_cdf}
+respectively). These scripts process their input and write a temporary
+file for the driver itself, run the driver and then remove the
+temporary file. The options required to run these scripts are available 
+from their {\tt man} pages:
+
+\begin{verbatim}
+man Cl_run_cdl
+man Cl_run_cdf
+\end{verbatim}

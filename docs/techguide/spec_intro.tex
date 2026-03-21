@@ -1,0 +1,120 @@
+\section{Introduction and General Remarks}
+
+To cover the broad range of
+frequencies encountered in atmospheric radiation, discretization in
+frequency or wavelength must be considered carefully. The approach
+adopted in all codes for use in general circulation models (GCMs) 
+is to divide the
+solar or infra-red spectral region into a number of bands, across
+which all radiative quantities, except the absorption coefficients
+of gases, may be considered uniform. More accurate computations can
+be made if more bands are used; but this comes at increased computational
+expense, and the balance to be struck between the two requirements
+will depend on the application. For operational use in GCMs only
+a small number of bands can be used. 
+
+The Edwards-Slingo radiation scheme was developed to meet a range of 
+varied requirements for radiative modelling, extending beyond the 
+demands of the Unified Model itself. To meet this need for flexibility,
+the discretization in frequency within this radiation code is not
+fixed, but is set by an external file supplied by the user when the
+code runs: this file is known as the {\em spectral file}. This 
+flexibility facilitates assessment of the files used in the UM itself
+against reference data in controlled experiments.
+
+The generation of spectral files requires a detailed knowledge of
+radiative transfer and judgements about efficiency for the application
+in question. It is therefore not envisaged that users of the code
+within the Unified Model in particular will generate their own files,
+unless they have this knowledge and are developing a specific new
+application. Instead, standard spectral files, appropriate for use
+in the Unified Model are provided in a central directory, 
+{\tt \$UMDIR/vn\$VN/ctldata/spectral}. When a new requirement arises,
+such as the need to model the radiative effects of a new gas,
+users should contact the radiation group to discuss the requirement.
+
+The following general points should be noted.
+
+\begin{enumerate}
+
+\item
+A spectral file is not an ancillary file: it contains no geographical
+information, but refers to the discretization in frequency.
+
+\item
+A spectral file released with a certain version of the Unified Model
+will normally be compatible with future releases (but the reverse is
+not generally true because of the possible addition of data to deliver
+new functionality). This makes upgrading to newer releases of the Model
+simpler than it would otherwise be. A caveat to this point is that at
+version 8.6 of the Unified Model the format of the spectral files was
+changed from a namelist to a readable text file as used by the offline
+Edwards-Slingo radiation code suite. Utilities are available within
+the offline suite to convert between namelist and text versions of the
+spectral files.
+
+\item
+{\bf Naming Convention}
+
+Although there is no formal requirement to adopt a particular 
+naming convention, the names of shortwave spectral files begin with the
+string {\tt sp\_sw} and those of longwave spectral files with the
+string {\tt sp\_lw}. (Spectral files in namelist format as used with the
+UM prior to version 8.6 begin with the string {\tt spec\_} or
+{\tt spec3a\_}.) When a new release of the model is prepared,
+the UM team copy all existing spectral files from the old release to the
+new one without change, unless advised differently by the
+radiation group.
+
+As new functionality is developed, it is sometimes necessary to change
+spectral files, either by adding new material or by replacing old
+material. If new material is added, in such a way that the results of
+existing runs are unchanged at the new release, the name of the file
+is not changed; but if existing data are altered, a new name is used.
+An example may make this clearer. Suppose that at version 5.11 of the
+UM we have a file {\tt spec3a\_sw\_orig} and that for version 5.12 a new
+scheme is to be added to the UM which requires the radiative modelling
+of volcanic ash. This would require the addition of information to
+the spectral file, but the new material would not change the results
+of any run which could be carried out at both versions 5.11 and 5.12:
+to allow for simple upgrading, the new material would be added to the
+spectral files for 5.12 without any change of name. Suppose now that
+for version 5.13 improvements to the modelling of ash had been made
+and that the data in the spectral file needed to be changed. This
+would represent a modification to an existing capability, so the old
+spectral file would be copied to the new directory for 5.13 without
+new data to allow existing configurations to continue, 
+but a new spectral file with the revised data and a new name
+would be introduced. If the old file were revised without a change of
+name it would be possible to upgrade an existing experiment and get
+different results: that would be unacceptable.
+
+\item
+{\bf Generation of and Additions to Spectral Files}
+
+As noted before, the generation or alteration of spectral files requires
+expertise in radiative transfer. The responsibility for changes to the
+standard files lies with the radiation group. Most users will
+never need to alter a spectral file, but it is possible that some
+users of the portable model with expertise in radiative transfer may wish 
+to generate files for their own specific purposes and the next paragraph 
+is addressed to them.
+
+Spectral files are generated using the pre-processing suite in the 
+off-line version of the radiation code, which is maintained by the
+radiation team. It is possible to generate a spectral file form scratch,
+but more usually, the requirement is to add to or modify an existing file.
+Prior to version 8.6 spectral files were read into
+the UM as namelists. The current UM along with the off-line code uses
+a more readable text format. Conversion from a namelist to the text
+format is carried out with the program {\tt nml\_spec} of the external
+suite and in the reverse direction with the program {\tt spec\_nml}. 
+
+Data on aerosols are generated in consultation with the aerosol 
+modelling group.
+
+\end{enumerate}
+
+
+
+

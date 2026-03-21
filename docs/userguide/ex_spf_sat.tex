@@ -1,0 +1,324 @@
+To simulate satellite radiances, or observational data more generally,
+account must be taken of the instrumental response function. This involves
+weighting data at various stages of the process of generating data.
+This example is based on setting up a file for the Seviri 3.9 micron channel.
+
+This filter response for this channel is zero outside the range 3.05--4.79
+microns. This range include the 4.3 micron band of CO${}_2$ and a little
+absorption by water vapour. CO2 is therefore the dominant absorber in the
+channel. We first define the skeleton of the spectral file.
+
+{\small
+\begin{verbatim}
+$ prep_spec
+Enter the name of the spectral file.
+sp_sw_sv39
+A new spectral file will be created.
+
+Enter number of spectral bands.
+1
+
+Enter number of absorbing gases.
+2
+
+Enter the physical types of absorber.
+Enter the identifier for gas      1
+2
+Enter the identifier for gas      2
+1
+
+Enter number of aerosols.
+2
+
+Enter the physical types of aerosol.
+Enter the identifier for aerosol      1
+2
+Enter the identifier for aerosol      2
+10
+
+For each band in turn specify the limits of the bands in 
+metres, inverse centimetres or microns.
+
+type "m" for metres, "c" for inverse centimetres, or "u" for microns.
+u
+Enter limits for band     1
+3.05 4.79
+All bands specified.
+
+
+For each band specify the type numbers of the absorbers
+active in that band.
+To continue input on the next line terminate the line with an &.
+enter '0' if there is no gaseous absorption in the band.
+
+identifiers of absorbers in band        1
+2 1
+
+
+For each band, specify the types of the continuum absorbers 
+active in that band.
+To continue input on the next line terminate the line with an &.
+
+
+Enter "0" if there is no continuum absorption in the band.
+
+type numbers of continua in band      1
+1
+
+
+Do you wish to exclude regions from particular bands? (y/n)
+n
+\end{verbatim}
+}
+
+The spectral file now looks as follows:
+
+{\small
+\begin{verbatim}
+*BLOCK: TYPE =    0: SUBTYPE =    0: VERSION =    2
+Summary of spectral data.
+Number of spectral bands =     1
+Total number of gaseous absorbers =     2
+Total number of aerosols =     2
+List of indexing numbers and absorbers.
+Index       Absorber(identifier and name)
+    1           2       Carbon Dioxide      
+    2           1       Water Vapour        
+List of indexing numbers of aerosols.
+Index       Aerosol(type number and name)
+    1           2       Dust-like           
+    2          10       Accum. Sulphate     
+*END
+*BLOCK: TYPE =    1: SUBTYPE =    0: VERSION =    0
+Specification of spectral intervals
+Limits of spectral intervals (wavelengths in m.)
+Band        Lower limit         Upper limit
+    1        3.050000000E-06     4.790000000E-06
+*END
+*BLOCK: TYPE =    4: SUBTYPE =    0: VERSION =    0
+Gaseous absorbers in each interval
+(The number is the indexing number of the species as set out
+ in the summary block 0.)
+A zero indicates that there in no gaseous absorption in the interval.
+Band        Number of active absorbers followed by indexing numbers
+    1           2
+         1    2
+*END
+*BLOCK: TYPE =    8: SUBTYPE =    0: VERSION =    0
+Continuum absorbers in each interval
+(The number is the indexing number of each type as set out
+ in the module rad_pcf.)
+A zero indicates that there is no continuum absorption in the interval.
+Band         Number of active continua followed by indexing numbers
+    1           1
+         1
+Indexing numbers of gases for continua:
+     Index of water =     2
+*END
+\end{verbatim}
+}
+
+We next need to generate a fit for the gaseous data in this file using 
+correlated-k methods. This uses the program {\tt corr\_k} (Note: The
+environment variable \$RAD\_DATA should be expanded and the HITRAN file
+02\_HIT96.par will be required in the working directory. Here we will
+show the interactive form of the program. Alternatively the {\tt Ccorr\_k}
+script could be used.):
+
+{\small
+\begin{verbatim}
+$ corr_k
+
+Give the name of the LbL absorption coefficient file.
+co2_lbl.nc
+
+Will a HITRAN database be provided? Type:
+  L for line database (.par)
+  X for cross-section database (.xsc)
+  N for none.
+l
+
+Give the name of the HITRAN .par database.
+02_hit12.par
+
+Enter location of parsum.dat.
+$RAD_DATA/gases/parsum.dat
+
+Enter the name of the spectral file.
+sp_sw_sv39
+
+Is an instrumental response required? (Y/N)
+y
+
+Give the instrumental response.
+$RAD_DATA/channels/seviri_ir39
+Are line absorption data to be generated? (Y/N)
+y
+Are foreign continuum data to be generated? (Y/N)
+n
+Are self_broadened continuum data to be generated? (Y/N)
+n
+Enter the identifier for the gas to be considered.
+2
+
+Enter first and last bands to be considered.
+1 1
+
+Setting of pressures and temperatures:
+
+Enter "f" to read from a file or "i" to set values interactively.
+i
+Specify pressure and corresponding temperatures (*END to finish)
+6.00e3 190. 210. 230.
+Specify pressure and corresponding temperatures (*END to finish)
+1.25e4 190. 210. 230.
+Specify pressure and corresponding temperatures (*END to finish)
+2.50e4 200. 225. 250.
+Specify pressure and corresponding temperatures (*END to finish)
+5.00e4 225. 250. 275.
+Specify pressure and corresponding temperatures (*END to finish)
+1.00e5 250. 275. 300.
+Specify pressure and corresponding temperatures (*END to finish)
+*END
+Are scaling functions/lookup tables required? (Y/N)
+y
+
+Enter the type of scaling function.
+2
+
+Are the reference conditions to be set interactively or from a file? (I/F)
+i
+Enter reference pressure and temperature in band     1
+2.50e4 225.0
+
+Enter the line-cutoff in m-1
+2500.0
+
+Enter the frequency increment for integration in m-1
+1.0
+
+Enter the type of c-k fit required.
+
+1
+
+Enter the tolerance for the fit.
+
+1.0e-2
+
+Enter the maximum pathlength for the absorber.
+
+10.0
+
+Select the method of weighting the transmittances.
+    1. Planckian weighting at transmission temperature.
+    2. Differential planckian weighting at transmission temperature.
+    3. TOA solar spectral weighting.
+    4. Uniform weighting.
+Enter required number.
+
+3
+
+Enter the name of the file containing the solar irradiance data.
+$RAD_DATA/solar/kurucz_95_reduced
+
+Give the name of the output file.
+svswfit_co2
+
+Give the name of the monitoring file.
+svswfit_mon_co2
+===============================
+corr_k : Execution starts 
+ at 17:04:05 on 04/04/2014
+Band   1 limits adjusted to:  208768.000  327869.000 m-1
+===============================
+Processing band     1
+Gas required:    CO2
+Band limits:  2062.680000   3303.690000
+Opened HITRAN data file 
+Number of HITRAN lines in band: 116100
+Wavenumbers of min and max lines are:  1938.637060   3427.784093
+Calculation of absorption coefficients at  6.000E+03 Pa and  1.900E+02 K
+Calculation of absorption coefficients at  6.000E+03 Pa and  2.100E+02 K
+Calculation of absorption coefficients at  6.000E+03 Pa and  2.300E+02 K
+Calculation of absorption coefficients at  1.250E+04 Pa and  1.900E+02 K
+Calculation of absorption coefficients at  1.250E+04 Pa and  2.100E+02 K
+Calculation of absorption coefficients at  1.250E+04 Pa and  2.300E+02 K
+Calculation of absorption coefficients at  2.500E+04 Pa and  2.000E+02 K
+Calculation of absorption coefficients at  2.500E+04 Pa and  2.250E+02 K
+Calculation of absorption coefficients at  2.500E+04 Pa and  2.500E+02 K
+Calculation of absorption coefficients at  5.000E+04 Pa and  2.250E+02 K
+Calculation of absorption coefficients at  5.000E+04 Pa and  2.500E+02 K
+Calculation of absorption coefficients at  5.000E+04 Pa and  2.750E+02 K
+Calculation of absorption coefficients at  1.000E+05 Pa and  2.500E+02 K
+Calculation of absorption coefficients at  1.000E+05 Pa and  2.750E+02 K
+Calculation of absorption coefficients at  1.000E+05 Pa and  3.000E+02 K
+ Number of k-terms in band:            6
+===============================
+corr_k : Execution ends   
+ at 17:08:39 on 04/04/2014
+===============================
+\end{verbatim}
+}
+
+The generated fit can then be added to the spectral file using
+{\tt prep\_spec}:
+
+{\small
+\begin{verbatim}
+$ prep_spec
+Enter the name of the spectral file.
+sp_sw_sv39
+Type "a" to append data to the existing file;
+  or "n" to create a new file.
+a
+
+Select from the following types of data:
+      2.   Block 2: Solar spectrum in each band.
+      3.   Block 3: Rayleigh scattering in each band.
+      5.   Block 5: k-terms and p, T scaling data.
+      6.   Block 6: Thermal source function in each band.
+      9.   Block 9: Continuum extinction and scaling data.
+      10.  Block 10: Droplet parameters in each band.
+      11.  Block 11: Aerosol parameters in each band.
+      12.  Block 12: Ice crystal parameters in each band.
+      -1.  To write spectral file and exit.
+      -2.  To quit without writing spectral file.
+
+
+5
+
+enter the name of the file of esft data.
+svswfit_co2
+\end{verbatim}
+}
+
+This will add the following block to the spectral file for the CO2
+absorption coefficients (6 k-terms):
+
+{\small
+\begin{verbatim}
+*BLOCK: TYPE =    5: SUBTYPE =    0: version =    1
+Exponential sum fiting coefficients: (exponents: m2/kg)
+Band        Gas, Number of k-terms, Scaling type and scaling function,
+             followed by reference pressure and temperature,
+                   k-terms, weights and scaling parameters.
+    1           1           6           2           2
+       2.500000000E+04       2.250000000E+02
+    4.820386294E-04    9.356713378E-01    1.989931390E-01    1.923337296E+00
+                                         -1.309827391E+00
+    3.246306915E-01    2.993051740E-02    8.797685008E-01    2.311229496E+00
+                                         -1.265889618E+00
+    1.097340512E+01    1.367939377E-02    8.105283591E-01    1.268958997E+00
+                                         -1.664535414E+00
+    1.110700060E+02    1.708563272E-02    8.029082834E-01    3.824743186E-03
+                                         -1.006268013E+00
+    2.306389704E+03    2.948210815E-03    4.808108016E-01   -1.509617263E-01
+                                         -2.860907846E+00
+    5.015212272E+04    6.849075190E-04   -2.813477713E-01   -3.104128796E-01
+                                         -3.377901661E+00
+    1           2           1           0           0
+       1.236858101-312       1.236858101-312
+    0.000000000E+00    1.000000000E+00
+*END
+\end{verbatim}
+}

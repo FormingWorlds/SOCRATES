@@ -1,0 +1,179 @@
+The list below gives the recognized headers to be used for raw input and the   
+corresponding suffixes for CDL/netCDF files (found in {\tt src/modules\_gen/input\_head\_pcf.f90}).
+
+\begin{tabbing}
+\small
+{\it Column Heading } \hspace{.5in} \= {\it File Suffix} \hspace{.5in}\= {\it Description }\\
+PRESS  \> p         \> Pressure field \\ 
+HGT    \> hgt       \> Heights above the surface \\  
+TEMP   \> t         \> Temperature \\
+PSTAR  \> pstar     \> Surface Pressure \\
+TSTAR  \> tstar     \> Surface Temperature \\
+O3DEN  \> o3d       \> Mass density of Ozone \\
+H2ODEN \> qd        \> Mass density of Water Vapour \\
+LWC    \> lwc       \> Liquid Water Content \\
+LWM    \> lwm       \> Liquid Water Mass Fraction \\
+RE     \> re        \> Effective Radius of Water Droplets \\
+LWCCV  \> lwccv     \> Convective Liquid Water Content \\
+LWMCV  \> lwmcv     \> Convective Liquid Water Mass Fraction \\
+RECV   \> recv      \> Effective Radius of Convective Water Droplets \\
+IWC    \> iwc       \> Ice Water Content \\
+IWM    \> iwm       \> Ice Water Mass Fraction \\
+IRE    \> irecv     \> Effective Radius of Ice Crystals \\
+IWCCV  \> iwccv     \> Convective Ice Water Content \\
+IWMCV  \> iwmcv     \> Convective Ice Water Mass Fraction \\
+IRECV  \> irecv     \> Effective Radius of Convective Ice Crystals \\
+CLFRAC \> clfr      \> Cloud Fraction \\
+CVFRAC \> ccfr      \> Convective Cloud Fraction \\
+WCLFRC \> wclfr     \> Water Cloud Fraction \\
+ICLFRC \> iclfr     \> Ice Cloud Fraction \\
+CWFRAC \> wccfr     \> Convective Water Cloud Fraction \\
+CIFRAC \> iccfr     \> Convective Ice Cloud Fraction \\
+TDEW   \> tdw       \> Dew-point Temperature \\
+SPH    \> q         \> Specific Humidity \\
+HMR    \> hmr       \> Humidity Mixing Ratio \\
+RH     \> rh        \> Relative Humidity \\
+*      \> null      \> Null Field (used to define pressure levels) \\
+UFLX   \> uflx      \> Upward Flux \\
+DFLX   \> dflx      \> Diffuse Downward Flux \\
+VFLX   \> vflx      \> Total Downward Flux (Direct plus Diffuse) \\
+SFLX   \> sflx      \> Direct Flux \\
+NFLX   \> nflx      \> Net Downward Flux \\
+HRTS   \> hrts      \> Heating Rate (Kelvin per day) \\
+TAU    \> tau       \> Optical depth \\
+SSA    \> ssa       \> Albedo of Single Scattering \\
+ASYM   \> gsc       \> Asymmetry of Single Scattering \\
+FRWSC  \> fsc       \> Forward scattering parameter \\
+PLANCK \> plk       \> Planck function \\
+DISCRD \> *         \> Discard Column \\
+TLEV   \> tl        \> Temperature on levels \\
+SZEN   \> szen      \> Solar zenith angle \\
+SAZIM  \> sazim     \> Solar azimuthal angle \\
+STOA   \> stoa      \> Solar Irradiance at TOA \\
+SURF   \> surf      \> Type of surface \\
+POLAR  \> vwpol     \> Polar viewing angle \\
+AZIM   \> vwazim    \> Azimuthal viewing angle \\
+RADN   \> radn      \> Radiance \\
+SRFCHR \> surf      \> Surface characteristics \\
+OPWT   \> op\_water \> Optical data for droplets \\
+OPICE  \> op\_ice   \> Optical data for ice crystals \\
+OPSS   \> ss        \> Single scattering properties \\
+ISOS   \> isos      \> Isotropic source \\
+GEOM   \> view      \> Viewing Geometry \\
+PHOTOL \> photol    \> Rate of photolysis \\
+PLEV   \> pl        \> Pressure on Levels \\
+\end{tabbing}
+
+An asterisk in a column indicates that there is no corresponding header
+or suffix for this field since the corresponding functionality would be
+inappropriate.
+
+\section{Gases}
+
+The gases are specified as mass mixing ratios using filenames based on
+their chemical symbols, except in the case of water vapour where the latter
+{\tt q} is used.
+
+\begin{tabbing}
+\small
+{\it Column Heading} \hspace{.5in}\= {\it File Suffix} 
+\hspace{.5in}\= {\it Name of Gas } \\
+H2O     \> q       \> Water Vapour \\
+CO2     \> co2     \> Carbon dioxide \\
+O3      \> o3      \> Ozone \\ 
+N2O     \> n2o     \> Nitrous Oxide \\
+CO      \> co      \> Carbon monoxide \\
+CH4     \> ch4     \> Methane \\
+O2      \> o2      \> Oxygen \\
+NO      \> no      \> Nitrogen monoxide \\
+SO2     \> so2     \> Sulphur dioxide \\
+NO2     \> no2     \> Nitrogen dioxide \\
+NH3     \> nh3     \> Ammonia \\
+HNO3    \> hno3    \> Nitric acid \\
+N2      \> n2      \> Nitrogen \\
+CFC11   \> cfc11   \> CFC-11 \\
+CFC12   \> cfc12   \> CFC-12 \\
+CFC113  \> cfc113  \> CFC-113 \\
+HCFC22  \> hcfc22  \> HCFC-22 \\
+HFC125  \> hfc125  \> HFC-125  \\
+HFC134A \> hfc134a \> HFC-134a \\
+CFC114  \> cfc114  \> CFC-114 \\
+TiO     \> tio     \> Titanium oxide \\
+VO      \> vo      \> Vanadium oxide \\
+H2      \> h2      \> H2-H2 CIA \\
+He      \> he      \> H2-He CIA \\
+OCS     \> ocs     \> Carbonyl sulphide \\
+\end{tabbing}
+
+\section{Aerosols}
+
+In the case of aerosols the headings for the columns and the suffixes for 
+the files are:
+
+\begin{tabbing}
+\small
+{\it Column Heading} \hspace{.5in}\= {\it File Suffix} 
+\hspace{.5in}\= {\it Name of Aerosol} \\
+WTSOL    \> wtsol     \>  Water Soluble Aersol         \\
+DUST     \> dust      \>  Dust-like Aerosol            \\
+OCN      \> ocn       \>  Oceanic Aerosol              \\
+SOOT     \> soot      \>  Sooty Aerosol                \\
+ASH      \> ash       \>  Volcanic ash                 \\
+SULPH    \> sulph     \>  Sulphuric acid droplets      \\
+NH4SO4   \> nh4so4    \>  Ammonium Sulphate            \\
+AUNCH    \> aunch     \>  Uncharacterized Aerosol      \\
+SAHARA   \> sahara    \>  Saharan Dust Aerosol         \\
+ACCUM    \> accum     \>  Accumulation SO4 Aerosol     \\
+AITKEN   \> aitken    \>  Aitken-mode SO4 Aerosol      \\
+FRSOOT   \> frsoot    \>  Fresh Soot Aerosol           \\
+AGSOOT   \> agsoot    \>  Aged Soot Aerosol            \\
+NACL     \> nacl      \>  Generic Sodium Chloride      \\
+NACLFLM  \> naclflm   \>  Sodium Chloride (Film mode)  \\
+NACLJET  \> nacljet   \>  Sodium Chloride (Jet mode)   \\
+DUSTDIV1 \> dustdiv1  \>  Dust aerosol (division 1)    \\
+DUSTDIV2 \> dustdiv2  \>  Dust aerosol (division 2)    \\
+DUSTDIV3 \> dustdiv3  \>  Dust aerosol (division 3)    \\
+DUSTDIV4 \> dustdiv4  \>  Dust aerosol (division 4)    \\
+DUSTDIV5 \> dustdiv5  \>  Dust aerosol (division 5)    \\
+DUSTDIV6 \> dustdiv6  \>  Dust aerosol (division 6)    \\
+BIOMS1   \> bioms1    \>  Biomass aerosol (division 1) \\
+BIOMS2   \> bioms2    \>  Biomass aerosol (division 2) \\
+BIOGENIC \> biogenic  \>  Biogenic aerosol             \\
+FROCFF   \> frocff    \>  Fresh fossil-fuel org. carbon\\
+AGOCFF   \> agocff    \>  Aged fossil-fuel org. carbon \\
+DELTA    \> delta     \>  Unspecified (delta) aerosol  \\
+NITRATE  \> nitrate   \>  Ammonium nitrate aerosol     \\
+DUST2BIN1\> dust2bin1 \>  Two-bin Dust aerosol (div 1) \\
+DUST2BIN2\> dust2bin2 \>  Two-bin Dust aerosol (div 2) \\
+
+\end{tabbing}
+
+File suffixes for the optical properties of each aerosol are as above, beginning with the letters op\_ e.g. .dust becomes .op\_dust.
+
+\section{Units}
+
+The recognized units for use in headers are these:
+
+\begin{tabbing}
+\small
+{\it Symbol for Unit } \hspace{.5in}
+\= {\it Name of Unit } \\
+PA    \> Pascal \\
+MB    \> Millibar \\ 
+K     \> Kelvin \\
+M     \> Metre \\
+KM    \> Kilometre \\
+UM    \> Micron \\
+KGM-3 \> Kilograms per cubic metre \\
+GM-3  \> Grams per cubic metre \\
+KGM-2 \> Kilograms per square metre \\
+GM-2  \> Grams per square metre \\
+GKG-1 \> Grams per kilogram \\
+GG-1  \> Grams per gram \\
+NONE  \> Dimensionless quantity \\
+M-3   \> Number per cubic metre \\
+CM-3  \> Number per cubic centimetre \\
+WM-2  \> Watts per square metre \\
+C     \> Degrees Celsius \\
+PPMV  \> Parts per million by volume \\
+\end{tabbing}

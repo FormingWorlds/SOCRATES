@@ -1,0 +1,70 @@
+A collection of example scripts are available in the directory {\tt \$RAD\_DIR/examples}. These cover a variety of usage cases including:
+
+\begin{description}
+\item[{\tt rc3}]
+: The files in this directory contain the inputs for running the
+radiance code on monochromatic data (executable run\_mono) to repeat the
+3rd test of the international radiation commission (see Benassi et al.).
+These replicate a standard test of monochromatic solar
+radiances in specific directions.
+
+\item[{\tt aer\_cmp}]
+: An example of using the code to run ICRCCM case 27 (LW) on AER profiles.
+The files laer27... contain atmospheric profiles for ICRCCM case27
+as used by the AER LBL code given in CDL format. The calculation of
+fluxes can be performed using the script run27, which gives an example of
+how the code is run. The files aer\_... are the results from the AER LbL code
+itself.
+
+\item[{\tt prsc}]
+: An example of using prescribed optical
+properties for a water cloud. The file {\tt input\_prsc} defines a simple
+atmosphere and the script {\tt p1.scr} will run appropriate programs.
+
+\item[{\tt netcdf}]
+: Contains data to test the netCDF code ({\tt l\_run\_cdf}). The directory
+{\tt netcdf/7460\_28} contains example netCDF input and output 
+files for a 1x20 column section of Cloud Resolving Model data. The
+directory {\tt netcdf/CIRC\_case6} contains input files for a case study
+from the CIRC (Continual Intercomparison of Radiation Codes) project. 
+{\tt README} files give instructions for testing.
+
+\item[{\tt aerosols}]
+: Contains a script to generate monochromatic single scattering properties
+of the aerosols used operationally with HadGEM3.
+
+\item[{\tt droplets}]
+: Contains a script to generate cloud droplet optical properties using the
+method employed for the operational spectral files.
+
+\item[{\tt corr\_k}]
+: Creates a skeleton 300 band LW spectral file, calculates example
+water vapour k-terms for bands 38-40 using a cut-down HITRAN line
+list, and adds foreign and self broadened continuum coefficients.
+CFC-113 coefficients are also added as an example of the use of
+cross-section data.
+
+\item[{\tt prep\_data}]
+: Test script for scatter\_90, scatter\_average\_90 and prep\_spec provided by
+Marc Stringer and Jolene Cook at Reading.
+
+\item[{\tt raw\_input}]
+: Demonstrates the use of the raw\_input program to convert column data into
+input files (CDL) for the ES code, including the conversion from units of
+parts-per-million by volume to kg/kg.
+
+\item[{\tt sp\_lw\_jm}]
+: Scripts to create the entire 300 and 9 band LW spectral files from scratch
+as intended for the next version of the Met Office global model (GA7).
+These take a long time to run (days) and use a lot of space ($\sim$20G).
+
+\item[{\tt sp\_sw\_jm}]
+: Scripts to create the entire 260 and 6 band SW spectral files from scratch
+as intended for the next version of the Met Office global model (GA7).
+These take a long time to run (days) and use a lot of space ($\sim$20G).
+
+\item[{\tt spectral\_var}]
+: Adds a look-up table of solar spectral variability data to the GA7
+shortwave spectral file. See section~\ref{sec_spectral_var} for further details.
+
+\end{description}

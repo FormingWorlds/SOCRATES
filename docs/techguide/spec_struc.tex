@@ -1,0 +1,126 @@
+\section{The Structure of Spectral Files}
+
+The file consists of a number of blocks of data, each referring to a different
+physical process. The flag {\tt l\_present(i)} is set to {\tt .TRUE.} if
+a block of type {\tt i} is present: not all possible blocks are required
+for all calculations.
+
+\begin{description}
+
+\item[Block 0]
+contains the number and physical natures of gases and aerosols. There are
+a vast number of gases and aerosols in the atmosphere, not all of which
+are relevant in all applciations. In each spectral file a subset of all
+the gases is selected and indexed $1,\ldots,n$. This number is referred
+to as the indexing number and is used internally by the radiation code.
+There is still a need to know the physical nature of each species, and this
+is recorded by the $type$ number. The array {\tt TYPE\_ABSORB} holds the
+type numbers for gaseous absorbers. The meaning of these numbers is set
+in the module {\tt gas\_list\_pcf}. Aerosols are indexed in a similar
+way, the type numbers for these being recorded in {\tt rad\_pcf}.
+
+\item[Block 1]
+contains the limits of the spectral bands used as wavelengths in metres.
+{\it Note: UM standards require the use of SI units.} In a number of UM
+shortwave files, it will be observed that some bands have the same limits:
+this indicates that they are not true spectral bands, and that one should
+not consider the fluxes in individual bands alone, but only the sum of
+the fluxes in the bands which does represent the true flux across the
+specified region. For example, if band 1 is specified as running from
+0.2--0.32 $\mu$m, but bands 2 and 3 both have limits 0.32--0.69$\mu$m,
+it is meaningful to consider the flux in band 1 as representing the true
+flux between 0.2 and 0.32 $\mu$m, but the flux in band 2 or band 3 should not
+be considered alone: all that can be said is that the sum of the fluxes 
+in bands 2 and 3 can meaningfully be taken as that in the region
+0.32--0.69$\mu$m.
+
+\item[Block 2]
+is required only in shortwave files and contains the fraction of the solar
+spectrum in each band.
+
+\item[Block 3]
+is required only in shortwave files and contains the Rayleigh scattering 
+coefficients.
+
+\item[Block 4]
+contains the list of gaseous absorbers active in each band, listed by their
+indexing numbers. Note that the first gas listed must be the primary
+absorber in the band {\em i.e.} that which makes the greatest contribution
+to the atmospheric absorption when considered alone.
+
+\item[Block 5]
+contains the $k$-fits to the gaseous transmissions.
+
+\item[Block 6]
+is required only for infra-red calculations and contains the 
+coefficients of a polynomial fit to the Planck function in
+each band.
+
+\item[Block 7]
+is obsolete and not present in any file used in the UM.
+
+\item[Block 8]
+contains the list of continuum absorbers in each band. In principle, there
+are several species of continuum absorber, but in practice the main
+continua are the self and foreign-broadened continua of water vapour.
+
+\item[Block 9]
+contains the continuum absorption coefficients in each band.
+
+\item[Block 10]
+contains parametrizations for the single scattering properties of
+droplets. The file may contain data for a number of different
+{\em types} of droplet. The term type is deliberately vague to
+allow for flexibility: a different type may indicate a parametrization
+appropriate to a different collection of droplets, say droplets in
+convective clouds and stratiform clouds, a different parametrization
+of the same data or different spectral averaging. Type numbers are
+supplied at runtime and must be selected for the appropriate spectral
+file. The details are given below. 
+Parametrizations are generated 
+over a range of particle sizes, so the minimum and  maximum dimensions
+for which the parametrization is valid are recorded as well.
+
+\item[Block 11]
+contains data on aerosols. The selection of aerosols included is very varied
+and is described for each file listed below.
+
+\item[Block 12]
+contains parametrizations for the single scattering properties of
+ice crystals. The file may contain data for a number of different
+{\em types} of droplet. As for water droplets, 
+the term type is deliberately vague to
+allow for flexibility: a different type may indicate a parametrization
+appropriate to a different collection of ice crystals, say, crystals in
+convective clouds and stratiform clouds, a different parametrization
+of the same data, a different crystal shape, or different spectral 
+averaging. Type numbers are
+supplied at runtime and must be selected for the appropriate spectral
+file. The details are given below.
+Parametrizations are generated 
+over a range of particle sizes, so the minimum and  maximum dimensions
+for which the parametrization is valid are recorded as well.
+
+\item[Block 13]
+is only relevant in the longwave region and is obsolescent. It contains 
+heuristic adjustments for Doppler broadening. Eventually, these will be
+moved to block 5.
+
+\item[Block 14]
+specifies exclusions. In the original version of the radiation code a 
+band had to be a contiguous range of frequencies, but for use in the
+UM it was desirable to allow for split bands. 
+This concept is most easily
+explained by an example. If we specify that band 5 extends from 8 to 12
+$\mu$m and band 6 from 10--11$\mu$m, and exclude band 6 from band 5, this
+means that we take band 5 effectively to consist of the regions 
+8--10 $\mu$m and 11--12$\mu$m. In this case, the limits for band 6 will
+naturally be set as 10 and 11 $\mu$m, but band 5 will have limits of
+8 and 12 $\mu$m. Exclusions are of importance in the generation of the
+spectral file, but are not of such relevance in runs in the UM. If diagnostics
+covering only a portion of the spectrum were defined, it would be 
+necessary to know about any exclusions in order to weight the contributions
+from individual bands appropriately. Split bands are used only for reasons
+of efficiency.
+
+\end{description}

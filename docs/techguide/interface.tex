@@ -1,0 +1,61 @@
+
+The interface to the core radiation code is designed to present a clear and logical structure to the input and output fields. This is done by wrapping related variables into defined types. All arguments passed to the routine radiance\_calc are contained within 8 defined types:
+
+\begin{description}
+\item[control:] control options initially read in via a namelist
+\item[dimen:] dimensions for arrays
+\item[spectrum:] spectral discretisation and optical properties read in from the spectral file
+\item[atm:] grid discretisation and atmospheric profiles of thermodynamic quantities and gas amounts
+\item[cld:] cloud fields (fractions, mixing ratios and sub-grid structure)
+\item[aer:] aerosol fields (mixing ratios for CLASSIC aerosols, optical properties for GLOMAP-MODE aerosols)
+\item[bound:] boundary conditions at top-of-atmosphere and surface (input fluxes, albedo/emissivity etc)
+\item[radout:] all output variables (fluxes and other diagnostics)
+\end{description}
+
+The first 7 defined types are INTENT(IN) and radout is INTENT(OUT). All variables required or output by the code are contained within these types: modules are only used to pass parameters, constants and type definitions.
+
+The structure of the interface from the calling model (such as the UM) should look like this:
+
+\begin{verbatim}
+CALL read_control -- sets up control (elements that are not time-step dependent)
+CALL read_spectrum -- sets up spectrum by reading from a standard spectral file
+
+--- Begin loop over time-steps / calls to radiation -->
+
+    CALL set_control -- sets control for this call
+
+    --- Begin loop over OpenMP segments -->
+
+        CALL set_dimen -- sets dimen for segment
+        CALL set_atm   --> CALL allocate_atm(atm, dimen), set atm
+        CALL set_cld   --> CALL allocate_cld(cld, dimen), set cld
+        CALL set_aer   --> CALL allocate_aer(aer, dimen), set aer
+        CALL set_bound --> CALL allocate_bound(bound, dimen), set bound
+
+        CALL radiance_calc(control, dimen, spectrum, atm, cld, aer, bound, radout)
+                       --> CALL allocate_out(radout, dimen), calculate radout
+
+        --> Assign required variables from radout onto full model grid
+
+        DEALLOCATE(atm, cld, aer, bound, radout)
+
+    <-- End loop over OpenMP segments ---
+
+<-- End loop over time-steps / calls to radiation ---
+\end{verbatim}
+
+This structure is repeated for the SW and LW radiation calls.
+
+The core radiation code will contain the interface definition comprising the routines:
+
+\begin{description}
+\item[read\_spectrum:] a standard routine to read in spectral files that can then be used interchangeably between models
+\item[def\_spectrum, def\_control, def\_dimen, def\_atm, def\_cld, def\_aer, def\_bound, def\_out:] type definitions including associated allocate/deallocate routines (and netCDF read/write routines in the future)
+\item[radiance\_calc and called routines:] the core radiation code itself
+\end{description}
+
+The calling model will contain the routines to set the input variables:
+
+\begin{description}
+\item[set\_control, set\_dimen, set\_atm, set\_cld, set\_aer, set\_bound:] these will USE the def\_ modules from the core code.
+\end{description}
