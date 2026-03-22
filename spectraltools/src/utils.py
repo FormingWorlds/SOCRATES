@@ -42,7 +42,7 @@ def is_ascending(arr):
     if l < 2:
         return True
     for i in range(1,l):
-        if not arr[i] >= arr[i-1]:
+        if not arr[i] > arr[i-1]:
             return False
     return True
 
@@ -151,7 +151,6 @@ for line in gas_list_raw:
     if read_start:
         line_splt = line.strip().replace(" ","").replace("'","").replace("&","").split(',')
         gas_list.extend([s for s in line_splt if len(s) > 0])
-print(gas_list)
 
 absorber_id = {}
 for i,g in enumerate(gas_list):

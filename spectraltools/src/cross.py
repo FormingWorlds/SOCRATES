@@ -302,7 +302,7 @@ class xsec():
         self.t = t
         self.arr_nu = np.array(tmp_nu)
         self.numin = tmp_nu[0]
-        self.numax = tmp_nu[1]
+        self.numax = tmp_nu[-1]
         self.nbins = len(tmp_nu)
         self.arr_k = np.array(tmp_k)
         self.arr_k = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
