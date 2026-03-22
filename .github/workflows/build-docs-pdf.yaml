@@ -28,13 +28,9 @@ jobs:
             texlive-latex-extra \
             texlive-bibtex-extra \
             texlive-fonts-recommended \
-            texlive-a4wide \
             texlive-luatex \
-            texlive-parskip \
-            texlive-pdfpages \
-            texlive-texdraw \
+            latexdraw \
             texlive-pictures \
-            texlive-metafont \
             ghostscript \
             groff-base
 
