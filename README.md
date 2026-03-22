@@ -60,6 +60,9 @@ in netCDF format to be used as input for the radiation code (l_run_cdf).
 
 `docs/` contain the user guide and technical guide for the Socrates code.
 
+The latest PDFs built by GitHub Actions are available from the
+[Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
+
 ## Compiling the source code within the Met Office
 
 For users within the Met Office simply run the command:

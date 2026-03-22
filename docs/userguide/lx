@@ -1,3 +1,5 @@
+#!/bin/bash
+
 MANPATH=../../man:$MANPATH
 export MANPATH
 man -t Ccorr_k | ps2pdf -sPAPERSIZE=a4 - Ccorr_k.pdf
@@ -8,7 +10,18 @@ man -t Ccdl2cdf | ps2pdf -sPAPERSIZE=a4 - Ccdl2cdf.pdf
 man -t Ccdf2cdl | ps2pdf -sPAPERSIZE=a4 - Ccdf2cdl.pdf
 man -t Cl_run_cdf | ps2pdf -sPAPERSIZE=a4 - Cl_run_cdf.pdf
 man -t calc_horizon_angles | ps2pdf -sPAPERSIZE=a4 - calc_horizon_angles.pdf
-pdflatex socrates_userguide
+
+
+function cleantex(){
+    rm -f *.log *.aux *.out *.log *.toc *.blg *.bbl
+}
+
+cleantex
+
+pdflatex socrates_userguide -interaction=nonstopmode
 bibtex socrates_userguide
-pdflatex socrates_userguide
-pdflatex socrates_userguide
+pdflatex socrates_userguide -interaction=nonstopmode
+pdflatex socrates_userguide -interaction=nonstopmode
+
+cleantex
+

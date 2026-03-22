@@ -11,6 +11,10 @@ docs/**/*.aux
 docs/**/*.out
 docs/**/*.pdf
 docs/**/*.toc
+docs/**/*.blg
+docs/**/*.toc
+docs/**/*.bbl
+
 
 # Model files
 set_rad_env

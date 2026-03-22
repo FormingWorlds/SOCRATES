@@ -1,4 +1,14 @@
-pdflatex socrates_techguide
+#!/bin/bash
+
+function cleantex(){
+    rm -f *.log *.aux *.out *.log *.toc *.blg *.bbl
+}
+
+cleantex
+
+pdflatex socrates_techguide -interaction=nonstopmode
 bibtex socrates_techguide
-pdflatex socrates_techguide
-pdflatex socrates_techguide
+pdflatex socrates_techguide -interaction=nonstopmode
+pdflatex socrates_techguide -interaction=nonstopmode
+
+cleantex
