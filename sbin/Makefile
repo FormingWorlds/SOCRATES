@@ -27,3 +27,6 @@ Cscale_field: Cscale_field.c
 new:
 	touch Cinc_field.c Cscale_field.c
 	make
+
+clean:
+	rm -f Cinc_field Cscale_field

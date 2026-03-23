@@ -1,15 +1,16 @@
-#
-# Pathnames for compilers and global options for naming files
-#
-FORTCOMP        = gfortran -O -c
-LINK            = gfortran -O
-LIBLINK         = ar rvu
-INCCDF_PATH     = /usr/include
-LIBCDF_PATH     = /usr/lib
-LIBCDF_NAME     = netcdff
-OMPARG          = -fopenmp
-FLAGS_ODEPACK   = -w -std=legacy -fallow-argument-mismatch
-
-LIBSUFFIX       = a
-
-.SUFFIXES: $(SUFFIXES) .f90
+# Generated automatically
+# System: Linux delphinium 6.19.8-200.fc43.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Mar 13 22:06:06 UTC 2026 x86_64 GNU/Linux 
+# Date: Sat 21 Mar 19:36:59 GMT 2026 
+ 
+FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch  -c 
+LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch  
+LIBLINK         = /usr/bin/ar rvu 
+INCCDF_PATH     = /usr/include -I/usr/lib64/gfortran/modules 
+LIBCDF_PATH     = netcdff 
+LIBCDF_NAME     = netcdff 
+OMPARG          = -fopenmp 
+ 
+LIBSUFFIX       = a 
+ 
+.SUFFIXES: $(SUFFIXES) .f90 
+ 

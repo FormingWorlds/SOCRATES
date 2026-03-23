@@ -1,3 +1,42 @@
+# Misc files
+.vscode
+.DS_Store
+nogit*
+__pycache__
+fort.20
+screenlog.0
+*.log
+
+docs/**/*.aux
+docs/**/*.out
+docs/**/*.pdf
+docs/**/*.toc
+docs/**/*.blg
+docs/**/*.toc
+docs/**/*.bbl
+
+
+# Model files
+set_rad_env
+radiation_code.lock
+bin/
+sbin/Cgen_null
+sbin/Cinc_field
+sbin/Cscale_field
+*.o
+*.mod
+make/Mk_cmd
+Mk_cmd
+julia/lib/*.so
+julia/gen/*.jl
+julia/gen/*.f90
+
+# Outputs
+spectraltools/output
+spectraltools/output/
+spectraltools/data
+spectraltools/data/
+spectraltools/moleculesUV/
 __pycache__
 .vscode
 .idea
