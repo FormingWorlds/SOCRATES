@@ -6,7 +6,8 @@ import src.dace as dace
 import src.utils as utils
 import src.netcdf as netcdf
 
-import sys, os
+import sys
+import os
 
 # Main function
 def main(formula:str):

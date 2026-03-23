@@ -1,7 +1,9 @@
 # Tools for handling socrates spectral files
 
 import numpy as np
-import os, subprocess, time
+import os
+import subprocess
+import time
 import src.utils as utils
 from netCDF4 import Dataset
 

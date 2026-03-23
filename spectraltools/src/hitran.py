@@ -2,8 +2,7 @@
 
 # Import system libraries
 from glob import glob
-import numpy as np
-import os, shutil
+import os
 
 # Import files
 import src.cross as cross

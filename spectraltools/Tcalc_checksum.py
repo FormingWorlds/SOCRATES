@@ -1,7 +1,8 @@
 #!/usr/bin/env python3 
 # Calculate the checksum of a file, for verifying spectral file or data integrity
 
-import sys, os
+import sys
+import os
 import src.utils as utils
 
 def main(fpath:str):

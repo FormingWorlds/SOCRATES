@@ -3,7 +3,10 @@
 
 # Import local files 
 import src.utils as utils
-import os, glob, argparse, time
+import os
+import glob
+import argparse
+import time
 
 # Main function
 def main(alias:str, rm_netcdf:bool, dryrun:bool):

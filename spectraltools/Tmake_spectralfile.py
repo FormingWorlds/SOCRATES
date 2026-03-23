@@ -8,7 +8,8 @@ import src.dace as dace
 import src.cross as cross
 import src.phys as phys
 import src.netcdf as netcdf
-import os, glob
+import os
+import glob
 import numpy as np
 import time
 
@@ -45,7 +46,7 @@ def main():
     # Check volatile names
     for i in range(len(vols)):
         safe = phys.chemsafe(vols[i])
-        if safe == None:
+        if safe is None:
             raise Exception("Invalid gas '%s'"%vols[i])
         vols[i] = safe
 

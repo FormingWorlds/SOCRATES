@@ -5,7 +5,8 @@
 import src.cross as cross
 import src.utils as utils
 
-import os, argparse
+import os
+import argparse
 
 # Main function
 def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas:str):

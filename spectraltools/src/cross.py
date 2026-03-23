@@ -2,7 +2,9 @@
 
 # Libraries
 import numpy as np
-import struct, os, io
+import struct
+import os
+import io
 
 # Files
 import src.phys as phys
@@ -222,11 +224,11 @@ class xsec():
 
         # Process header
         i = 20
-        self.numin = float(head[i:i+10]);   i += 10
-        self.numax = float(head[i:i+10]);   i += 10
-        self.nbins = int(  head[i:i+7 ]);   i += 7
-        self.t     = float(head[i:i+7 ]);   i += 7
-        self.p     = float(head[i:i+6 ]);   i += 6
+        self.numin = float(head[i:i+10]);   i += 10  # noqa
+        self.numax = float(head[i:i+10]);   i += 10  # noqa
+        self.nbins = int(  head[i:i+7 ]);   i += 7   # noqa
+        self.t     = float(head[i:i+7 ]);   i += 7   # noqa
+        self.p     = float(head[i:i+6 ]);   i += 6   # noqa
         self.p /= 750.06 # convert torr to bar
 
         # Process body
@@ -429,12 +431,12 @@ class xsec():
 
         if xaxis == 'wavelength': # Assumes that user input in wavelength [nm] units
             # Crop data
-            if (xmin == None):
+            if (xmin is None):
                 xmin = self.numax # The minimum value in wavelength is the maximum value in wavenumber
             else:
                 xmin = min(1e7/xmin, self.numax)
             xmin_idx = np.argmin( abs(self.arr_nu-xmin))
-            if (xmax == None):
+            if (xmax is None):
                 xmax = self.numin # The maximum value in wavelength is the minimum value in wavenumber
             else:
                 xmax = max(1e7/xmax, self.numin)
@@ -456,12 +458,12 @@ class xsec():
 
         elif xaxis == 'wavenumber':
             # Crop data
-            if (xmin == None):
+            if (xmin is None):
                 xmin = self.numin
             else:
                 xmin = max(xmin, self.numin)
             xmin_idx = np.argmin( abs(self.arr_nu-xmin))
-            if (xmax == None):
+            if (xmax is None):
                 xmax = self.numax
             else:
                 xmax = min(xmax, self.numax)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Download CIA databases from HITRAN website
 
-import requests, os, glob
+import requests
+import os
 
 import src.utils as utils
 

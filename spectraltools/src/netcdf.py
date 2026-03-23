@@ -2,7 +2,6 @@
 
 import numpy as np
 from netCDF4 import Dataset
-import os
 
 import src.utils as utils
 import src.cross as cross

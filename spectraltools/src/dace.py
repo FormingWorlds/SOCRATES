@@ -2,7 +2,9 @@
 
 # Import system libraries
 import numpy as np
-import os, glob, shutil
+import os
+import glob
+import shutil
 
 # Import files
 import src.cross as cross
@@ -209,7 +211,9 @@ def map_ptf(directory:str, p_targets:list=[], t_targets:list=[], allow_itp:bool=
 def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_arr, outdir:str):
 
     from dace_query.opacity import Molecule
-    import h5py, struct, subprocess
+    import h5py
+    import struct
+    import subprocess
 
     # Validate p,t
     len_p = len(p_arr)
@@ -368,7 +372,9 @@ def extend(outdir:str, t_extend):
         t_close = utils.get_closest(t_req, all_t)
 
         # Find all source points at this temperature
-        t_src = []; p_src = []; f_src = []
+        t_src = []
+        p_src = []
+        f_src = []
         for i in range(all_n):
             if abs(all_t[i] - t_close) < 1.0e-10:
                 t_src.append(all_t[i])

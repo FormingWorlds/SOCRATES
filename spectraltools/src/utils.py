@@ -5,7 +5,7 @@ import numpy as np
 import hashlib
 
 # Check that SOCRATES is setup
-if not ("RAD_DIR" in os.environ.keys()) or (os.environ["RAD_DIR"] == None):
+if "RAD_DIR" not in os.environ.keys() or (os.environ["RAD_DIR"] is None):
     raise Exception("Cannot find SOCRATES! Refer to README.md")
 
 # Named directories
@@ -53,9 +53,9 @@ def is_unique(arr):
 
 # Convert all of the values in an array into one long string
 def get_arr_as_str(arr):
-    if type(arr[0]) == float:
+    if type(arr[0]) is float:
         return " ".join(["%g"%v for v in arr])
-    elif type(arr[0]) == int:
+    elif type(arr[0]) is int:
         return " ".join(["%d"%v for v in arr])
     else:
         return " ".join([str(v) for v in arr])
