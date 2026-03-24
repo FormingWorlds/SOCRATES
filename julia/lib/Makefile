@@ -1,8 +1,9 @@
 LIB = .so
 LDFLAGS = -ldl
 SHLIBFLAGS = -shared
-FC=gfortran
-FFLAGS = -O3 -Wall -fPIC
+FC="$(command -v gfortran)"
+FFLAGS ="-Ofast -march=native -Wall -fPIC"
+
 
 ifeq ($(shell uname -s),Darwin)
 	FFLAGS += -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/
