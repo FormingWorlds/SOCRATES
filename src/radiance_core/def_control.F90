@@ -210,6 +210,76 @@ TYPE StrCtrl
 !   Flag for absorption by peroxyacetyl nitrate (PAN)
   LOGICAL :: l_ch3ono2                                            = .FALSE.
 !   Flag for absorption by methylnitrate
+  LOGICAL :: l_si                                                 = .FALSE.
+!   Flag for absorption by silicon
+  LOGICAL :: l_sio                                                = .FALSE.
+!   Flag for absorption by silicon monoxide
+  LOGICAL :: l_sio2                                               = .FALSE.
+!   Flag for absorption by silicon dioxide
+  LOGICAL :: l_mg                                                 = .FALSE.
+!   Flag for absorption by atomic magnesium
+  LOGICAL :: l_mg2                                                = .FALSE.
+!   Flag for absorption by magnesium dimer
+  LOGICAL :: l_mgo                                                = .FALSE.
+!   Flag for absorption by magnesium oxide
+  LOGICAL :: l_tio2                                               = .FALSE.
+!   Flag for absorption by titanium dioxide
+  LOGICAL :: l_fe                                                 = .FALSE.
+!   Flag for absorption by atomic iron
+  LOGICAL :: l_feo                                                = .FALSE.
+!   Flag for absorption by iron(ii) oxide
+  LOGICAL :: l_ca                                                 = .FALSE.
+!   Flag for absorption by calcium
+  LOGICAL :: l_cao                                                = .FALSE.
+!   Flag for absorption by calcium oxide
+  LOGICAL :: l_alo                                                = .FALSE.
+!   Flag for absorption by aluminium monoxide
+  LOGICAL :: l_na2                                                = .FALSE.
+!   Flag for absorption by disodium
+  LOGICAL :: l_nao                                                = .FALSE.
+!   Flag for absorption by sodium oxide
+  LOGICAL :: l_naoh                                               = .FALSE.
+!   Flag for absorption by sodium hydroxide
+  LOGICAL :: l_koh                                                = .FALSE.
+!   Flag for absorption by potassium hydroxide
+  LOGICAL :: l_hminus                                             = .FALSE.
+!   Flag for absorption by hydride anion
+  LOGICAL :: l_ps                                                 = .FALSE.
+!   Flag for absorption by phosphorus sulfide
+  LOGICAL :: l_po                                                 = .FALSE.
+!   Flag for absorption by phosphorus monoxide
+  LOGICAL :: l_pn                                                 = .FALSE.
+!   Flag for absorption by phosphorus nitride
+  LOGICAL :: l_ch3sh                                              = .FALSE.
+!   Flag for absorption by methanethiol
+  LOGICAL :: l_ch3s                                               = .FALSE.
+!   Flag for absorption by methylthiyl radical
+  LOGICAL :: l_c2h6s                                              = .FALSE.
+!   Flag for absorption by dimethyl sulfide
+  LOGICAL :: l_c2h6s2                                             = .FALSE.
+!   Flag for absorption by dimethyl disulfide
+  LOGICAL :: l_c3h4                                               = .FALSE.
+!   Flag for absorption by propyne/allene
+  LOGICAL :: l_c4h3                                               = .FALSE.
+!   Flag for absorption by butadiynyl radical
+  LOGICAL :: l_sih4                                               = .FALSE.
+!   Flag for absorption by silane
+  LOGICAL :: l_s2                                                 = .FALSE.
+!   Flag for absorption by disulfur
+  LOGICAL :: l_sf6                                                = .FALSE.
+!   Flag for absorption by sulfur hexafluoride
+  LOGICAL :: l_cs2                                                = .FALSE.
+!   Flag for absorption by carbon disulfide
+  LOGICAL :: l_s8                                                 = .FALSE.
+!   Flag for absorption by octasulfur
+  LOGICAL :: l_cn                                                 = .FALSE.
+!   Flag for absorption by cyanogen radical
+  LOGICAL :: l_ch3cl                                              = .FALSE.
+!   Flag for absorption by methyl chloride
+  LOGICAL :: l_ch3f                                               = .FALSE.
+!   Flag for absorption by methyl fluoride
+  LOGICAL :: l_ch3br                                              = .FALSE.
+!   Flag for absorption by methyl bromide
 
   LOGICAL :: l_include_gas(npd_gases)                             = .FALSE.
 !   Flags to treat radiative effect of gases

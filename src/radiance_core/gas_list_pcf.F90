@@ -20,7 +20,7 @@ IMPLICIT NONE
 
 INTEGER, PRIVATE :: i
 
-INTEGER, PARAMETER :: npd_gases = 75
+INTEGER, PARAMETER :: npd_gases = 110
 !   Number of indexed gases
 
 INTEGER, PARAMETER :: IP_h2o = 1
@@ -173,6 +173,76 @@ INTEGER, PARAMETER :: IP_n2h4 = 74
 !   Identifier for hydrazine
 INTEGER, PARAMETER :: IP_n2o3 = 75
 !   Identifier for dinitrogen trioxide
+INTEGER, PARAMETER :: IP_si = 76
+!   Identifier for silicon
+INTEGER, PARAMETER :: IP_sio = 77
+!   Identifier for silicon monoxide
+INTEGER, PARAMETER :: IP_sio2 = 78
+!   Identifier for silicon dioxide
+INTEGER, PARAMETER :: IP_mg = 79
+!   Identifier for atomic magnesium
+INTEGER, PARAMETER :: IP_mg2 = 80
+!   Identifier for magnesium dimer
+INTEGER, PARAMETER :: IP_mgo = 81
+!   Identifier for magnesium oxide
+INTEGER, PARAMETER :: IP_tio2 = 82
+!   Identifier for titanium dioxide
+INTEGER, PARAMETER :: IP_fe = 83
+!   Identifier for atomic iron
+INTEGER, PARAMETER :: IP_feo = 84
+!   Identifier for iron(ii) oxide
+INTEGER, PARAMETER :: IP_ca = 85
+!   Identifier for calcium
+INTEGER, PARAMETER :: IP_cao = 86
+!   Identifier for calcium oxide
+INTEGER, PARAMETER :: IP_alo = 87
+!   Identifier for aluminium monoxide
+INTEGER, PARAMETER :: IP_na2 = 88
+!   Identifier for disodium
+INTEGER, PARAMETER :: IP_nao = 89
+!   Identifier for sodium oxide
+INTEGER, PARAMETER :: IP_naoh = 90
+!   Identifier for sodium hydroxide
+INTEGER, PARAMETER :: IP_koh = 91
+!   Identifier for potassium hydroxide
+INTEGER, PARAMETER :: IP_hminus = 92
+!   Identifier for hydride anion
+INTEGER, PARAMETER :: IP_ps = 93
+!   Identifier for phosphorus sulfide
+INTEGER, PARAMETER :: IP_po = 94
+!   Identifier for phosphorus monoxide
+INTEGER, PARAMETER :: IP_pn = 95
+!   Identifier for phosphorus nitride
+INTEGER, PARAMETER :: IP_ch3sh = 96
+!   Identifier for methanethiol
+INTEGER, PARAMETER :: IP_ch3s = 97
+!   Identifier for methylthiyl radical
+INTEGER, PARAMETER :: IP_c2h6s = 98
+!   Identifier for dimethyl sulfide
+INTEGER, PARAMETER :: IP_c2h6s2 = 99
+!   Identifier for dimethyl disulfide
+INTEGER, PARAMETER :: IP_c3h4 = 100
+!   Identifier for propyne
+INTEGER, PARAMETER :: IP_c4h3 = 101
+!   Identifier for butadiynyl radical
+INTEGER, PARAMETER :: IP_sih4 = 102
+!   Identifier for silane
+INTEGER, PARAMETER :: IP_s2 = 103
+!   Identifier for disulfur
+INTEGER, PARAMETER :: IP_sf6 = 104
+!   Identifier for sulfur hexafluoride
+INTEGER, PARAMETER :: IP_cs2 = 105
+!   Identifier for carbon disulfide
+INTEGER, PARAMETER :: IP_s8 = 106
+!   Identifier for octasulfur
+INTEGER, PARAMETER :: IP_cn = 107
+!   Identifier for cyanogen radical
+INTEGER, PARAMETER :: IP_ch3cl = 108
+!   Identifier for methyl chloride
+INTEGER, PARAMETER :: IP_ch3f = 109
+!   Identifier for methyl fluoride
+INTEGER, PARAMETER :: IP_ch3br = 110
+!   Identifier for methyl bromide
 
 
 ! Column headers for reading data in raw_input
@@ -195,7 +265,16 @@ CHARACTER (LEN=10), PARAMETER :: header_gas(npd_gases) = (/ &
     'C2H5CHO   ', 'HOCH2CHO  ', 'C2H5COCH3 ', 'MVK       ', &
     'MACR      ', 'PAN       ', 'CH3ONO2   ', 'C2H3      ', &
     'C2H4      ', 'OH        ', 'HCO       ', 'N2O4      ', &
-    'C2N2      ', 'N2H4      ', 'N2O3      '/)
+    'C2N2      ', 'N2H4      ', 'N2O3      ', &
+    'Si        ', 'SiO       ', 'SiO2      ', 'Mg        ', &
+    'Mg2       ', 'MgO       ', 'TiO2      ', 'Fe        ', &
+    'FeO       ', 'Ca        ', 'CaO       ', 'AlO       ', &
+    'Na2       ', 'NaO       ', 'NaOH      ', 'KOH       ', &
+    'H-        ', 'PS        ', 'PO        ', 'PN        ', &
+    'CH3SH     ', 'CH3S      ', 'C2H6S     ', 'C2H6S2    ', &
+    'C3H4      ', 'C4H3      ', 'SiH4      ', 'S2        ', &
+    'SF6       ', 'CS2       ', 'S8        ', 'CN        ', &
+    'CH3Cl     ', 'CH3F      ', 'CH3Br     ' /)
 
 ! File suffixes
 CHARACTER (LEN=12), PARAMETER :: gas_suffix(npd_gases) = (/ &
@@ -217,7 +296,16 @@ CHARACTER (LEN=12), PARAMETER :: gas_suffix(npd_gases) = (/ &
     'c2h5cho     ', 'hoch2cho    ', 'c2h5coch3   ', 'mvk         ', &
     'macr        ', 'pan         ', 'ch3ono2     ', 'c2h3        ', &
     'c2h4        ', 'oh          ', 'hco         ', 'n2o4        ', &
-    'c2n2        ', 'n2h4        ', 'n2o3        '/)
+    'c2n2        ', 'n2h4        ', 'n2o3        ', &
+    'si          ', 'sio         ', 'sio2        ', 'mg          ', &
+    'mg2         ', 'mgo         ', 'tio2        ', 'fe          ', &
+    'feo         ', 'ca          ', 'cao         ', 'alo         ', &
+    'na2         ', 'nao         ', 'naoh        ', 'koh         ', &
+    'hminus      ', 'ps          ', 'po          ', 'pn          ', &
+    'ch3sh       ', 'ch3s        ', 'c2h6s       ', 'c2h6s2      ', &
+    'c3h4        ', 'c4h3        ', 'sih4        ', 's2          ', &
+    'sf6         ', 'cs2         ', 's8          ', 'cn          ', &
+    'ch3cl       ', 'ch3f        ', 'ch3br       ' /)
 
 ! Long names
 CHARACTER (LEN=20), PARAMETER :: name_absorb(npd_gases) = (/ &
@@ -295,7 +383,41 @@ CHARACTER (LEN=20), PARAMETER :: name_absorb(npd_gases) = (/ &
                                    "Dinitrogen tetroxide", &
                                    "Cyanogen            ", &
                                    "Hydrazine           ", &
-                                   "Dinitrogen trioxide "/)
+                                   "Silicon             ", &
+                                   "Silicon monoxide    ", &
+                                   "Silicon dioxide     ", &
+                                   "Atomic magnesium    ", &
+                                   "Magnesium dimer     ", &
+                                   "Magnesium oxide     ", &
+                                   "Titanium dioxide    ", &
+                                   "Iron                ", &
+                                   "Iron(II) oxide      ", &
+                                   "Calcium             ", &
+                                   "Calcium oxide       ", &
+                                   "Aluminium monoxide  ", &
+                                   "Disodium            ", &
+                                   "Sodium oxide        ", &
+                                   "Sodium hydroxide    ", &
+                                   "Potassium hydroxide ", &
+                                   "Hydride anion       ", &
+                                   "Phosphorus sulfide  ", &
+                                   "Phosphorus monoxide ", &
+                                   "Phosphorus nitride  ", &
+                                   "Methanethiol        ", &
+                                   "Methylthiyl radical ", &
+                                   "Dimethyl sulfide    ", &
+                                   "Dimethyl disulfide  ", &
+                                   "Propyne             ", &
+                                   "Butadiynyl radical  ", &
+                                   "Silane              ", &
+                                   "Disulfur            ", &
+                                   "Sulfur hexafluoride ", &
+                                   "Carbon disulfide    ", &
+                                   "Octasulfur          ", &
+                                   "Cyanogen radical    ", &
+                                   "Methyl chloride     ", &
+                                   "Methyl fluoride     ", &
+                                   "Methyl bromide      " /)
 
 
 ! Molecular weights taken from "General Inorganic Chemistry"
@@ -375,7 +497,42 @@ REAL (RealK), PARAMETER :: molar_weight(npd_gases) = (/ &
   91.0110_RealK,     & ! 72: N2O4 (from NIST)
   52.0348_RealK,     & ! 73: C2N2 (from NIST)
   32.0452_RealK,     & ! 74: N2H4 (from NIST)
-  76.0116_RealK     /) ! 75: N2O3 (from NIST)
+  76.0116_RealK,     & ! 75: N2O3 (from NIST)
+  28.0855_RealK,     & !  76: Si (from NIST)
+  44.0849_RealK,     & !  77: SiO (from NIST)
+  60.0843_RealK,     & !  78: SiO2 (from NIST)
+  24.3050_RealK,     & !  79: Mg (from NIST)
+  48.6100_RealK,     & !  80: Mg2 (from NIST)
+  40.3044_RealK,     & !  81: MgO (from NIST)
+  79.8658_RealK,     & !  82: TiO2 (from NIST)
+  55.8450_RealK,     & !  83: Fe (from NIST)
+  71.8440_RealK,     & !  84: FeO (from NIST)
+  40.0780_RealK,     & !  85: Ca (from NIST)
+  56.0774_RealK,     & !  86: CaO (from NIST)
+  42.9809_RealK,     & !  87: AlO (from NIST)
+  45.9795_RealK,     & !  88: Na2 (from NIST)
+  38.9892_RealK,     & !  89: NaO (from NIST)
+  39.9971_RealK,     & !  90: NaOH (from NIST)
+  56.1056_RealK,     & !  91: KOH (from NIST)
+   1.0079_RealK,     & !  92: H- (from NIST)
+  63.0389_RealK,     & !  93: PS (from NIST)
+  46.9732_RealK,     & !  94: PO (from NIST)
+  44.9805_RealK,     & !  95: PN (from NIST)
+  48.1075_RealK,     & !  96: CH3SH (from NIST)
+  47.0996_RealK,     & !  97: CH3S (from NIST)
+  62.1343_RealK,     & !  98: C2H6S (from NIST)
+  94.1994_RealK,     & !  99: C2H6S2 (from NIST)
+  40.0638_RealK,     & ! 100: C3H4 (from NIST)
+  51.0717_RealK,     & ! 101: C4H3 (from NIST)
+  32.1173_RealK,     & ! 102: SiH4 (from NIST)
+  64.1302_RealK,     & ! 103: S2 (from NIST)
+  146.0554_RealK,    & ! 104: SF6 (from NIST)
+  76.1409_RealK,     & ! 105: CS2 (from NIST)
+  256.5208_RealK,    & ! 106: S8 (from NIST)
+  26.0174_RealK,     & ! 107: CN (from NIST)
+  50.4875_RealK,     & ! 108: CH3Cl (from NIST)
+  34.0329_RealK,     & ! 109: CH3F (from NIST)
+  94.9385_RealK     /) ! 110: CH3Br (from NIST)
 
 
 ! Array of identifiers in HITRAN for each gas in the radiation code.
@@ -454,7 +611,42 @@ INTEGER, PARAMETER :: hitran_number(npd_gases) = (/ &
   0,   & ! 72: N2O4
   48,  & ! 73: C2N2
   0 ,  & ! 74: N2H4
-  0   /) ! 75: N2H3
+  0,   & ! 75: N2H3
+  0  , & !  76: Si
+  0  , & !  77: SiO
+  0  , & !  78: SiO2
+  0  , & !  79: Mg
+  0  , & !  80: Mg2
+  0  , & !  81: MgO
+  0  , & !  82: TiO2
+  0  , & !  83: Fe
+  0  , & !  84: FeO
+  0  , & !  85: Ca
+  0  , & !  86: CaO
+  0  , & !  87: AlO
+  0  , & !  88: Na2
+  0  , & !  89: NaO
+  0  , & !  90: NaOH
+  0  , & !  91: KOH
+  0  , & !  92: H-
+  0  , & !  93: PS
+  0  , & !  94: PO
+  0  , & !  95: PN
+  0  , & !  96: CH3SH
+  0  , & !  97: CH3S
+  0  , & !  98: C2H6S
+  0  , & !  99: C2H6S2
+  0  , & ! 100: C3H4
+  0  , & ! 101: C4H3
+  0  , & ! 102: SiH4
+  0  , & ! 103: S2
+  30 , & ! 104: SF6
+  53 , & ! 105: CS2
+  0  , & ! 106: S8
+  0  , & ! 107: CN
+  24 , & ! 108: CH3Cl
+  51 , & ! 109: CH3F
+  40  /) ! 110: CH3Br
 
 ! Maximum number of specified HITRAN isotopes for a given absorber
 INTEGER, PARAMETER :: npd_isotopes = 3
@@ -543,7 +735,43 @@ REAL (RealK), PARAMETER :: depolarization_factor(npd_gases) = (/ &
   0.0_RealK,     & ! 72: N2O4
   0.0_RealK,     & ! 73: C2N2
   0.0_RealK,     & ! 74: N2H4
-  0.0_RealK     /) ! 75: N2H3
+  0.0_RealK,     & ! 75: N2H3
+  0.0_RealK,     & ! 76: Si
+  0.0_RealK,     & ! 77: SiO
+  0.0_RealK,     & ! 78: SiO2
+  0.0_RealK,     & ! 79: Mg
+  0.0_RealK,     & ! 80: Mg2
+  0.0_RealK,     & ! 81: MgO
+  0.0_RealK,     & ! 82: TiO2
+  0.0_RealK,     & ! 83: Fe
+  0.0_RealK,     & ! 84: FeO
+  0.0_RealK,     & ! 85: Ca
+  0.0_RealK,     & ! 86: CaO
+  0.0_RealK,     & ! 87: AlO
+  0.0_RealK,     & ! 88: Na2
+  0.0_RealK,     & ! 89: NaO
+  0.0_RealK,     & ! 90: NaOH
+  0.0_RealK,     & ! 91: KOH
+  0.0_RealK,     & ! 92: H-
+  0.0_RealK,     & ! 93: PS
+  0.0_RealK,     & ! 94: PO
+  0.0_RealK,     & ! 95: PN
+  0.0_RealK,     & ! 96: CH3SH
+  0.0_RealK,     & ! 97: CH3S
+  0.0_RealK,     & ! 98: C2H6S
+  0.0_RealK,     & ! 99: C2H6S2
+  0.0_RealK,     & ! 100: C3H4
+  0.0_RealK,     & ! 101: C4H3
+  0.0_RealK,     & ! 102: SiH4
+  0.0_RealK,     & ! 103: S2
+  0.0_RealK,     & ! 104: SF6
+  0.0_RealK,     & ! 105: CS2
+  0.0_RealK,     & ! 106: S8
+  0.0_RealK,     & ! 107: CN
+  0.0_RealK,     & ! 108: CH3Cl
+  0.0_RealK,     & ! 109: CH3F
+  0.0_RealK,     & ! 110: CH3Br
+  0.0_RealK     /) ! 110: CH3Br
 
 ! Minimum wavelength to consider Rayleigh scattering
 REAL (RealK), PARAMETER :: rayleigh_cutoff(npd_gases) = (/ &
@@ -621,7 +849,43 @@ REAL (RealK), PARAMETER :: rayleigh_cutoff(npd_gases) = (/ &
   0.0_RealK,       & ! 72: N2O4
   0.0_RealK,       & ! 73: C2N2
   0.0_RealK,       & ! 74: N2H4
-  0.0_RealK       /) ! 75: N2H3
+  0.0_RealK,       & ! 75: N2H3
+  0.0_RealK,       & ! 76: Si
+  0.0_RealK,       & ! 77: SiO
+  0.0_RealK,       & ! 78: SiO2
+  0.0_RealK,       & ! 79: Mg
+  0.0_RealK,       & ! 80: Mg2
+  0.0_RealK,       & ! 81: MgO
+  0.0_RealK,       & ! 82: TiO2
+  0.0_RealK,       & ! 83: Fe
+  0.0_RealK,       & ! 84: FeO
+  0.0_RealK,       & ! 85: Ca
+  0.0_RealK,       & ! 86: CaO
+  0.0_RealK,       & ! 87: AlO
+  0.0_RealK,       & ! 88: Na2
+  0.0_RealK,       & ! 89: NaO
+  0.0_RealK,       & ! 90: NaOH
+  0.0_RealK,       & ! 91: KOH
+  0.0_RealK,       & ! 92: H-
+  0.0_RealK,       & ! 93: PS
+  0.0_RealK,       & ! 94: PO
+  0.0_RealK,       & ! 95: PN
+  0.0_RealK,       & ! 96: CH3SH
+  0.0_RealK,       & ! 97: CH3S
+  0.0_RealK,       & ! 98: C2H6S
+  0.0_RealK,       & ! 99: C2H6S2
+  0.0_RealK,       & ! 100: C3H4
+  0.0_RealK,       & ! 101: C4H3
+  0.0_RealK,       & ! 102: SiH4
+  0.0_RealK,       & ! 103: S2
+  0.0_RealK,       & ! 104: SF6
+  0.0_RealK,       & ! 105: CS2
+  0.0_RealK,       & ! 106: S8
+  0.0_RealK,       & ! 107: CN
+  0.0_RealK,       & ! 108: CH3Cl
+  0.0_RealK,       & ! 109: CH3F
+  0.0_RealK,       & ! 110: CH3Br
+  0.0_RealK       /) ! 110: CH3Br
 
 ! Maximum number of photolysis products for a given absorber
 INTEGER, PARAMETER :: npd_products = 9
@@ -852,7 +1116,42 @@ CHARACTER(LEN=56), PARAMETER :: photol_products(npd_products, npd_gases) &
   "N2H4 -> N2H3 + H                  ", &
   (blank, i=1, npd_products-1)        , & ! N2H4
   "N2O3 -> NO2 + NO                  ", &
-  (blank, i=1, npd_products-1)          & ! N2O3
+  (blank, i=1, npd_products-1)    ,  & ! N2O3
+  (blank, i=1, npd_products),        & ! Si
+  (blank, i=1, npd_products),        & ! SiO
+  (blank, i=1, npd_products),        & ! SiO2
+  (blank, i=1, npd_products),        & ! Mg
+  (blank, i=1, npd_products),        & ! Mg2
+  (blank, i=1, npd_products),        & ! MgO
+  (blank, i=1, npd_products),        & ! TiO2
+  (blank, i=1, npd_products),        & ! Fe
+  (blank, i=1, npd_products),        & ! FeO
+  (blank, i=1, npd_products),        & ! Ca
+  (blank, i=1, npd_products),        & ! CaO
+  (blank, i=1, npd_products),        & ! AlO
+  (blank, i=1, npd_products),        & ! Na2
+  (blank, i=1, npd_products),        & ! NaO
+  (blank, i=1, npd_products),        & ! NaOH
+  (blank, i=1, npd_products),        & ! KOH
+  (blank, i=1, npd_products),        & ! H-
+  (blank, i=1, npd_products),        & ! PS
+  (blank, i=1, npd_products),        & ! PO
+  (blank, i=1, npd_products),        & ! PN
+  (blank, i=1, npd_products),        & ! CH3SH
+  (blank, i=1, npd_products),        & ! CH3S
+  (blank, i=1, npd_products),        & ! C2H6S
+  (blank, i=1, npd_products),        & ! C2H6S2
+  (blank, i=1, npd_products),        & ! C3H4
+  (blank, i=1, npd_products),        & ! C4H3
+  (blank, i=1, npd_products),        & ! SiH4
+  (blank, i=1, npd_products),        & ! S2
+  (blank, i=1, npd_products),        & ! SF6
+  (blank, i=1, npd_products),        & ! CS2
+  (blank, i=1, npd_products),        & ! S8
+  (blank, i=1, npd_products),        & ! CN
+  (blank, i=1, npd_products),        & ! CH3Cl
+  (blank, i=1, npd_products),        & ! CH3F
+  (blank, i=1, npd_products),        & ! CH3Br          & ! CH3Br
   ], shape=[npd_products, npd_gases] )
 
 ! Name used by UKCA for photolysis pathway
@@ -974,7 +1273,42 @@ CHARACTER(LEN=56), PARAMETER :: photol_fldname(0:npd_products, npd_gases) &
   (blank, i=0, npd_products),        & ! N2O4
   (blank, i=0, npd_products),        & ! C2N2
   (blank, i=0, npd_products),        & ! N2H4
-  (blank, i=0, npd_products)         & ! N2O3
+  (blank, i=0, npd_products),        & ! N2O3
+  (blank, i=0, npd_products),        & ! Si
+  (blank, i=0, npd_products),        & ! SiO
+  (blank, i=0, npd_products),        & ! SiO2
+  (blank, i=0, npd_products),        & ! Mg
+  (blank, i=0, npd_products),        & ! Mg2
+  (blank, i=0, npd_products),        & ! MgO
+  (blank, i=0, npd_products),        & ! TiO2
+  (blank, i=0, npd_products),        & ! Fe
+  (blank, i=0, npd_products),        & ! FeO
+  (blank, i=0, npd_products),        & ! Ca
+  (blank, i=0, npd_products),        & ! CaO
+  (blank, i=0, npd_products),        & ! AlO
+  (blank, i=0, npd_products),        & ! Na2
+  (blank, i=0, npd_products),        & ! NaO
+  (blank, i=0, npd_products),        & ! NaOH
+  (blank, i=0, npd_products),        & ! KOH
+  (blank, i=0, npd_products),        & ! H-
+  (blank, i=0, npd_products),        & ! PS
+  (blank, i=0, npd_products),        & ! PO
+  (blank, i=0, npd_products),        & ! PN
+  (blank, i=0, npd_products),        & ! CH3SH
+  (blank, i=0, npd_products),        & ! CH3S
+  (blank, i=0, npd_products),        & ! C2H6S
+  (blank, i=0, npd_products),        & ! C2H6S2
+  (blank, i=0, npd_products),        & ! C3H4
+  (blank, i=0, npd_products),        & ! C4H3
+  (blank, i=0, npd_products),        & ! SiH4
+  (blank, i=0, npd_products),        & ! S2
+  (blank, i=0, npd_products),        & ! SF6
+  (blank, i=0, npd_products),        & ! CS2
+  (blank, i=0, npd_products),        & ! S8
+  (blank, i=0, npd_products),        & ! CN
+  (blank, i=0, npd_products),        & ! CH3Cl
+  (blank, i=0, npd_products),        & ! CH3F
+  (blank, i=0, npd_products),        & ! CH3Br         & ! CH3Br
   ], shape=[npd_products+1, npd_gases] )
 
 ! Threshold wavelength defining energy required for photolysis
@@ -1201,7 +1535,43 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
   290.0E-09_RealK,                  & ! N2H4 -> N2H3 + H
   (0.0_RealK, i=1, npd_products-1), & ! N2H4 : Venot 2012-highest non zero xsc
   398.0E-09_RealK,                  & ! N2O3 -> NO2 + NO
-  (0.0_RealK, i=1, npd_products-1)  & ! N2O3 : Venot 2012-highest non zero xsc
+  (0.0_RealK, i=1, npd_products-1), & ! N2O3 : Venot 2012-highest non zero xsc
+  (0.0_RealK, i=1, npd_products),   & ! Si
+  (0.0_RealK, i=1, npd_products),   & ! SiO
+  (0.0_RealK, i=1, npd_products),   & ! SiO2
+  (0.0_RealK, i=1, npd_products),   & ! Mg
+  (0.0_RealK, i=1, npd_products),   & ! Mg2
+  (0.0_RealK, i=1, npd_products),   & ! MgO
+  (0.0_RealK, i=1, npd_products),   & ! TiO2
+  (0.0_RealK, i=1, npd_products),   & ! Fe
+  (0.0_RealK, i=1, npd_products),   & ! FeO
+  (0.0_RealK, i=1, npd_products),   & ! Ca
+  (0.0_RealK, i=1, npd_products),   & ! CaO
+  (0.0_RealK, i=1, npd_products),   & ! AlO
+  (0.0_RealK, i=1, npd_products),   & ! Na2
+  (0.0_RealK, i=1, npd_products),   & ! NaO
+  (0.0_RealK, i=1, npd_products),   & ! NaOH
+  (0.0_RealK, i=1, npd_products),   & ! KOH
+  (0.0_RealK, i=1, npd_products),   & ! H-
+  (0.0_RealK, i=1, npd_products),   & ! PS
+  (0.0_RealK, i=1, npd_products),   & ! PO
+  (0.0_RealK, i=1, npd_products),   & ! PN
+  (0.0_RealK, i=1, npd_products),   & ! CH3SH
+  (0.0_RealK, i=1, npd_products),   & ! CH3S
+  (0.0_RealK, i=1, npd_products),   & ! C2H6S
+  (0.0_RealK, i=1, npd_products),   & ! C2H6S2
+  (0.0_RealK, i=1, npd_products),   & ! C3H4
+  (0.0_RealK, i=1, npd_products),   & ! C4H3
+  (0.0_RealK, i=1, npd_products),   & ! SiH4
+  (0.0_RealK, i=1, npd_products),   & ! S2
+  (0.0_RealK, i=1, npd_products),   & ! SF6
+  (0.0_RealK, i=1, npd_products),   & ! CS2
+  (0.0_RealK, i=1, npd_products),   & ! S8
+  (0.0_RealK, i=1, npd_products),   & ! CN
+  (0.0_RealK, i=1, npd_products),   & ! CH3Cl
+  (0.0_RealK, i=1, npd_products),   & ! CH3F
+  (0.0_RealK, i=1, npd_products),   & ! CH3Br
+  (0.0_RealK, i=1, npd_products)  & ! CH3Br
   ], shape=[npd_products, npd_gases] )
 
 ! Unless otherwise stated, data comes from JPL publication No. 15-10:
