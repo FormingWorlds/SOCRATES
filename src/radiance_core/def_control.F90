@@ -144,6 +144,8 @@ TYPE StrCtrl
 !   Flag for absorption by nitrogen
   LOGICAL :: l_ar                                                 = .FALSE.
 !   Flag for absorption by argon
+  LOGICAL :: l_air                                                = .FALSE.
+!   Flag for absorption by dry air
   LOGICAL :: l_o                                                  = .FALSE.
 !   Flag for absorption by atomic oxygen
   LOGICAL :: l_n                                                  = .FALSE.
@@ -184,8 +186,8 @@ TYPE StrCtrl
 !   Flag for absorption by OSO-S
   LOGICAL :: l_h2s                                                = .FALSE.
 !   Flag for absorption by Hydrogen sulphide
-  LOGICAL :: l_cocs                                               = .FALSE.
-!   Flag for absorption by Carbonyl sulphide
+  LOGICAL :: l_ocs                                               = .FALSE.
+!   Flag for absorption by carbonyl sulphide
   LOGICAL :: l_ch3cho                                             = .FALSE.
 !   Flag for absorption by Acetaldehyde
   LOGICAL :: l_ch3ooh                                             = .FALSE.
@@ -210,6 +212,22 @@ TYPE StrCtrl
 !   Flag for absorption by peroxyacetyl nitrate (PAN)
   LOGICAL :: l_ch3ono2                                            = .FALSE.
 !   Flag for absorption by methylnitrate
+  LOGICAL :: l_c2h3                                               = .FALSE.
+!   Flag for absorption by vinyl radical
+  LOGICAL :: l_c2h4                                               = .FALSE.
+!   Flag for absorption by ethylene
+  LOGICAL :: l_oh                                                 = .FALSE.
+!   Flag for absorption by hydroxyl radical
+  LOGICAL :: l_hco                                                = .FALSE.
+!   Flag for absorption by formyl radical
+  LOGICAL :: l_n2o4                                               = .FALSE.
+!   Flag for absorption by dinitrogen tetroxide
+  LOGICAL :: l_c2n2                                               = .FALSE.
+!   Flag for absorption by cyanogen
+  LOGICAL :: l_n2h4                                               = .FALSE.
+!   Flag for absorption by hydrazine
+  LOGICAL :: l_n2o3                                               = .FALSE.
+!   Flag for absorption by dinitrogen trioxide
   LOGICAL :: l_si                                                 = .FALSE.
 !   Flag for absorption by silicon
   LOGICAL :: l_sio                                                = .FALSE.

@@ -169,6 +169,7 @@ This has to be done manually and will require editing a lot of files. The easies
 * `spectraltools/src/utils.py`
 * `src/interface_core/socrates_set_spectrum.F90`
 * `src/modules_gen/input_head_pcf.f90`
+* `src/modules_gen/refract_re_ccf.f90`
 * `src/radiance_core/def_control.F90`
 * `src/radiance_core/gas_list_pcf.F90`
 

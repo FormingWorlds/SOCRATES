@@ -383,6 +383,7 @@ CHARACTER (LEN=20), PARAMETER :: name_absorb(npd_gases) = (/ &
                                    "Dinitrogen tetroxide", &
                                    "Cyanogen            ", &
                                    "Hydrazine           ", &
+                                   "Dinitrogen trioxide ", &
                                    "Silicon             ", &
                                    "Silicon monoxide    ", &
                                    "Silicon dioxide     ", &
@@ -770,7 +771,6 @@ REAL (RealK), PARAMETER :: depolarization_factor(npd_gases) = (/ &
   0.0_RealK,     & ! 107: CN
   0.0_RealK,     & ! 108: CH3Cl
   0.0_RealK,     & ! 109: CH3F
-  0.0_RealK,     & ! 110: CH3Br
   0.0_RealK     /) ! 110: CH3Br
 
 ! Minimum wavelength to consider Rayleigh scattering
@@ -884,7 +884,6 @@ REAL (RealK), PARAMETER :: rayleigh_cutoff(npd_gases) = (/ &
   0.0_RealK,       & ! 107: CN
   0.0_RealK,       & ! 108: CH3Cl
   0.0_RealK,       & ! 109: CH3F
-  0.0_RealK,       & ! 110: CH3Br
   0.0_RealK       /) ! 110: CH3Br
 
 ! Maximum number of photolysis products for a given absorber
@@ -1151,7 +1150,7 @@ CHARACTER(LEN=56), PARAMETER :: photol_products(npd_products, npd_gases) &
   (blank, i=1, npd_products),        & ! CN
   (blank, i=1, npd_products),        & ! CH3Cl
   (blank, i=1, npd_products),        & ! CH3F
-  (blank, i=1, npd_products),        & ! CH3Br          & ! CH3Br
+  (blank, i=1, npd_products)         & ! CH3Br
   ], shape=[npd_products, npd_gases] )
 
 ! Name used by UKCA for photolysis pathway
@@ -1308,7 +1307,7 @@ CHARACTER(LEN=56), PARAMETER :: photol_fldname(0:npd_products, npd_gases) &
   (blank, i=0, npd_products),        & ! CN
   (blank, i=0, npd_products),        & ! CH3Cl
   (blank, i=0, npd_products),        & ! CH3F
-  (blank, i=0, npd_products),        & ! CH3Br         & ! CH3Br
+  (blank, i=0, npd_products)         & ! CH3Br
   ], shape=[npd_products+1, npd_gases] )
 
 ! Threshold wavelength defining energy required for photolysis
