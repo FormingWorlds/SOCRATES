@@ -113,7 +113,7 @@ case "$1" in
     ;;
 esac
 . ./set_prog_env
-make $1 -j && echo "All compiled OK"
+make $1 -j 2 && echo "All compiled OK"
 cd $here
 
 echo "Setting path to distribution in set_rad_env"
