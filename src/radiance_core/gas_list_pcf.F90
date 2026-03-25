@@ -1572,8 +1572,7 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
   (0.0_RealK, i=1, npd_products),   & ! CN
   (0.0_RealK, i=1, npd_products),   & ! CH3Cl
   (0.0_RealK, i=1, npd_products),   & ! CH3F
-  (0.0_RealK, i=1, npd_products),   & ! CH3Br
-  (0.0_RealK, i=1, npd_products)  & ! CH3Br
+  (0.0_RealK, i=1, npd_products)    & ! CH3Br
   ], shape=[npd_products, npd_gases] )
 
 ! Unless otherwise stated, data comes from JPL publication No. 15-10:
