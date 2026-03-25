@@ -335,7 +335,6 @@ if (.not.l_retain_all) then
         retain_absorber(ip_cn,        l_cn       ) .or. &
         retain_absorber(ip_ch3cl,     l_ch3cl    ) .or. &
         retain_absorber(ip_ch3f,      l_ch3f     ) .or. &
-        retain_absorber(ip_ch3br,     l_ch3br    ) .or. &
         retain_absorber(ip_ch3br,     l_ch3br    )) then
       l_retain_absorb(i)=.true.
     end if

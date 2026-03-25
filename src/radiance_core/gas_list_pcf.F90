@@ -1101,7 +1101,7 @@ CHARACTER(LEN=56), PARAMETER :: photol_products(npd_products, npd_gases) &
   (blank, i=1, npd_products-8)        , & ! CH3ONO2
   "C2H3 -> C2H2 + H                  ", &
   (blank, i=1, npd_products-1)        , & ! C2H3
-  "C2H4 -> C2H2 + H2                 ", & 
+  "C2H4 -> C2H2 + H2                 ", &
   "C2H4 -> C2H2 + H + H              ", &
   (blank, i=1, npd_products-2)        , & ! C2H4
   "OH -> O(1D) + H                   ", &
@@ -1408,13 +1408,13 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
   (0.0_RealK, i=1, npd_products),   & ! H2S
   (0.0_RealK, i=1, npd_products),   & ! Ar
   (0.0_RealK, i=1, npd_products),   & ! Dry air
-   91.25E-09_RealK,                 & ! O -> O+(4S) 
-   73.18E-09_RealK,                 & ! O -> O+(2D) 
-   66.58E-09_RealK,                 & ! O -> O+(2P) 
+   91.25E-09_RealK,                 & ! O -> O+(4S)
+   73.18E-09_RealK,                 & ! O -> O+(2D)
+   66.58E-09_RealK,                 & ! O -> O+(2P)
    43.50E-09_RealK,                 & ! O -> O+(4Pe)
    31.00E-09_RealK,                 & ! O -> O+(2Pe)
-   24.80E-09_RealK,                 & ! O -> O++    
-   12.179E-09_RealK,                & ! O -> O+++   
+   24.80E-09_RealK,                 & ! O -> O++
+   12.179E-09_RealK,                & ! O -> O+++
   (0.0_RealK, i=1, npd_products-7), & ! O
    85.92E-09_RealK,                 & ! N -> N+
    28.00E-09_RealK,                 & ! N -> N++
@@ -1490,7 +1490,7 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
    349.0E-09_RealK,                 & ! C2H5CHO -> CH3 + CH2CHO : JPL 19-5
   (0.0_RealK, i=1, npd_products-4), & ! C2H5CHO
    347.0E-09_RealK,                 & ! HOCH2CHO -> CH2OH + HCO
-  1910.0E-09_RealK,                 & ! HOCH2CHO -> CH3OH + CO 
+  1910.0E-09_RealK,                 & ! HOCH2CHO -> CH3OH + CO
    328.0E-09_RealK,                 & ! HOCH2CHO -> OH + CH2CHO
    314.0E-09_RealK,                 & ! HOCH2CHO -> HOCH2CO + H
   (0.0_RealK, i=1, npd_products-4), & ! HOCH2CHO
@@ -1509,27 +1509,27 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
   1004.0E-09_RealK,                 & ! CH3C(O)OONO2 -> CH3C(O)OO + NO2
    963.0E-09_RealK,                 & ! CH3C(O)OONO2 -> CH3C(O)O + NO3
   (0.0_RealK, i=1, npd_products-2), & ! CH3C(O)OONO2 (PAN) : IUPAC P21
-   697.0E-09_RealK,                 & ! CH3ONO2 -> CH3O + NO2       
-   1.0_RealK,                       & ! CH3ONO2 -> HCHO + HONO      
-   497.0E-09_RealK,                 & ! CH3ONO2 -> HCHO + NO + OH   
-   391.0E-09_RealK,                 & ! CH3ONO2 -> CH3ONO + O(3P)   
-   344.0E-09_RealK,                 & ! CH3ONO2 -> CH3 + NO3        
-   294.0E-09_RealK,                 & ! CH3ONO2 -> CH2ONO2 + H      
+   697.0E-09_RealK,                 & ! CH3ONO2 -> CH3O + NO2
+   1.0_RealK,                       & ! CH3ONO2 -> HCHO + HONO
+   497.0E-09_RealK,                 & ! CH3ONO2 -> HCHO + NO + OH
+   391.0E-09_RealK,                 & ! CH3ONO2 -> CH3ONO + O(3P)
+   344.0E-09_RealK,                 & ! CH3ONO2 -> CH3 + NO3
+   294.0E-09_RealK,                 & ! CH3ONO2 -> CH2ONO2 + H
    250.0E-09_RealK,                 & ! CH3ONO2 -> CH3O + NO + O(3P)
-   241.0E-09_RealK,                 & ! CH3ONO2 -> CH3ONO + O(1D)   
+   241.0E-09_RealK,                 & ! CH3ONO2 -> CH3ONO + O(1D)
   (0.0_RealK, i=1, npd_products-8), & ! CH3ONO2 : JPL 19-5
-   237.0E-09_RealK,                 & ! C2H3 -> C2H2 + H   
+   237.0E-09_RealK,                 & ! C2H3 -> C2H2 + H
   (0.0_RealK, i=1, npd_products-1), & ! C2H3 : Venot 2012-highest non zero qy
    720.0E-09_RealK,                 & ! C2H4 -> C2H2 + H2
-   196.0E-09_RealK,                 & ! C2H4 -> C2H2 + H + H   
+   196.0E-09_RealK,                 & ! C2H4 -> C2H2 + H + H
   (0.0_RealK, i=1, npd_products-2), & ! C2H4 : Huebner 92
-   511.4E-09_RealK,                 & ! OH -> O(1D) + H  
+   511.4E-09_RealK,                 & ! OH -> O(1D) + H
   (0.0_RealK, i=1, npd_products-1), & ! OH : Huebner 1992
-   229.0E-09_RealK,                 & ! HCO -> H + CO 
+   229.0E-09_RealK,                 & ! HCO -> H + CO
   (0.0_RealK, i=1, npd_products-1), & ! HCO : Venot 2012-highest non zero xsc
-  453.0E-09_RealK,                  & ! N2O4 -> NO2 + NO2 
+  453.0E-09_RealK,                  & ! N2O4 -> NO2 + NO2
   (0.0_RealK, i=1, npd_products-1), & ! N2O4 : Venot 2012-highest non zero xsc
-  224.0E-09_RealK,                  & ! C2N2 -> C2 + N2 
+  224.0E-09_RealK,                  & ! C2N2 -> C2 + N2
   (0.0_RealK, i=1, npd_products-1), & ! C2N2 : Venot 2012-highest non zero xsc
   290.0E-09_RealK,                  & ! N2H4 -> N2H3 + H
   (0.0_RealK, i=1, npd_products-1), & ! N2H4 : Venot 2012-highest non zero xsc
@@ -1569,8 +1569,7 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
   (0.0_RealK, i=1, npd_products),   & ! CN
   (0.0_RealK, i=1, npd_products),   & ! CH3Cl
   (0.0_RealK, i=1, npd_products),   & ! CH3F
-  (0.0_RealK, i=1, npd_products),   & ! CH3Br
-  (0.0_RealK, i=1, npd_products)  & ! CH3Br
+  (0.0_RealK, i=1, npd_products)    & ! CH3Br
   ], shape=[npd_products, npd_gases] )
 
 ! Unless otherwise stated, data comes from JPL publication No. 15-10:
@@ -1586,6 +1585,6 @@ REAL (RealK), PARAMETER :: threshold_wavelength(npd_products, npd_gases) &
 !    * PAN: P21: https://iupac-aeris.ipsl.fr/datasheets/pdf/P21.pdf
 !  * Venot 2012 : Venot et al (2012) DOI: 10.1051/0004-6361/201219310
 !  * Lias 70   : Lias et al (1970) DOI: 10.1063/1.1673226
-!  * Chang 2020   : Chang et al (2020) DOI: 10.1039/D0SC01746A 
+!  * Chang 2020   : Chang et al (2020) DOI: 10.1039/D0SC01746A
 
 END MODULE gas_list_pcf
