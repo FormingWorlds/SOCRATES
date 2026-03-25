@@ -89,11 +89,15 @@ contains
         l_h2o, l_co2, l_o3, l_n2o, l_co, l_ch4, l_o2, l_no, l_so2, l_no2, l_nh3, &
         l_hno3, l_n2, l_cfc11, l_cfc12, l_cfc113, l_hcfc22, l_hfc125, l_hfc134a, &
         l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
-        l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+        l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_air, l_o, l_n, l_no3, l_n2o5, &
         l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
         l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
         l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-        l_pan, l_ch3ono2, &
+        l_pan, l_ch3ono2, l_c2h3, l_c2h4, l_oh, l_hco, l_n2o4, l_c2n2, l_n2h4, l_n2o3, &
+        l_si, l_sio, l_sio2, l_mg, l_mg2, l_mgo, l_tio2, l_fe, l_feo, l_ca, l_cao,  &
+        l_alo, l_na2, l_nao, l_naoh, l_koh, l_hminus, l_ps, l_po, l_pn,  &
+        l_ch3sh, l_ch3s, l_c2h6s, l_c2h6s2, l_c3h4, l_c4h3, l_sih4, l_s2, l_sf6, l_cs2, l_s8,  &
+        l_cn, l_ch3cl, l_ch3f, l_ch3br, &
         l_all_gases, wavelength_blue) bind(C, name='PS_set_spectrum')   
     
         implicit none
@@ -111,11 +115,15 @@ contains
             l_h2o, l_co2, l_o3, l_n2o, l_co, l_ch4, l_o2, l_no, l_so2, l_no2, l_nh3, &
             l_hno3, l_n2, l_cfc11, l_cfc12, l_cfc113, l_hcfc22, l_hfc125, l_hfc134a, &
             l_cfc114, l_tio, l_vo, l_h2, l_he, l_ocs, l_na, l_k, l_feh, l_crh, l_li, &
-            l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_o, l_n, l_no3, l_n2o5, &
+            l_rb, l_cs, l_ph3, l_c2h2, l_hcn, l_h2s, l_ar, l_air, l_o, l_n, l_no3, l_n2o5, &
             l_hono, l_ho2no2, l_h2o2, l_c2h6, l_ch3, l_h2co, l_ho2, l_hdo, l_hcl, &
             l_hf, l_cosso, l_tosso, l_yosos, l_ch3cho, l_ch3ooh, l_ch3coch3, &
             l_ch3cocho, l_chocho, l_c2h5cho, l_hoch2cho, l_c2h5coch3, l_mvk, l_macr, &
-            l_pan, l_ch3ono2, &
+            l_pan, l_ch3ono2, l_c2h3, l_c2h4, l_oh, l_hco, l_n2o4, l_c2n2, l_n2h4, l_n2o3, &
+            l_si, l_sio, l_sio2, l_mg, l_mg2, l_mgo, l_tio2, l_fe, l_feo, l_ca, l_cao, &
+            l_alo, l_na2, l_nao, l_naoh, l_koh, l_hminus, l_ps, l_po, l_pn,  &
+            l_ch3sh, l_ch3s, l_c2h6s, l_c2h6s2, l_c3h4, l_c4h3, l_sih4, l_s2, l_sf6, l_cs2, l_s8,  &
+            l_cn, l_ch3cl, l_ch3f, l_ch3br, &
             l_all_gases
         
         real(c_double), intent(in), optional :: wavelength_blue
@@ -181,6 +189,7 @@ contains
             l_hcn         = logical(l_hcn      ), & 
             l_h2s         = logical(l_h2s      ), & 
             l_ar          = logical(l_ar       ), & 
+            l_air         = logical(l_air      ), &
             l_o           = logical(l_o        ), & 
             l_n           = logical(l_n        ), & 
             l_no3         = logical(l_no3      ), & 
@@ -210,6 +219,49 @@ contains
             l_macr        = logical(l_macr     ), &
             l_pan         = logical(l_pan      ), &
             l_ch3ono2     = logical(l_ch3ono2  ), &
+            l_c2h3        = logical(l_c2h3     ), &
+            l_c2h4        = logical(l_c2h4     ), &
+            l_oh          = logical(l_oh       ), &
+            l_hco         = logical(l_hco      ), &
+            l_n2o4        = logical(l_n2o4     ), &
+            l_c2n2        = logical(l_c2n2     ), &
+            l_n2h4        = logical(l_n2h4     ), &
+            l_n2o3        = logical(l_n2o3     ), &
+            l_si          = logical(l_si       ), &
+            l_sio         = logical(l_sio      ), &
+            l_sio2        = logical(l_sio2     ), &
+            l_mg          = logical(l_mg       ), &
+            l_mg2         = logical(l_mg2      ), &
+            l_mgo         = logical(l_mgo      ), &
+            l_tio2        = logical(l_tio2     ), &
+            l_fe          = logical(l_fe       ), &
+            l_feo         = logical(l_feo      ), &
+            l_ca          = logical(l_ca       ), &
+            l_cao         = logical(l_cao      ), &
+            l_alo         = logical(l_alo      ), &
+            l_na2         = logical(l_na2      ), &
+            l_nao         = logical(l_nao      ), &
+            l_naoh        = logical(l_naoh     ), &
+            l_koh         = logical(l_koh      ), &
+            l_hminus      = logical(l_hminus   ), &
+            l_ps          = logical(l_ps       ), &
+            l_po          = logical(l_po       ), &
+            l_pn          = logical(l_pn       ), &
+            l_ch3sh       = logical(l_ch3sh    ), &
+            l_ch3s        = logical(l_ch3s     ), &
+            l_c2h6s       = logical(l_c2h6s    ), &
+            l_c2h6s2      = logical(l_c2h6s2   ), &
+            l_c3h4        = logical(l_c3h4     ), &
+            l_c4h3        = logical(l_c4h3     ), &
+            l_sih4        = logical(l_sih4     ), &
+            l_s2          = logical(l_s2       ), &
+            l_sf6         = logical(l_sf6      ), &
+            l_cs2         = logical(l_cs2      ), &
+            l_s8          = logical(l_s8       ), &
+            l_cn          = logical(l_cn       ), &
+            l_ch3cl       = logical(l_ch3cl    ), &
+            l_ch3f        = logical(l_ch3f     ), &
+            l_ch3br       = logical(l_ch3br    ), &
             l_all_gases   = logical(l_all_gases), &
             wavelength_blue = wavelength_blue )
 
