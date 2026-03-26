@@ -179,18 +179,18 @@ subroutine compress_spectrum(spec, &
   l_all_gases)
 
 use gas_list_pcf, only: &
-  ip_h2o, ip_co2, ip_o3, ip_n2o, ip_co, ip_ch4, ip_o2, ip_no, ip_so2, ip_no2, &
-  ip_nh3, ip_hno3, ip_n2, ip_cfc11, ip_cfc12, ip_cfc113, ip_hcfc22, ip_hfc125, &
-  ip_hfc134a, ip_cfc114, ip_tio, ip_vo, ip_h2, ip_he, ip_ocs, ip_na, ip_k, &
-  ip_feh, ip_crh, ip_li, ip_rb, ip_cs, ip_ph3, ip_c2h2, ip_hcn, ip_h2s, ip_ar, &
-  ip_air, ip_o, ip_n, ip_no3, ip_n2o5, ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, &
-  ip_h2co, ip_ho2, ip_hdo, ip_hcl, ip_hf, ip_cosso, ip_tosso, ip_yosos, &
-  ip_ch3cho, ip_ch3ooh, ip_ch3coch3, ip_ch3cocho, ip_chocho, ip_c2h5cho, &
-  ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, ip_pan, ip_ch3ono2, ip_c2h3, ip_c2h4, &
-  ip_oh, ip_hco, ip_n2o4, ip_c2n2, ip_n2h4, ip_n2o3, ip_si, ip_sio, ip_sio2, ip_mg, ip_mg2, ip_mgo, ip_tio2, ip_fe, ip_feo, ip_ca, ip_cao, &
-  ip_alo, ip_na2, ip_nao, ip_naoh, ip_koh, ip_hminus, ip_ps, ip_po, ip_pn, &
-  ip_ch3sh, ip_ch3s, ip_c2h6s, ip_c2h6s2, ip_c3h4, ip_c4h3, ip_sih4, ip_s2, &
-  ip_sf6, ip_cs2, ip_s8, ip_cn, ip_ch3cl, ip_ch3f, ip_ch3br
+  ip_h2o, ip_co2, ip_o3, ip_n2o, ip_co, ip_ch4, ip_o2, ip_no, ip_so2, ip_no2, ip_nh3, &
+  ip_hno3, ip_n2, ip_cfc11, ip_cfc12, ip_cfc113, ip_hcfc22, ip_hfc125, ip_hfc134a, &
+  ip_cfc114, ip_tio, ip_vo, ip_h2, ip_he, ip_ocs, ip_na, ip_k, ip_feh, ip_crh, ip_li, &
+  ip_rb, ip_cs, ip_ph3, ip_c2h2, ip_hcn, ip_h2s, ip_ar, ip_air, ip_o, ip_n, ip_no3, ip_n2o5, &
+  ip_hono, ip_ho2no2, ip_h2o2, ip_c2h6, ip_ch3, ip_h2co, ip_ho2, ip_hdo, ip_hcl, &
+  ip_hf, ip_cosso, ip_tosso, ip_yosos, ip_ch3cho, ip_ch3ooh, ip_ch3coch3, &
+  ip_ch3cocho, ip_chocho, ip_c2h5cho, ip_hoch2cho, ip_c2h5coch3, ip_mvk, ip_macr, &
+  ip_pan, ip_ch3ono2, ip_c2h3, ip_c2h4, ip_oh, ip_hco, ip_n2o4, ip_c2n2, ip_n2h4, ip_n2o3, &
+  ip_si, ip_sio, ip_sio2, ip_mg, ip_mg2, ip_mgo, ip_tio2, ip_fe, ip_feo, ip_ca, ip_cao, &
+  ip_alo, ip_na2, ip_nao, ip_naoh, ip_koh, ip_hminus, ip_ps, ip_po, ip_pn,  &
+  ip_ch3sh, ip_ch3s, ip_c2h6s, ip_c2h6s2, ip_c3h4, ip_c4h3, ip_sih4, ip_s2, ip_sf6, ip_cs2, ip_s8,  &
+  ip_cn, ip_ch3cl, ip_ch3f, ip_ch3br
 
 implicit none
 
