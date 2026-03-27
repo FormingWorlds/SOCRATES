@@ -1,8 +1,25 @@
 LIB = .so
 LDFLAGS = -ldl
 SHLIBFLAGS = -shared
-FC=gfortran
-FFLAGS = -O3 -Wall -fPIC
+
+# Include SOCRATES Mk_cmd to get consistent compiler settings (including precision)
+# RAD_DIR must be set by sourcing set_rad_env before running make
+-include $(RAD_DIR)/bin/Mk_cmd
+
+# Base flags
+FFLAGS_BASE = -O3 -Wall -fPIC
+
+# Check if FORTCOMP is defined (from Mk_cmd) and extract precision-related flags
+ifdef FORTCOMP
+    # Extract the compiler path (first word of FORTCOMP)
+    FC := $(firstword $(FORTCOMP))
+    # Extract precision flags (-freal-8-real-4, -DSINGLE_PRECISION, -cpp) from SOCRATES config
+    PREC_FLAGS := $(filter -freal-8-real-4 -DSINGLE_PRECISION -cpp -real-size%,$(FORTCOMP))
+    FFLAGS = $(FFLAGS_BASE) $(PREC_FLAGS)
+else
+    FC = gfortran
+    FFLAGS = $(FFLAGS_BASE)
+endif
 
 ifeq ($(shell uname -s),Darwin)
 	FFLAGS += -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/
