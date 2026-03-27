@@ -53,9 +53,17 @@ MODULE PolynomialRoots
   PUBLIC:: SolvePolynomial
 !----------------------------------------------------------------------------
 
+#ifdef SINGLE_PRECISION
+  ! In single precision mode, SwapDouble handles all reals (DP becomes SP)
+  INTERFACE Swap
+    MODULE PROCEDURE SwapDouble
+  END INTERFACE
+#else
+  ! In double precision mode, provide both single and double swap routines
   INTERFACE Swap
     MODULE PROCEDURE SwapDouble, SwapSingle
   END INTERFACE
+#endif
 
 CONTAINS
 

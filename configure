@@ -6,6 +6,19 @@ optim="-Ofast -march=native"
 # optim="-O3"
 # optim=""
 
+# Floating point precision: "single" or "double" (default)
+precision="double"
+# precision="double"
+
+# Set precision-related flags based on choice
+if [ "$precision" == "single" ]; then
+    prec_flag="-freal-8-real-4"
+    prec_def="-DSINGLE_PRECISION"
+else
+    prec_flag=""
+    prec_def=""
+fi
+
 # Remove old files
 rm -rf "bin/"
 rm -f "set_rad_env"
@@ -21,6 +34,7 @@ rm -f $genpath
 echo "# Generated automatically" >> $genpath 
 echo "# System: $(uname -a) " >> $genpath
 echo "# Date: $(date) " >> $genpath
+echo "# Precision: $precision " >> $genpath
 echo " " >> $genpath
 
 #    compiler and linker 
@@ -34,8 +48,8 @@ if  [[ "$OSTYPE" == "darwin"* ]]; then
 else 
     extra=""
 fi 
-echo "FORTCOMP        = $fc $optim -fPIC -fallow-argument-mismatch $extra -c " >> $genpath
-echo "LINK            = $fc $optim -fPIC -fallow-argument-mismatch $extra " >> $genpath
+echo "FORTCOMP        = $fc $optim -fPIC -fallow-argument-mismatch -cpp $prec_flag $prec_def $extra -c " >> $genpath
+echo "LINK            = $fc $optim -fPIC -fallow-argument-mismatch $prec_flag $extra " >> $genpath
 
 ar="$(command -v ar)"
 if [ -z "$ar" ]; then 
