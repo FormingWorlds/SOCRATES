@@ -12,6 +12,8 @@ using OffsetArrays
 
 const libSOCRATES_C = joinpath(@__DIR__, "../lib/libSOCRATES_C.so")
 
+const Creal = Cfloat
+
 include("../gen/rad_pcf.jl")
 include("../gen/gas_list_pcf.jl")
 include("../gen/input_head_pcf.jl")
@@ -328,7 +330,7 @@ function set_spectrum(;
             Ref{Cuchar},
             Ref{Cuchar},
             Ref{Cuchar},
-            Ptr{Cvoid}, # Ref{Cdouble} doesn't work (can't be set to C_NULL) ???
+            Ptr{Cvoid}, # Ref{Creal} doesn't work (can't be set to C_NULL) ???
         ),
         n_instances,
         spectrum === C_NULL ? C_NULL : spectrum.cptr,
@@ -445,7 +447,7 @@ function set_spectrum(;
         l_ch3f,
         l_ch3br,
         l_all_gases,
-        wavelength_blue === C_NULL ? C_NULL : Ref{Cdouble}(wavelength_blue),
+        wavelength_blue === C_NULL ? C_NULL : Ref{Creal}(wavelength_blue),
     )
 
     return nothing
@@ -668,19 +670,14 @@ end
 #####################################
 
 function test_double_val(din::Float64)
-    dout = ccall((:PS_test_double_val, libSOCRATES_C), Cdouble, (Cdouble, ), din)
+    dout = ccall((:PS_test_double_val, libSOCRATES_C), Creal, (Creal, ), din)
     return dout
 end
 
 # din = C_NULL -> Fortran optional argument not present
 function test_double_ref(din::Union{Float64, Ptr{Nothing}} = C_NULL)
-    # dout = ccall((:PS_test_double_ref, libSOCRATES_C), Cdouble, (Ref{Cdouble}, ), din)
-
-    # TODO -  Ref{Cdouble} apparently can't be set to C_NULL, so
-    # we have to pass the argument as Ptr{Cvoid}
-    # cf Ref{Cuchar} (Fortran c_bool <-> C99 _Bool ) which can be set to C_NULL
-    din_C = din === C_NULL ? C_NULL : Ref{Cdouble}(din)
-    dout = ccall((:PS_test_double_ref, libSOCRATES_C), Cdouble, (Ptr{Cvoid}, ), din_C)
+    din_C = din === C_NULL ? C_NULL : Ref{Creal}(din)
+    dout = ccall((:PS_test_double_ref, libSOCRATES_C), Creal, (Ptr{Cvoid}, ), din_C)
     return dout
 end
 

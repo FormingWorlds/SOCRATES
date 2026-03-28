@@ -1,7 +1,7 @@
 """
     GenFortranWrappers
 
-Generate 
+Generate
     1) ISO_C_BINDING Fortran and Julia wrapper code to access Fortran Type fields (`gen_wrappers`)
     2) Julia modules with const variables corresponding to Fortran module parameters (`gen_pars`)
 """
@@ -9,6 +9,8 @@ Generate
 module GenFortranWrappers
 
 include("ParseFortran.jl")
+
+Creal_str = "Cfloat" # this is the default, but can be overridden by passing fortran_realtype="real(crealk)" to gen_wrappers
 
 """
     gen_wrappers
@@ -31,7 +33,7 @@ function gen_wrappers(
     svn_rev,
 )
     gen_julia_wrapper(
-        type_name*member_name, type_fields,        
+        type_name*member_name, type_fields,
         var_name=var_name,
         ismember=!isempty(member_name),
         julia_filename=julia_filename,
@@ -117,7 +119,7 @@ function gen_julia_wrapper(
             # this is used to show values in the REPL and when using IJulia
             function Base.show(io::IO, m::MIME"text/plain", handle::$(type_name))
                 println(io, handle)
-                dump_properties(io, handle)                
+                dump_properties(io, handle)
             end
 
         """)
@@ -126,32 +128,32 @@ function gen_julia_wrapper(
         gen_julia_propertynames(f, type_name, type_fields)
 
         gen_julia_getproperty(
-            f, type_name, type_fields, 
+            f, type_name, type_fields,
             lib_name=lib_name, fortran_realtype=fortran_realtype, ismember=ismember
         )
 
         gen_julia_setproperty(
-            f, type_name, type_fields, 
+            f, type_name, type_fields,
             lib_name=lib_name, fortran_realtype=fortran_realtype, ismember=ismember
         )
 
     end
-        
+
     return nothing
 
 end
 
 
-function gen_julia_propertynames(    
+function gen_julia_propertynames(
     f::IO, type_name, type_fields
 )
-    
+
     write(f, """
 
         function Base.propertynames(handle::$(type_name), private::Bool=false)
             names = [
     """)
-    
+
     for field in type_fields
         write(f, """
                     :$(field[:name]),
@@ -163,7 +165,7 @@ function gen_julia_propertynames(
 
             return names
         end
-    
+
     """)
 
     return nothing
@@ -183,7 +185,7 @@ function _gen_julia_cptr(f::IO, ismember::Bool)
     end
 
     write(f, """
-            cptr != Ptr{Cvoid}() || error("invalid handle (null cptr)")            
+            cptr != Ptr{Cvoid}() || error("invalid handle (null cptr)")
 
     """)
     return nothing
@@ -208,11 +210,11 @@ end
 
 
 
-function gen_julia_getproperty(    
+function gen_julia_getproperty(
     f::IO, type_name, type_fields;
     fortran_realtype, lib_name, ismember,
 )
-    
+
     write(f, """
 
         function Base.getproperty(handle::$(type_name), field::Symbol)
@@ -235,9 +237,9 @@ function gen_julia_getproperty(
     # logical scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == "logical"]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        write(f, """            
+        write(f, """
                     val = Ref{Cuchar}()
                     field_ok = ccall(
                         (:PS_$(type_name)_get_logical, $lib_name),
@@ -253,7 +255,7 @@ function gen_julia_getproperty(
     # integer scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == "integer"]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
         write(f, """
                     val = Ref{Cint}()
@@ -271,14 +273,14 @@ function gen_julia_getproperty(
     # real scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == fortran_realtype]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
         write(f, """
-                    val = Ref{Cdouble}()
+                    val = Ref{$Creal_str}()
                     field_ok = ccall(
                         (:PS_$(type_name)_get_real, $lib_name),
                         Cuchar,
-                        (Ptr{Cvoid}, Cstring, Ref{Cdouble}),
+                        (Ptr{Cvoid}, Cstring, Ref{$Creal_str}),
                         cptr, String(field), val
                     )
                     Bool(field_ok) || error("$(type_name) real field \$field not present - coding error")
@@ -294,7 +296,7 @@ function gen_julia_getproperty(
                     lbounds = zeros(Cint, ndim[])
                     field_ok = ccall(
                         (:PS_$(type_name)_get_$(ftypename)_array, $lib_name),
-                        Cuchar, 
+                        Cuchar,
                         (Ptr{Cvoid}, Cstring, Ref{Ptr{$ctype}}, Ref{Cint}, Ref{Cint}, Ref{Cint}),
                         cptr, String(field), loc, dims, ndim, lbounds
                     )
@@ -312,7 +314,7 @@ function gen_julia_getproperty(
     # NB: returned as Cint, not Bool, in order to match layout of 4 byte Fortran logical type
     fields = [f[:name] for f in type_fields if !isempty(f[:dims]) && f[:type] == "logical"]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
         emit_get_array("Cint", "logical")
     end
@@ -320,7 +322,7 @@ function gen_julia_getproperty(
     # integer arrays returned as OffsetArrays, or nothing if not allocated
     fields = [f[:name] for f in type_fields if !isempty(f[:dims]) && f[:type] == "integer"]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
         emit_get_array("Cint", "integer")
     end
@@ -328,21 +330,21 @@ function gen_julia_getproperty(
     # real arrays returned as OffsetArrays, or nothing if not allocated
     fields = [f[:name] for f in type_fields if !isempty(f[:dims]) && f[:type] == fortran_realtype]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        emit_get_array("Cdouble", "real")        
+        emit_get_array("$Creal_str", "real")
     end
 
     # strings
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && contains(f[:type], "character")]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
         write(f, """
                     val = zeros(Cuchar, 1024)
                     field_ok = ccall(
                         (:PS_$(type_name)_get_string, $lib_name),
-                        Cuchar, 
+                        Cuchar,
                         (Ptr{Cvoid}, Cstring, Ptr{Cuchar}, Csize_t),
                         cptr, String(field), val, length(val)
                     )
@@ -353,38 +355,38 @@ function gen_julia_getproperty(
     end
 
     # Types as members
-    # These are returned as a 'subtype' with the handle to the parent object, and the 
+    # These are returned as a 'subtype' with the handle to the parent object, and the
     # member of the parent object encoded in 'subtype' = 'type_name*field_name'
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && (f[:type][1:4] == "type")]
     for fieldname in fields
-        _gen_julia_if(f, [fieldname], firstif)       
+        _gen_julia_if(f, [fieldname], firstif)
         firstif = false
         write(f, """
-                    return $(type_name)$(fieldname)(handle)  
+                    return $(type_name)$(fieldname)(handle)
         """)
     end
 
     if firstif
         write(f, """
-                return getfield(handle, field)            
+                return getfield(handle, field)
         """)
     else
         write(f, """
                 else
                     return getfield(handle, field)
-                end    
+                end
         """)
     end
-    
-    write(f, """           
+
+    write(f, """
         end
-    
+
     """)
 
     return nothing
 end
 
-function gen_julia_setproperty(    
+function gen_julia_setproperty(
     f::IO, type_name, type_fields;
     fortran_realtype, lib_name, ismember,
 )
@@ -392,19 +394,19 @@ function gen_julia_setproperty(
     write(f, """
 
         function Base.setproperty!(handle::$(type_name), field::Symbol, val)
-                  
+
     """)
     _gen_julia_cptr(f, ismember)
 
     # logical scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == "logical"]
-    if !isempty(fields)        
-        _gen_julia_if(f, fields, firstif)       
+    if !isempty(fields)
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        write(f, """                                
+        write(f, """
                     field_ok = ccall(
                         (:PS_$(type_name)_set_logical, $lib_name),
-                        Cuchar, 
+                        Cuchar,
                         (Ptr{Cvoid}, Cstring, Cuchar),
                         cptr, String(field), val
                     )
@@ -416,9 +418,9 @@ function gen_julia_setproperty(
     # integer scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == "integer"]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        write(f, """                    
+        write(f, """
                     field_ok = ccall(
                         (:PS_$(type_name)_set_integer, $lib_name),
                         Cuchar,
@@ -433,13 +435,13 @@ function gen_julia_setproperty(
     # real scalars
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && f[:type] == fortran_realtype]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        write(f, """                    
+        write(f, """
                     field_ok = ccall(
                         (:PS_$(type_name)_set_real, $lib_name),
                         Cuchar,
-                        (Ptr{Cvoid}, Cstring, Cdouble),
+                        (Ptr{Cvoid}, Cstring, $Creal_str),
                         cptr, String(field), val
                     )
                     Bool(field_ok) || error("$(type_name) real field \$field not present - coding error")
@@ -450,9 +452,9 @@ function gen_julia_setproperty(
     # strings
     fields = [f[:name] for f in type_fields if isempty(f[:dims]) && contains(f[:type], "character")]
     if !isempty(fields)
-        _gen_julia_if(f, fields, firstif)       
+        _gen_julia_if(f, fields, firstif)
         firstif = false
-        write(f, """                    
+        write(f, """
                     field_ok = ccall(
                         (:PS_$(type_name)_set_string, $lib_name),
                         Cuchar,
@@ -466,19 +468,19 @@ function gen_julia_setproperty(
 
     if firstif
         write(f, """
-                error("type $type_name has no writeable field \$field")            
+                error("type $type_name has no writeable field \$field")
         """)
     else
         write(f, """
                 else
-                    error("type $type_name has no writeable field \$field")    
-                end    
+                    error("type $type_name has no writeable field \$field")
+                end
         """)
     end
 
-    write(f, """           
+    write(f, """
         end
-    
+
     """)
 
     return nothing
@@ -532,18 +534,18 @@ function gen_cfortran_wrapper(
         gen_cfortran_set(f, type_name, type_fields, "integer", "c_int", var_name=var_name, member_name=member_name)
 
         gen_cfortran_get(
-            f, type_name, type_fields, fortran_realtype, "c_double", 
+            f, type_name, type_fields, fortran_realtype, "c_double",
             var_name=var_name, ftype_emit_fortran="real", member_name=member_name
         )
         gen_cfortran_set(
-            f, type_name, type_fields, fortran_realtype, "c_double", 
+            f, type_name, type_fields, fortran_realtype, "c_double",
             var_name=var_name, ftype_emit_fortran="real", member_name=member_name
         )
 
         gen_cfortran_get_array(f, type_name, type_fields, "logical", var_name=var_name, member_name=member_name)
         gen_cfortran_get_array(f, type_name, type_fields, "integer", var_name=var_name, member_name=member_name)
         gen_cfortran_get_array(
-            f, type_name, type_fields, fortran_realtype, 
+            f, type_name, type_fields, fortran_realtype,
             var_name=var_name, ftype_emit_fortran="real", member_name=member_name
         )
 
@@ -562,7 +564,7 @@ function gen_cfortran_create(
 )
 
     write(f, """
-        function create_$type_name() result($(var_name)_Cptr) & 
+        function create_$type_name() result($(var_name)_Cptr) &
             bind(C, NAME='PS_create_$type_name')
 
             implicit none
@@ -574,7 +576,7 @@ function gen_cfortran_create(
 
             $(var_name)_Cptr = c_loc($var_name)
         end function create_$type_name
-    
+
     """)
     return nothing
 end
@@ -598,7 +600,7 @@ function gen_cfortran_delete(
             DEALLOCATE($(var_name))
 
         end subroutine delete_$type_name
-    
+
     """)
     return nothing
 end
@@ -635,14 +637,14 @@ function gen_cfortran_get(
             field = c_to_f_string(field_Cstr)
 
             field_OK = .TRUE.
-        
+
     """)
 
     first_field = true
     for field in type_fields_filtered
 
         ifstr = first_field ? "if" : "else if"
-        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
+        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])"
         write(f, """
                 $ifstr (field == '$(field[:name])') then
                     val = $(var_name)%$fn
@@ -653,9 +655,9 @@ function gen_cfortran_get(
             else
                 field_OK = .FALSE.
             end if
-    
+
         end function $(type_name)$(member_name)_get_$(ftype_emit_fortran)
-    
+
     """)
 
     return nothing
@@ -694,28 +696,28 @@ function gen_cfortran_set(
             field = c_to_f_string(field_Cstr)
 
             field_OK = .TRUE.
-        
+
     """)
 
     first_field = true
     for field in type_fields_filtered
 
         ifstr = first_field ? "if" : "else if"
-        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
+        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])"
         write(f, """
                 $ifstr (field == '$(field[:name])') then
                     $(var_name)%$fn = val
         """)
         first_field = false
     end
-    
+
     write(f, """
             else
                 field_OK = .FALSE.
             end if
-    
+
         end function $(type_name)$(member_name)_set_$(ftype_emit_fortran)
-    
+
     """)
 
     return nothing
@@ -750,7 +752,7 @@ function gen_cfortran_get_array(
             ! local variables
             TYPE($(type_name)), pointer             :: $(var_name)
             character(len=:), allocatable           :: field
-            integer(c_int), pointer, dimension(:)   :: dims, lbounds    
+            integer(c_int), pointer, dimension(:)   :: dims, lbounds
 
             ! convert types
             call C_F_POINTER($(var_name)_Cptr, $(var_name))
@@ -759,18 +761,18 @@ function gen_cfortran_get_array(
             call C_F_POINTER(lbounds_C, lbounds, [ndim])
 
             field_OK = .TRUE.
-        
+
     """)
 
     first_field = true
     for field in type_fields_filtered
-        
+
         if !field[:allocatable]
-            continue 
+            continue
         end
 
         ifstr = first_field ? "if" : "else if"
-        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
+        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])"
         write(f, """
                 $ifstr (field == '$(field[:name])') then
                     if (allocated($(var_name)%$fn)) then
@@ -789,9 +791,9 @@ function gen_cfortran_get_array(
             else
                 field_OK = .FALSE.
             end if
-    
+
         end function $(type_name)$(member_name)_get_$(ftype_emit_fortran)_array
-    
+
     """)
 
     return nothing
@@ -818,27 +820,27 @@ function gen_cfortran_get_string(
             type(c_ptr), value, intent(in)          :: field_Cstr
             logical(c_bool)                         :: field_OK
             type(c_ptr), value, intent(in)          :: val
-            integer(c_size_t), value, intent(in)    :: val_len 
+            integer(c_size_t), value, intent(in)    :: val_len
 
             ! local variables
             TYPE($(type_name)), pointer             :: $(var_name)
             character(len=:), allocatable           :: field
-           
+
             ! convert types
             call C_F_POINTER($(var_name)_Cptr, $(var_name))
             field = c_to_f_string(field_Cstr)
-                    
+
             field_OK = .TRUE.
-        
+
     """)
 
     first_field = true
     for field in type_fields_filtered
 
         ifstr = first_field ? "if" : "else if"
-        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
+        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])"
         write(f, """
-                $ifstr (field == '$(field[:name])') then                    
+                $ifstr (field == '$(field[:name])') then
                     field_OK = copy_f_to_c_string(val, val_len, $(var_name)%$fn)
         """)
         first_field = false
@@ -847,9 +849,9 @@ function gen_cfortran_get_string(
             else
                 field_OK = .FALSE.
             end if
-    
+
         end function $(type_name)$(member_name)_get_string
-    
+
     """)
 
     return nothing
@@ -876,27 +878,27 @@ function gen_cfortran_set_string(
             type(c_ptr), value, intent(in)          :: field_Cstr
             logical(c_bool)                         :: field_OK
             type(c_ptr), value, intent(in)          :: val
-           
+
 
             ! local variables
             TYPE($(type_name)), pointer             :: $(var_name)
-            character(len=:), allocatable           :: field            
+            character(len=:), allocatable           :: field
 
             ! convert types
             call C_F_POINTER($(var_name)_Cptr, $(var_name))
             field = c_to_f_string(field_Cstr)
-                    
+
             field_OK = .TRUE.
-        
+
     """)
 
     first_field = true
     for field in type_fields_filtered
 
         ifstr = first_field ? "if" : "else if"
-        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])" 
+        fn = isempty(member_name) ? field[:name] : "$member_name%$(field[:name])"
         write(f, """
-                $ifstr (field == '$(field[:name])') then                    
+                $ifstr (field == '$(field[:name])') then
                     field_OK = copy_c_to_f_string($(var_name)%$fn, val)
         """)
         first_field = false
@@ -905,9 +907,9 @@ function gen_cfortran_set_string(
             else
                 field_OK = .FALSE.
             end if
-    
+
         end function $(type_name)$(member_name)_set_string
-    
+
     """)
 
     return nothing
@@ -929,14 +931,14 @@ corresponding to Fortran parameter variables supplied in `parameter_fields`.
 function gen_pars(
     julia_filename, julia_modulename, parameter_fields;
     fortran_file, svn_rev)
-    
+
     open(julia_filename, "w") do f
         write(f, """
         # Autogenerated from $fortran_file
         # svn revision $svn_rev
 
         module $(julia_modulename)
-        
+
 
         """)
 
@@ -955,23 +957,23 @@ function gen_pars(
                 for ji in initializer_jl
                     write(f, """
                         $ji,
-                    """) 
+                    """)
                 end
                 write(f, """
                 ]
                 """)
-            end           
+            end
         end
         write(f, """
 
         end
         """)
-    end        
+    end
 end
 
 "convert a Fortran scalar initializer into a Julia initializer"
 function juliaize_scalar_initializer(initializer::AbstractString)
-    if length(initializer) >= 2 && 
+    if length(initializer) >= 2 &&
         ((initializer[1] == '"' && initializer[end] == '"') ||
         (initializer[1] == ''' && initializer[end] == '''))
         # string - strip Fortran trailing blanks
@@ -988,9 +990,9 @@ function safe_split(str)
     strsplitnaive = split(str, ",")
     if lstrip(strsplitnaive[1])[1] in (''', '"')
         # reassemble any strings containing ,
-        strsplit = []        
+        strsplit = []
         for str in strsplitnaive
-            if !(lstrip(str)[1] in (''', '"'))               
+            if !(lstrip(str)[1] in (''', '"'))
                 strsplit[end] = strsplit[end]*","*str
             else
                 push!(strsplit, str)

@@ -1,10 +1,10 @@
 # Generated automatically
 # System: Linux delphinium 6.19.8-200.fc43.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Mar 13 22:06:06 UTC 2026 x86_64 GNU/Linux 
-# Date: Fri 27 Mar 09:38:14 GMT 2026 
-# Precision: double 
+# Date: Sat 28 Mar 13:51:45 GMT 2026 
+# Precision: single 
  
-FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch -cpp    -c 
-LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch   
+FORTCOMP        = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch -cpp -freal-8-real-4 -DSINGLE_PRECISION  -c 
+LINK            = /usr/bin/gfortran -Ofast -march=native -fPIC -fallow-argument-mismatch -freal-8-real-4  
 LIBLINK         = /usr/bin/ar rvu 
 INCCDF_PATH     = /usr/include -I/usr/lib64/gfortran/modules 
 LIBCDF_PATH     = netcdff 
