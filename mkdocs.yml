@@ -1,6 +1,6 @@
-site_name: PROTEUS
-site_url: https://proteus-framework.org/PROTEUS/
-repo_url: https://github.com/FormingWorlds/PROTEUS
+site_name: SOCRATES
+site_url: https://proteus-framework.org/SOCRATES/
+repo_url: https://github.com/FormingWorlds/SOCRATES
 repo_name: GitHub
 
 copyright: '© 2023-2026 <a href="https://formingworlds.space">Forming Worlds Lab</a>'
@@ -11,25 +11,26 @@ nav:
       - Getting started: getting_started.md
 
   - How-to guides:
+      - Installation: How-to/installation.md
     
-
   - Tutorials:
       - First SOCRATES run: How-to/usage.md
 
   - Explanations:
+    - Model overview: model_overview.md
+
     
 
   - Reference:
-
+    - API reference: reference.md
+    - Publications: publications.md
 
   - Community:
       - Contact: Community/contact.md
-      - Contributing: Community/CONTRIBUTING.md
-      - Code of Conduct: Community/CODE_OF_CONDUCT.md
+      - Contributing: CONTRIBUTING.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
       - Developers: https://proteus-framework.org/people
       - Issues: https://github.com/FormingWorlds/SOCRATES/issues
-
-  - Funding: funding.md
 
   - Source code: https://github.com/FormingWorlds/SOCRATES
 
@@ -116,8 +117,8 @@ extra:
       link: https://pypi.org/project/fwl-proteus/
       name: PROTEUS on PyPI
     - icon: fontawesome/brands/github
-      link: https://github.com/FormingWorlds/PROTEUS
-      name: PROTEUS on GitHub
+      link: https://github.com/FormingWorlds/SOCRATES
+      name: SOCRATES on GitHub
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
