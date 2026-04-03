@@ -36,7 +36,10 @@ function parse_module_parameters(fortran_file_name::AbstractString, module_name:
 
     parameter_types = [
         l for l in internal_types
-            if l[:parameter] && !contains(lowercase(l[:initializer]), "reshape") 
+            if l[:parameter] && 
+                !contains(lowercase(l[:initializer]), "reshape") && 
+                !contains(lowercase(l[:name]),"photol_products") &&
+                !contains(lowercase(l[:name]),"threshold_wavelength") 
     ]
 
     return parameter_types
