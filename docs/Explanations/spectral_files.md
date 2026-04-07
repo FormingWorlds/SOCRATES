@@ -5,7 +5,7 @@
 
 ## Overview
 
-Atmospheric radiative transfer spans an enormous range of frequencies, across which gaseous absorption coefficients vary by many orders of magnitude. The approach adopted in SOCRATES — and in general circulation models (GCMs) broadly — is to divide the solar or infra-red spectral region into a number of **bands**, across which all radiative quantities except gaseous absorption coefficients may be treated as uniform. More bands give more accuracy, but at greater computational cost; the appropriate balance depends on the application.
+Atmospheric radiative transfer spans an enormous range of frequencies, across which gaseous absorption coefficients vary by many orders of magnitude. The approach adopted in SOCRATES, and in general circulation models (GCMs) broadly, is to divide the solar or infra-red spectral region into a number of **bands**, across which all radiative quantities except gaseous absorption coefficients may be treated as uniform. More bands give more accuracy, but at greater computational cost; the appropriate balance depends on the application.
 
 A key design choice in SOCRATES is that the frequency discretisation is not fixed in the code itself. Instead, it is set by an external file supplied at runtime: the **spectral file**. This separates the physical parametrisation data from the radiation solver, making the code flexible and easy to update. A spectral file generated for one version of SOCRATES remains compatible with future versions (though not necessarily the reverse, as new functionality may add new data blocks).
 
