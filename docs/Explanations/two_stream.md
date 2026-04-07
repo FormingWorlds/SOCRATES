@@ -88,8 +88,8 @@ The two-stream equations express diffuse fluxes $F^\pm$ in terms of two paramete
 | Approximation | $s$ | $d$ |
 |---|---|---|
 | **Eddington** | $\tfrac{3}{2}(1 - \omega g)$ | $2(1 - \omega)$ |
-| **PIFM85** (Zdunkowski & Korb 1985) | $D - \tfrac{3}{2}\omega g$ | $D(1 - \omega)$, $D = 2$ (or $1.66$ in IR) |
-| **Zdunkowski et al. 1980** | $2 - \tfrac{3}{2}\omega g - \tfrac{1}{2}\omega$ | $2(1 - \omega)$ |
+| **PIFM85** [^cite-ZK85] | $D - \tfrac{3}{2}\omega g$ | $D(1 - \omega)$, $D = 2$ (or $1.66$ in IR) |
+| **Zdunkowski et al. 1980** [^cite-ZWK80] | $2 - \tfrac{3}{2}\omega g - \tfrac{1}{2}\omega$ | $2(1 - \omega)$ |
 | **Discrete ordinates** | $\sqrt{3}(1 - \omega g)$ | $\sqrt{3}(1 - \omega)$ |
 | **Hemispheric mean** | $2(1 - \omega g)$ | $2(1 - \omega)$ |
 
@@ -97,7 +97,7 @@ The two-stream equations express diffuse fluxes $F^\pm$ in terms of two paramete
 
 ## Delta-rescaling of single scattering properties
 
-The crude angular representation in the two-stream equations introduces errors for strongly forward-scattering particles. The **$\delta$-rescaling** (Joseph et al. 1976) corrects this. A forward-scattering fraction $f = g^2$ is defined and the properties are transformed:
+The crude angular representation in the two-stream equations introduces errors for strongly forward-scattering particles. The **$\delta$-rescaling** [^cite-JWW76] corrects this. A forward-scattering fraction $f = g^2$ is defined and the properties are transformed:
 
 $$\tau \to \tau(1 - \omega f)$$
 
@@ -143,7 +143,7 @@ Discrepancies far from line centres are represented by a **smoothly varying cont
 
 $$k^{(e,c)} = K_f^{(c)} q_w f_f n_{b,f} + K_s^{(c)} q_w f_s n_{b,s}$$
 
-where $q_w$ is the water vapour mixing ratio, $n_b$ is the molar density of the broadening species, and subscripts $f$ and $s$ denote foreign and self-broadened components. The implementation is based on the **CKD continuum model** (Clough et al. 1989). A more general continuum parametrisation also supports **collision-induced absorption (CIA)**.
+where $q_w$ is the water vapour mixing ratio, $n_b$ is the molar density of the broadening species, and subscripts $f$ and $s$ denote foreign and self-broadened components. The implementation is based on the **CKD continuum model** [^cite-CKD89]. A more general continuum parametrisation also supports **collision-induced absorption (CIA)**.
 
 ### Aerosols
 
@@ -161,10 +161,10 @@ Represented by adding a **band-constant value** to the scattering and total exti
 
 Droplet properties depend on both mass mixing ratio $L$ and **effective radius** $r_e$. Three parametrisation forms are available:
 
-**Slingo & Schrecker (1982):**
+**Slingo & Schrecker (1982)** [^cite-SS82]:
 $$k^{(e)} = L(a + b/r_e), \quad k^{(s)} = k^{(e)}(1 - c - dr_e), \quad g = e + fr_e$$
 
-**Ackerman & Stephens / Hu & Stamnes (1987/1993):**
+**Ackerman & Stephens / Hu & Stamnes** [^cite-AS87] [^cite-HS93]:
 $$k^{(e)} = L(a_1 r_e^{b_2} + c_1), \quad \ldots$$
 *(More flexible but computationally expensive due to exponentials; rarely used in practice.)*
 
@@ -177,23 +177,23 @@ Ice crystal parametrisation is more complex due to **irregular crystal shapes**.
 
 | Scheme | Size Measure | Notes |
 |---|---|---|
-| Slingo & Schrecker analogy | Effective radius $r_e$ | Simplest; used in HadAM3 |
-| Modified anomalous diffraction (Mitchell et al. 1996) | Mean max dimension $\bar{D}_l$ | Two quartic polynomials for small/large ranges |
-| Fu (1996) / Fu et al. (1998) | Effective dimension $D_e$ | Proportional to volume/projected-area ratio |
-| Baran et al. (2013) | Ice water content + temperature | Linked directly to GCM prognostic variables |
-| Baran et al. (2014) | Ice water content only | No intermediate size variable |
+| Slingo & Schrecker analogy [^cite-SS82] | Effective radius $r_e$ | Simplest; used in HadAM3 |
+| Modified anomalous diffraction [^cite-M96] | Mean max dimension $\bar{D}_l$ | Two quartic polynomials for small/large ranges |
+| Fu (1996) / Fu et al. (1998) [^cite-Fu96] [^cite-Fu98] | Effective dimension $D_e$ | Proportional to volume/projected-area ratio |
+| Baran et al. (2013) [^cite-B13] | Ice water content + temperature | Linked directly to GCM prognostic variables |
+| Baran et al. (2014) [^cite-B14] | Ice water content only | No intermediate size variable |
 
 The spectral file may contain data for multiple ice crystal types, selectable at runtime.
 
 ---
 
-## Overlapping Gaseous Absorption
+## Overlapping gaseous absorption
 
 When multiple gases absorb in a band, their spectral lines may overlap. Full **random overlap** treatment is available but expensive. Faster approximations are provided:
 
 ### Equivalent extinction
 
-An extension of the FESFT method (Ritter & Geleyn 1992). For minor gases, a single band-representative extinction coefficient is derived from a subsidiary calculation:
+An extension of the FESFT method [^cite-RG92]. For minor gases, a single band-representative extinction coefficient is derived from a subsidiary calculation:
 
 $$\bar{K} = \frac{\sum_r w_r K_r N_r}{\sum_r w_r N_r}$$
 
@@ -209,7 +209,7 @@ In the solar region, minor gas direct transmissions are multiplicative and compu
 
 A fractional cloud cover $W_i$ may be specified within each layer $i$, divided into $N_T$ types (stratiform water, stratiform ice, convective water, convective ice). Clouds are treated as **plane-parallel** with no three-dimensional effects.
 
-The vertical overlapping of clouds is handled by coupling coefficients $u_{i,j,k}$ and $v_{i,j,k}$ that transfer fluxes between regions at layer boundaries, following a generalisation of Geleyn & Hollingsworth (1979).
+The vertical overlapping of clouds is handled by coupling coefficients $u_{i,j,k}$ and $v_{i,j,k}$ that transfer fluxes between regions at layer boundaries, following a generalisation of Geleyn & Hollingsworth (1979) [^cite-GH79].
 
 Layers are decomposed into **regions** (clear, stratiform cloud, convective cloud), and fluxes within each region are assumed horizontally uniform.
 
@@ -221,18 +221,18 @@ Three assumptions are supported for computing the overlap area $Y_{i,j,k}$:
 |---|---|
 | **Random overlap** | $Y_{i,j,k} = X_{i,j} X_{i+1,k}$ |
 | **Maximum-random overlap** | Similar regions are maximally overlapped; dissimilar ones randomly overlapped |
-| **Exponential-random overlap** (Hogan & Illingworth 2000) | Combines random and maximum-random linearly via overlap coefficient $\alpha = \exp(-\delta p / p_0)$, where $\delta p$ is layer separation and $p_0$ is the decorrelation length |
+| **Exponential-random overlap** [^cite-HI00] | Combines random and maximum-random linearly via overlap coefficient $\alpha = \exp(-\delta p / p_0)$, where $\delta p$ is layer separation and $p_0$ is the decorrelation length |
 
 Sub-grid scale cloud water content variability can be included by multiplying cloud water content by a **scaling factor**.
 
 ### Monte Carlo Independent Column Approximation (McICA)
 
-McICA (Pincus et al. 2003) efficiently represents sub-grid cloud variability by sampling a different randomly chosen sub-column for each spectral integration point. Properties:
+McICA [^cite-P03] efficiently represents sub-grid cloud variability by sampling a different randomly chosen sub-column for each spectral integration point. Properties:
 
 - Each sub-column layer is either overcast or cloud-free (no partial cloud).
 - The resulting radiative profile is **unbiased** relative to a full ICA calculation but introduces **noise**.
-- Sub-columns are generated by a stochastic cloud generator (Räisänen et al. 2004) using a **gamma distribution** for in-cloud water content.
-- Fractional standard deviation may be set globally or parametrised from resolution and cloud properties (Hill et al. 2012, Boutle et al. 2013).
+- Sub-columns are generated by a stochastic cloud generator [^cite-R04] using a **gamma distribution** for in-cloud water content.
+- Fractional standard deviation may be set globally or parametrised from resolution and cloud properties [^cite-H12] [^cite-Boutle13].
 - McICA is currently available only when cloud is segregated by **phase** (not by type; no convection separation).
 
 ---
@@ -283,18 +283,22 @@ At grazing solar zenith angles, Earth's curvature causes the local zenith angle 
 
 ---
 
-## References
-
-| Topic | Reference |
-|---|---|
-| Two-stream core | Edwards & Slingo (1996), *Q. J. Roy. Meteorol. Soc.* |
-| δ-rescaling | Joseph et al. (1976), *J. Atm. Sci.* |
-| Water droplets (Slingo) | Slingo & Schrecker (1982), *Q. J. R. Meteorol. Soc.* |
-| Water droplets (Padé) | Hu & Stamnes (1993), *J. Climate* |
-| Ice crystals (anomalous diffraction) | Mitchell et al. (1996), *J. Atm. Sci.* |
-| Ice crystals (aggregate) | Baran et al. (2001, 2013, 2014) |
-| Equivalent extinction | Edwards (1996), *J. Atm. Sci.*; Ritter & Geleyn (1992) |
-| Cloud overlap | Geleyn & Hollingsworth (1979); Hogan & Illingworth (2000) |
-| McICA | Pincus et al. (2003), *J. Geophys. Res.* |
-| Stochastic cloud generator | Räisänen et al. (2004), *Q. J. Roy. Meteorol. Soc.* |
-| Water vapour continuum | Clough et al. (1989), *Atmos. Res.* |
+[^cite-ZK85]: W. G. Zdunkowski and G. J. Korb, *Numerische Methoden zur Lösung der Strahlungsübertragungsgleichung*, Promet, 2/3:26–39, 1985.
+[^cite-ZWK80]: W. G. Zdunkowski, R. M. Welch, and G. Korb, *An investigation of the structure of typical two-stream methods for the calculation of solar fluxes and heating rates in clouds*, Beiträge Phys. Atmosph., 53:147–166, 1980.
+[^cite-JWW76]: J. H. Joseph, W. J. Wiscombe, and J. A. Weinman, *The delta-Eddington approximation for radiative flux transfer*, J. Atm. Sci., 33:2452–2459, 1976.
+[^cite-CKD89]: S. A. Clough, F. X. Kneizys, and R. W. Davies, *Line shape and the water vapor continuum*, Atmos. Res., 23:229–241, 1989.
+[^cite-SS82]: A. Slingo and H. M. Schrecker, *On the shortwave radiative properties of stratiform water clouds*, Q. J. R. Meteorol. Soc., 108:407–426, 1982.
+[^cite-AS87]: S. A. Ackerman and G. L. Stephens, *The absorption of solar radiation by cloud droplets: An application of anomalous diffraction theory*, J. Atm. Sci., 44:1574–1588, 1987.
+[^cite-HS93]: Y. X. Hu and K. Stamnes, *An accurate parametrization of the radiative properties of water clouds suitable for use in climate models*, J. Climate, 6:728–742, 1993.
+[^cite-M96]: D. L. Mitchell, A. Macke, and Y. Liu, *Modeling cirrus clouds. Part II: Treatment of radiative properties*, J. Atm. Sci., 53:2967–2988, 1996.
+[^cite-Fu96]: Q. Fu, *An accurate parametrization of the solar radiative properties of cirrus clouds for climate models*, J. Clim., 9:2058–2082, 1996.
+[^cite-Fu98]: Q. Fu, P. Yang, and W. B. Sun, *An accurate parametrization of the infrared radiative properties of cirrus clouds for climate models*, J. Clim., 11:2223–2237, 1998.
+[^cite-B13]: A. J. Baran, P. J. Connolly, and C. Lee, *Testing an ensemble model of cirrus ice crystals using midlatitude in situ estimates of ice water content, volume extinction coefficient and the total solar optical depth*, J. Quant. Spectrosc. Radiat. Transfer, 110:1579–1598, 2009; Baran et al., AIP Conf. Proc., 1531:716–719, 2013.
+[^cite-B14]: A. J. Baran, P. Hill, K. Furtado, P. Field, and J. Manners, *A Coupled Cloud Physics–Radiation Parameterization of the Bulk Optical Properties of Cirrus and its Impact on the Met Office Unified Model Global Atmosphere 5.0 Configuration*, J. Climate, 27:7725–7752, 2014.
+[^cite-RG92]: B. Ritter and J.-F. Geleyn, *A comprehensive radiation scheme for numerical weather prediction models with potential applications in climate simulations*, Mon. Wea. Rev., 120:303–325, 1992.
+[^cite-GH79]: J. F. Geleyn and A. Hollingsworth, *An economical analytical method for the computation of the interaction between scattering and line absorption of radiation*, Beiträge Phys. Atmosph., 52:1–16, 1979.
+[^cite-HI00]: R. J. Hogan and A. J. Illingworth, *Deriving cloud overlap statistics from radar*, Q. J. Roy. Meteorol. Soc., 126:1–7, 2000.
+[^cite-P03]: R. Pincus, H. W. Barker, and J.-J. Morcrette, *A fast, flexible, approximate technique for computing radiative transfer in inhomogeneous cloud fields*, J. Geophys. Res., 108(D13):4376, 2003.
+[^cite-R04]: P. Räisänen, H. W. Barker, M. F. Khairoutdinov, J. Li, and D. A. Randall, *Stochastic generation of subgrid-scale cloudy columns for large-scale models*, Q. J. Roy. Meteorol. Soc., 130:2047–2067, 2004.
+[^cite-H12]: P. G. Hill, R. J. Hogan, J. Manners, and J. C. Petch, *Parametrizing the horizontal inhomogeneity of ice water content using CloudSat data products*, Q. J. Roy. Meteorol. Soc., 138:1784–1793, 2012.
+[^cite-Boutle13]: I. A. Boutle, S. J. Abel, P. G. Hill, and C. J. Morcrette, *Spatial variability of liquid cloud and rain: observations and microphysical effects*, Q. J. Roy. Meteorol. Soc., 2013.
