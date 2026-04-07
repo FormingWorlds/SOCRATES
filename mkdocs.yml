@@ -17,13 +17,16 @@ nav:
       - First SOCRATES run: How-to/usage.md
 
   - Explanations:
-    - Model overview: model_overview.md
-
-    
+    - Physical model description:
+      - Overview: Explanations/overview.md
+      - Two-stream radiation code: Explanations/two_stream.md
+      - Spherical harmonic code: Explanations/spherical_harmonic.md
+    - Spectral files: Explanations/spectral_files.md
+    - Interface to the calling model: Explanations/interface.md
 
   - Reference:
-    - API reference: reference.md
     - Publications: publications.md
+    - Spectral files: spectral_files_reference.md
 
   - Community:
       - Contact: Community/contact.md
@@ -35,7 +38,7 @@ nav:
   - Source code: https://github.com/FormingWorlds/SOCRATES
 
   - Other PROTEUS modules:
-      - PROTEUS framework: proteus-framework.md
+      - PROTEUS framework: proteus_framework.md
       - PROTEUS: https://proteus-framework.org/PROTEUS/
       - MORS: https://proteus-framework.org/MORS/
       - JANUS: https://proteus-framework.org/JANUS/
@@ -126,6 +129,7 @@ extra_javascript:
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/footnotes.css
 
 plugins:
   - search
