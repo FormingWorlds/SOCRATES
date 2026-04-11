@@ -1,7 +1,7 @@
 # PROTEUS spectral files
 
 !!! note
-    The spectral files described here have been generated specifically for use within the PROTEUS framework, covering atmospheric compositions relevant to exoplanet and planetary science applications. They are distinct from the [standard Met Office spectral files](spectral_files_reference.md) distributed with SOCRATES for Earth atmosphere modelling.
+    The spectral files described here have been generated specifically for use within the PROTEUS framework, covering atmospheric compositions relevant to exoplanet and planetary science applications. They are distinct from the [standard Met Office spectral files](spectral_file_reference.md) distributed with SOCRATES for Earth atmosphere modelling.
 
 ---
 
