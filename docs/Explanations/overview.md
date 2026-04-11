@@ -51,7 +51,7 @@ Both solvers rely on **spectral files**: external, user-supplied files that defi
 
 The separation of spectral data from the radiation code itself makes SOCRATES highly flexible: a spectral file generated for one version of the code remains compatible with future versions, and new gases, aerosols, or parametrisations can be added without modifying the solver.
 
-### [Interface to the calling model](../interface.md)
+### [Interface to the calling model](interface.md)
 
 SOCRATES is designed to be embedded in any atmospheric model through a clean, well-defined interface. All inputs and outputs are wrapped into eight structured types, `control`, `dimen`, `spectrum`, `atm`, `cld`, `aer`, `bound`, and `radout`, passed to the core routine `radiance_calc`. This design keeps the radiation code self-contained and straightforward to couple to new models.
 
