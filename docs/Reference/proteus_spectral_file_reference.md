@@ -13,35 +13,223 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
 
 ---
 
-## Spectral file table
+## Spectral file summary table
  
-| Codename | Bands | Absorbers | Continua | Tolerance | Source | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Legacy | 318 | CO₂, CH₄, O₂, N₂, H₂, He | — | 1.00E-02 | HITRAN | Yes | 2002 | 2021 | Linux Intel | Tim Lichtenberg | Legacy spectral file used in Lichtenberg+2021 |
-| Oak | 318 | H₂O | H₂O | 1.00E-02 | HITRAN | Yes | 2306 | 2023-07-10 | Linux Intel | Harrison Nicholls | Water-only spectral file from HITRAN. To be used for benchmarking. |
-| Idwal | 318 | H₂O | H₂O | 1.00E-02 | HITRAN | No | 2211 | 2023-07-11 | Linux Intel | Harrison Nicholls | Made redundant by Oak. They only differ by SOCRATES version. |
-| Balmora | 318 | H₂O | H₂O | 1.00E-02 | HITRAN | No | 2306 | 2023-07-19 | Mac ARM | Tim Lichtenberg | Made redundant by Oak. They only differ by creation platform. |
-| Triangle | 318 | H₂O, H₂, CO₂ | H₂O, H₂, CO₂ | 1.00E-02 | HITRAN | Yes | 2306 | 2023-07-11 | Linux Intel | Harrison Nicholls | Test |
-| Mallard | 318 | H₂O, H₂, CO₂, CO, CH₄, O₂, N₂, He | H₂O, CO₂, CH₄, O₂, N₂, H₂, He | 1.00E-02 | HITRAN | Yes | 2306 | 2023-07-13 | Linux Intel | Harrison Nicholls | HITRAN file with useful opacities |
-| Reach | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | H₂O, CO₂, CH₄, O₂, N₂, H₂, He | 1.00E-02 | HITRAN | Yes | 2306 | 2023-07-19 | Linux Intel | Harrison Nicholls | Same as above but with more opacities. Script exists to generate this file, but it is not currently available. |
-| Vivec | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | H₂O, CO₂, CH₄, O₂, N₂, H₂, He | 1.00E-02 | HITRAN | No | 2306 | 2023-07-25 | Mac Intel | Tim Lichtenberg | Same as above, but compiled on MacOS |
-| Alduin | 432 | H₂O | H₂O | 1.00E-02 | EXOMOL | Yes | 2306 | — | Linux Intel | Ryan Boukrouche | — |
-| Kynesgrove | 318 | O₂ | O₂-O₂ | 5.00E-04 | DACE | Yes | 2403 | 2024-03-14 | Linux Intel | Harrison Nicholls | Created for validation of DACE xsec data against SOCRATES' own LbL calculations used in Mallard. |
-| Frostflow | 4096 | H₂O | H₂O | 5.00E-03 | DACE | Yes | 2403 | 2024-03-20 | Linux Intel | Harrison Nicholls | Very high resolution. Intended for benchmarking. |
-| Frostflow | 256 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | High resolution. |
-| Frostflow | 48 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution. |
-| Frostflow | 16 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution. Intended for debugging. |
-| Dayspring | 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂ | H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄ | 1.00E-02 | DACE | Yes | 2403 | 2024-04-30 | Linux Intel | Harrison Nicholls | Very high resolution. Intended for benchmarking. |
-| Dayspring | 256 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | High resolution. |
-| Dayspring | 48 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution. |
-| Dayspring | 16 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution. Intended for debugging. |
-| Honeyside | 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂, NH₃, SO₂, N₂O, O₃, HCN, H₂S | H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄ | 1.00E-02 | DACE | Yes | 2403 | 2024-07-07 | Linux Intel | Harrison Nicholls | Very high resolution. Intended for benchmarking. |
-| Honeyside | 256 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | High resolution. |
-| Honeyside | 48 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution. |
-| Honeyside | 16 | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution. Intended for debugging. |
-| Rocks | 256 | O₂, SiO, SiO₂ | O₂-O₂ | — | DACE | Yes | 2407.2 | 2025-05-15 | Linux Intel | Alex McGinty | — |
-| Rocks | 128 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | — | DACE | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles. High resolution file used for comparison with JWST observations of rock-vapour atmospheres. |
-| Rocks | 64 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | — | DACE | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles (low resolution). |
+| Codename | Bands | Absorbers | Source | Notes |
+|---|---|---|---|---|
+| Legacy | 318 | CO₂, CH₄, O₂, N₂, H₂, He | HITRAN | Legacy file used in Lichtenberg et al. (2021) |
+| Oak | 318 | H₂O | HITRAN | Water-only file from HITRAN; intended for benchmarking |
+| Idwal | 318 | H₂O | HITRAN | Made redundant by Oak |
+| Balmora | 318 | H₂O | HITRAN | Made redundant by Oak |
+| Triangle | 318 | H₂O, H₂, CO₂ | HITRAN | Test file |
+| Mallard | 318 | H₂O, H₂, CO₂, CO, CH₄, O₂, N₂, He | HITRAN | HITRAN file with useful opacities |
+| Reach | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | HITRAN | Same as Mallard but with more opacities |
+| Vivec | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | HITRAN | Same as Reach, compiled on macOS |
+| Alduin | 432 | H₂O | EXOMOL | |
+| Kynesgrove | 318 | O₂ | DACE | Validation of DACE cross-section data against SOCRATES line-by-line calculations |
+| Frostflow | 16 / 48 / 256 / 4096 | H₂O | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Dayspring | 16 / 48 / 256 / 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂ | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Honeyside | 16 / 48 / 256 / 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂, NH₃, SO₂, N₂O, O₃, HCN, H₂S | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Rocks | 64 / 128 / 256 | H₂, H₂O, O₂, SiO, SiO₂ | DACE | Rock vapours and key volatiles; 128-band file for JWST comparison |
+ 
+---
+ 
+## Full metadata
+ 
+??? info "Honeyside"
+    | Bands | Tolerance | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
+    |---|---|---|---|---|---|---|---|
+    | 4096 | 1.00E-02 | Yes | 2403 | 2024-07-07 | Linux Intel | Harrison Nicholls | Very high resolution; intended for benchmarking |
+    | 256 | ^ | ^ | ^ | ^ | ^ | ^ | High resolution |
+    | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
+    | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
+ 
+    **Absorbers:** H₂O, H₂, CO₂, CO, CH₄, N₂, NH₃, SO₂, N₂O, O₃, HCN, H₂S  
+    **Continua:** H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄  
+    **Source:** DACE
+ 
+??? info "Rocks"
+    | Bands | Absorbers | Continua | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
+    |---|---|---|---|---|---|---|---|---|
+    | 256 | O₂, SiO, SiO₂ | O₂-O₂ | Yes | 2407.2 | 2025-05-15 | Linux Intel | Alex McGinty | — |
+    | 128 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles. High resolution file for comparison with JWST observations of rock-vapour atmospheres |
+    | 64 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles (low resolution) |
+ 
+    **Source:** DACE
+ 
+??? info "Dayspring"
+    | Bands | Tolerance | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
+    |---|---|---|---|---|---|---|---|
+    | 4096 | 1.00E-02 | Yes | 2403 | 2024-04-30 | Linux Intel | Harrison Nicholls | Very high resolution; intended for benchmarking |
+    | 256 | ^ | ^ | ^ | ^ | ^ | ^ | High resolution |
+    | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
+    | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
+ 
+    **Absorbers:** H₂O, H₂, CO₂, CO, CH₄, N₂  
+    **Continua:** H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄  
+    **Source:** DACE
+ 
+??? info "Frostflow"
+    | Bands | Tolerance | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
+    |---|---|---|---|---|---|---|---|
+    | 4096 | 5.00E-03 | Yes | 2403 | 2024-03-20 | Linux Intel | Harrison Nicholls | Very high resolution; intended for benchmarking |
+    | 256 | ^ | ^ | ^ | ^ | ^ | ^ | High resolution |
+    | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
+    | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
+ 
+    **Absorbers:** H₂O  
+    **Continua:** H₂O  
+    **Source:** DACE
+ 
+??? info "Kynesgrove"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | O₂ |
+    | Continua | O₂-O₂ |
+    | Tolerance | 5.00E-04 |
+    | Source | DACE |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2403 |
+    | Date | 2024-03-14 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | Created for validation of DACE cross-section data against SOCRATES' own line-by-line calculations used in Mallard |
+ 
+??? info "Reach"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS |
+    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-19 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | Same as Mallard but with more opacities. Script exists to generate this file, but it is not currently available. |
+ 
+??? info "Mallard"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O, H₂, CO₂, CO, CH₄, O₂, N₂, He |
+    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-13 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | HITRAN file with useful opacities |
+ 
+??? info "Alduin"
+    | Field | Value |
+    |---|---|
+    | Bands | 432 |
+    | Absorbers | H₂O |
+    | Continua | H₂O |
+    | Tolerance | 1.00E-02 |
+    | Source | EXOMOL |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2306 |
+    | Date | — |
+    | Platform | Linux Intel |
+    | Creator | Ryan Boukrouche |
+    | Notes | — |
+ 
+??? info "Oak"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O |
+    | Continua | H₂O |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-10 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | Water-only spectral file from HITRAN. To be used for benchmarking. |
+ 
+??? info "Legacy"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | CO₂, CH₄, O₂, N₂, H₂, He |
+    | Continua | — |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2002 |
+    | Date | 2021 |
+    | Platform | Linux Intel |
+    | Creator | Tim Lichtenberg |
+    | Notes | Legacy spectral file used in Lichtenberg et al. (2021) |
+ 
+??? info "Vivec"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS |
+    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | No |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-25 |
+    | Platform | Mac Intel |
+    | Creator | Tim Lichtenberg |
+    | Notes | Same as Reach, but compiled on macOS |
+ 
+??? info "Triangle"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O, H₂, CO₂ |
+    | Continua | H₂O, H₂, CO₂ |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | Yes |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-11 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | Test |
+ 
+??? info "Idwal"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O |
+    | Continua | H₂O |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | No |
+    | SOCRATES version | 2211 |
+    | Date | 2023-07-11 |
+    | Platform | Linux Intel |
+    | Creator | Harrison Nicholls |
+    | Notes | Made redundant by Oak. They only differ by SOCRATES version. |
+ 
+??? info "Balmora"
+    | Field | Value |
+    |---|---|
+    | Bands | 318 |
+    | Absorbers | H₂O |
+    | Continua | H₂O |
+    | Tolerance | 1.00E-02 |
+    | Source | HITRAN |
+    | NaN-clean | No |
+    | SOCRATES version | 2306 |
+    | Date | 2023-07-19 |
+    | Platform | Mac ARM |
+    | Creator | Tim Lichtenberg |
+    | Notes | Made redundant by Oak. They only differ by creation platform. |
 
 ---
 

@@ -8,7 +8,6 @@ copyright: '© 2023-2026 <a href="https://formingworlds.space">Forming Worlds La
 nav:
   - Home:
       - About: index.md
-      - Getting started: getting_started.md
 
   - How-to guides:
       - Installation: How-to/installation.md
