@@ -9,12 +9,12 @@
 
 Standard spectral files are provided for four major model configurations, each with separate shortwave (SW) and longwave (LW) files. Files with names beginning `sp_` are readable text format for use with UM version ≥ 8.6 or the offline code; files beginning `spec3a_` are namelist format for UM version ≤ 8.5.
 
-| Configuration | SW file | LW file(s) | Notes |
-|---|---|---|---|
-| Global Atmosphere 7 | `sp_sw_ga7` | `sp_lw_ga7` | Most recent standard configuration |
-| Global Atmosphere 3 | `sp_sw_ga3_0` | `sp_lw_ga3_0`, `sp_lw_ga3_1` | ga3_0 for climate; ga3_1 for forecasts |
-| HadGEM2 | `spec3a_sw_hadgem1_5o_rlfx` | `spec3a_lw_hadgem1_5C` | Includes biogenic and mineral dust aerosols |
-| HadGEM1 | `spec3a_sw_hadgem1_3` | `spec3a_lw_hadgem1_3` | Standard HadGEM1 configuration |
+| Configuration | SW file | LW file(s) |
+|---|---|---|
+| Global Atmosphere 7 | `sp_sw_ga7` | `sp_lw_ga7` |
+| Global Atmosphere 3 | `sp_sw_ga3_0` | `sp_lw_ga3_0`, `sp_lw_ga3_1` |
+| HadGEM2 | `spec3a_sw_hadgem1_5o_rlfx` | `spec3a_lw_hadgem1_5C` |
+| HadGEM1 | `spec3a_sw_hadgem1_3` | `spec3a_lw_hadgem1_3` |
 
 Older files for HadCM3, HadAM4, and the mesoscale model are also distributed; see the technical guide for their full descriptions.
 
@@ -23,6 +23,8 @@ Older files for HadCM3, HadAM4, and the mesoscale model are also distributed; se
 ## Global Atmosphere Configuration 7
 
 ### `sp_sw_ga7`
+
+Sections are identical to `sp_sw_ga3_0` except for changes to the spectral bands, solar spectrum (including Rayleigh coefficients), and gaseous absorption.
 
 **Spectral bands:**
 
@@ -35,19 +37,21 @@ Older files for HadCM3, HadAM4, and the mesoscale model are also distributed; se
 | 5 | 1190 – 2380 |
 | 6 | 2380 – 10000 |
 
-Bands 2 and 3 are true spectral bands, properly split at 505 nm (correcting the combined pseudo-band used in GA3).
+The six bands are identical to `sp_sw_ga3_0` except that the combined bands 2 and 3 are now properly split into two true bands at 505 nm.
 
-**Solar spectrum:** "Lean 12": a mean over 2000–2011 from the SPARC/SOLARIS group recommendation [^cite-Lean00], with updated Rayleigh scattering coefficients.
+**Solar spectrum:** "Lean 12" — a mean over 2000–2011 from the SPARC/SOLARIS group recommendation [^cite-Lean00], with associated updates to Rayleigh scattering coefficients.
 
 **Gaseous absorption:** Newly derived for all gases using HITRAN 2012 [^cite-HITRAN] and the CAVIAR water vapour continuum. Absorption coefficients are scaled via a look-up table of 59 pressures × 5 temperatures, based on a mid-latitude summer profile. Total of **41 major gas k-terms**.
 
 Gases included: H₂O, O₃, CO₂, O₂, N₂O, CH₄, SO₂ (experimental), OCS (experimental).
 
-Ozone cross-sections: Serdyuchenko et al. [^cite-Serd14] and Gorshelev et al. [^cite-Gors14] for UV/visible; Brion–Daumont–Malicet for the far UV. In band 1, one k-term per 20 nm sub-interval (200–320 nm); in band 2, sub-intervals at 320–400 nm and 400–505 nm to support solar spectral variability experiments.
+Ozone cross-sections from Serdyuchenko et al. [^cite-Serd14] and Gorshelev et al. [^cite-Gors14] for UV/visible; Brion–Daumont–Malicet for the far UV. In band 1, one k-term per 20 nm sub-interval (200–320 nm); in band 2, sub-intervals at 320–400 nm and 400–505 nm to allow the incoming solar flux to be supplied on finer wavelength bands for solar spectral variability experiments.
 
 ---
 
 ### `sp_lw_ga7`
+
+Sections are identical to `sp_lw_ga3_0` except for changes to gaseous absorption and thermal emission.
 
 **Spectral bands:**
 
@@ -63,15 +67,15 @@ Ozone cross-sections: Serdyuchenko et al. [^cite-Serd14] and Gorshelev et al. [^
 | 8 | 1330 – 1500 | 6.67 – 7.52 |
 | 9 | 1500 – 2995 | 3.34 – 6.67 |
 
-Bands 3 and 5 are split bands (see [Spectral files — split bands](../Explanations/spectral_files.md#split-bands-block-14)).
+Bands 3 and 5 are split bands (see [Spectral files: split bands](../Explanations/spectral_files.md#split-bands-block-14)).
 
 **Gaseous absorption:** Newly derived for all gases (except CO₂ in band 4) using HITRAN 2012 and CAVIAR. Total of **81 major gas k-terms**.
 
 Greenhouse gases included: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a, SO₂ (experimental), OCS (experimental).
 
-The improved CO₂ representation in the window region (bands 5 and 6) gives a better forcing response to CO₂ increases (tested to ×32 present-day). **Hybrid scattering** is supported: 27 of the 81 k-terms (optically thin, nominal optical depth < 10) use the full scattering solver; the remaining 54 use a cheaper non-scattering solver.
+The improved representation of CO₂ in the window region (more minor gas k-terms in bands 5 and 6) provides a better forcing response to increases in CO₂ (tested up to ×32 present-day). The new method of hybrid scattering may be used with this spectral file: 27 of the major gas k-terms (where their nominal optical depth is less than 10 in a mid-latitude summer atmosphere) use the full scattering solver; the remaining 54 (optical depth > 10) use a cheaper non-scattering solver.
 
-**Thermal emission:** Planck function fitted by a quartic polynomial over 160–330 K (lower bound reduced from 150 K in GA3 to improve accuracy at cold stratospheric temperatures).
+**Thermal emission:** Planck function fitted by a quartic polynomial over 160–330 K. This increases the lower bound of the fit from 150 K used with `sp_lw_ga3_0` and slightly improves the fit over the important temperature range for the Earth's atmosphere.
 
 ---
 
@@ -79,31 +83,33 @@ The improved CO₂ representation in the window region (bands 5 and 6) gives a b
 
 ### `sp_sw_ga3_0`
 
-**Spectral bands:** Identical to GA7 except bands 2 and 3 share the combined range 320–690 nm (not true bands; only their sum is physically meaningful).
+Sections are identical to `spec3a_sw_hadgem1_5o_rlfx` except for changes to the solar spectrum (including Rayleigh coefficients), gaseous absorption, aerosols, and ice crystals.
 
-**Solar spectrum:** Lean (2000, updated) [^cite-Lean00]: satellite observations below 735 nm merged with the Kurucz spectrum [^cite-Kurucz95] at longer wavelengths, meaned over 1983–2004.
+**Spectral bands:** Identical to `sp_sw_ga7` except bands 2 and 3 are not true spectral bands — they share the combined range 320–690 nm and only the sum of fluxes in these two bands is physically meaningful.
 
-**Gaseous absorption:** Revised O₃ k-terms in bands 1–3 for improved ozone heating rate calculations and better incorporation of solar variability [^cite-Zhong08]. The UV band is divided into six narrow sub-bands, each with a single ozone k-term. Total of **k-terms comparable to HadGEM1** with improved UV treatment.
+**Solar spectrum:** Lean (2000, updated) [^cite-Lean00] — based on satellite observations at wavelengths shorter than 735 nm with the Kurucz spectrum [^cite-Kurucz95] at longer wavelengths, meaned over the last two solar cycles (1983–2004).
+
+**Gaseous absorption:** Revised O₃ k-terms in bands 1–3 for improved ozone heating rate calculations and to better incorporate solar variability [^cite-Zhong08]. The UV band is divided into six narrow sub-bands, each with a single ozone k-term.
 
 Gases included: H₂O, O₃, CO₂, O₂.
 
-**Aerosols:** Adds four species relative to HadGEM1: fresh and aged OCFF (organic carbon fossil fuel), delta aerosol, and nitrate aerosol. Mineral dust optical properties revised using Balkanski et al. [^cite-Balk07] refractive indices (less absorbing in SW, more absorbing in LW).
+**Aerosols:** Addition of four aerosol species: fresh and aged OCFF (organic carbon fossil fuel), delta aerosol, and nitrate aerosol. The optical properties of the six divisions of mineral dust have been revised using refractive indices from Balkanski et al. [^cite-Balk07], making mineral dust less absorbing in the SW and more absorbing in the LW.
 
-**Ice crystals:** Adds type 9: a new parametrisation by Anthony Baran based on observed particle size distributions (Paul Field) and an ensemble model of crystal type and orientation. Optical properties linked directly to temperature and ice water content with no intermediate size variable.
+**Ice crystals:** A new parametrisation (type 9) based on observed particle size distributions and an ensemble model of ice crystal type and orientation. Optical properties are linked directly to temperature and ice water content with no intermediate dependence on ice crystal size.
 
 ---
 
 ### `sp_lw_ga3_0`
 
-**Spectral bands:** Identical to GA7 LW (nine bands; bands 3 and 5 split).
+Used for climate configurations where a more accurate treatment of the stratosphere is required. Sections are identical to `spec3a_lw_hadgem1_5C` except for changes to gaseous absorption, thermal emission, aerosols, and ice crystals.
 
-Preferred over `sp_lw_ga3_1` where **more accurate stratospheric treatment** is required (climate configurations).
+**Spectral bands:** Identical to `sp_lw_ga7` (nine bands; bands 3 and 5 split).
 
-**Gaseous absorption:** New k-terms for CO₂ (band 4) and O₃ (band 6) from Wenyi Zhong [^cite-ZhongH00], adding 14 k-terms relative to HadGEM1 for improved stratospheric accuracy. All other gases use HITRAN 2000 data.
+**Gaseous absorption:** New k-terms for CO₂ (band 4) and O₃ (band 6) [^cite-ZhongH00], increasing the total number of k-terms by 14 relative to `spec3a_lw_hadgem1_5C` to allow a more accurate treatment of stratospheric absorption.
 
 Greenhouse gases: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a.
 
-**Thermal emission:** Quartic fit over 150–330 K (lower bound extended from 180 K in HadGEM1 to avoid negative emission at cold model top temperatures).
+**Thermal emission:** Quartic fit over 150–330 K. The previous fit (180–330 K in `spec3a_lw_hadgem1_5C`) could give negative emission at very cold temperatures sometimes seen at the top of the model.
 
 **Aerosols and ice crystals:** Same additions as `sp_sw_ga3_0`.
 
@@ -111,7 +117,7 @@ Greenhouse gases: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCF
 
 ### `sp_lw_ga3_1`
 
-Identical to `sp_lw_ga3_0` except it **omits the extra CO₂ and O₃ k-terms**, giving faster computation at the cost of reduced stratospheric accuracy. Preferred for **forecast configurations** where tropospheric accuracy and speed are the priority.
+Used for forecast configurations where speed of computation and a more accurate treatment of the troposphere are required. Sections are identical to `spec3a_lw_hadgem1_5C` except for changes to aerosols and ice crystals — the same additions as `sp_sw_ga3_0` — with the extra CO₂ and O₃ k-terms of `sp_lw_ga3_0` not included.
 
 ---
 
@@ -119,21 +125,21 @@ Identical to `sp_lw_ga3_0` except it **omits the extra CO₂ and O₃ k-terms**,
 
 ### `spec3a_sw_hadgem1_5o_rlfx`
 
-Based on `spec3a_sw_hadgem1_3` with two changes:
+Used in the HadGEM2-A model and the global forecast model from PS20. All sections are identical to `spec3a_sw_hadgem1_3` except for changes to aerosols and Rayleigh scattering.
 
-**Rayleigh scattering:** Corrects a ~20% error in the Rayleigh scattering coefficients of the earlier HadGEM1 file caused by a bug in the generating code [^cite-Haywood08].
+**Rayleigh scattering:** Rayleigh scattering coefficients in `spec3a_sw_hadgem1_3` were found to be in error by approximately 20% due to a bug in the generating code [^cite-Haywood08]. These are corrected here.
 
-**Aerosols:** Adds Mie-scattering-derived optical properties for seven additional aerosol types: six size bins of mineral dust and one mode of biogenic aerosol from terpene emissions. Updated parametrisations for Aitken sulphate, fresh biomass (mode 1), and aged biomass (mode 2) aerosols. Biogenic aerosols are hygroscopic.
+**Aerosols:** Mie scattering calculations have provided optical properties for seven additional aerosols: six size bins of mineral dust and one mode of biogenic aerosol from terpene emissions. Parametrisations of Aitken sulphate, fresh biomass (mode 1), and aged biomass (mode 2) have also been updated. Biogenic aerosols are hygroscopic.
 
 ---
 
 ### `spec3a_lw_hadgem1_5C`
 
-Based on `spec3a_lw_hadgem1_3` with:
+Used in the HadGEM2-A model and the global forecast model from PS20. All sections are identical to `spec3a_lw_hadgem1_3` except for changes to aerosols.
 
-**Aerosols:** Same additions as the SW HadGEM2 file.
+**Aerosols:** Same additions as `spec3a_sw_hadgem1_5o_rlfx`.
 
-**Block 15 (new):** Monochromatic specific absorption and scattering coefficients for each aerosol mode at six wavelengths (0.38, 0.44, 0.55, 0.67, 0.87, 1.02 µm), used to compute aerosol optical depth diagnostics. Hygroscopic aerosols have relative-humidity-dependent coefficients.
+**Block 15 (new):** Contains specific absorption and scattering coefficients of each aerosol mode at six wavelengths (0.38, 0.44, 0.55, 0.67, 0.87, 1.02 µm), used by the model to compute aerosol optical depth. In contrast to block 11, these coefficients are monochromatic. Hygroscopic aerosols have relative-humidity-dependent coefficients.
 
 ---
 
@@ -145,11 +151,11 @@ Based on `spec3a_lw_hadgem1_3` with:
 
 **Solar spectrum:** Kurucz (1995) [^cite-Kurucz95].
 
-**Gaseous absorption:** H₂O (with CKD 2.4 continuum [^cite-CKD]), O₃, CO₂, O₂. Foreign continuum combined with line data. Spectroscopic data from HITRAN 2000 [^cite-HITRAN] with published corrections, augmented by theoretical weak lines.
+**Gaseous absorption:** H₂O (with CKD 2.4 continuum [^cite-CKD]), O₃, CO₂, O₂. Foreign continuum combined with line data and fitted as one entity; self-broadened continuum represented explicitly. Spectroscopic data from HITRAN 2000 [^cite-HITRAN] with published corrections, augmented by theoretical weak lines.
 
 **Aerosols:** Five standard climatological aerosols [^cite-Cusack98], plus two sulphate modes (Aitken and accumulation), two black carbon modes (fresh and aged), two sea-salt modes (film and jet), two biomass smoke modes (fresh and aged), and six mineral dust size bins.
 
-**Cloud droplets:** Four types available (2, 3, 4, 5), based on size distributions from Rockel et al. [^cite-Rockel91] with effective radii 1.5–50 µm. Types 2 and 3 use linear fits (Slingo & Schrecker [^cite-SS82]); types 4 and 5 use Padé approximants. Types 4 (thin averaging) and 5 (thick averaging) are recommended; **type 5 preferred** for both convective and large-scale clouds.
+**Cloud droplets:** Four types available (2, 3, 4, 5), based on size distributions from Rockel et al. [^cite-Rockel91] with effective radii 1.5–50 µm. Types 2 and 3 use linear fits (Slingo & Schrecker [^cite-SS82]); types 4 and 5 use Padé approximants. Type 4 corresponds to thin averaging and type 5 to thick averaging; **type 5 preferred** for both convective and large-scale clouds.
 
 **Ice crystals:** Types 2 and 3 (spherical analogy, thin/thick averaging); type 7 (planar polycrystals, anomalous diffraction approximation [^cite-Krist99] [^cite-Krist00], fit in terms of mean maximum dimension $\bar{D}_l$); type 8 (ice aggregates [^cite-Edwards07], fit in terms of effective dimension $D_e$). **Type 2 recommended** for large-scale cloud; **type 3 for convective cloud**.
 
@@ -163,7 +169,7 @@ Based on `spec3a_lw_hadgem1_3` with:
 
 **Gaseous absorption:** H₂O, O₃, CO₂, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-125, HFC-134a. Spectroscopic data from HITRAN 92 for most gases; CKD 2.4 continuum for water vapour [^cite-CKD]. Halocarbon cross-sections from K. Shine (pers. comm.).
 
-**Aerosols, cloud droplets, ice crystals:** As per the SW HadGEM1 file. Only type 1 droplet data initially available for LW; types 4 and 5 (Padé fits) now recommended.
+**Cloud droplets and ice crystals:** As per `spec3a_sw_hadgem1_3`. Only type 1 droplet data initially available for LW; types 4 and 5 (Padé fits) now recommended.
 
 ---
 
