@@ -9,10 +9,10 @@ function wire() {
     title.dataset.spiderWired = "1";
     title.style.cursor = "pointer";
 
-    // always go to /PROTEUS/ when hosted there, else "/" (mkdocs serve)
+    // always go to /SOCRATES/ when hosted there, else "/" (mkdocs serve)
     const href = location.href;
-    const docsHome = href.includes("/PROTEUS/")
-      ? href.split("/PROTEUS/")[0] + "/PROTEUS/"
+    const docsHome = href.includes("/SOCRATES/")
+      ? href.split("/SOCRATES/")[0] + "/SOCRATES/"
       : location.origin + "/";
 
     title.addEventListener("click", (e) => {
