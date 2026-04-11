@@ -18,7 +18,7 @@ nav:
       - Overview: Explanations/overview.md
       - Two-stream radiation code: Explanations/two_stream.md
       - Spherical harmonic code: Explanations/spherical_harmonic.md
-    - Integration into PROTEUS: proteus_integration.md
+    - Integration into PROTEUS: Explanations/proteus_integration.md
     - Spectral files: Explanations/spectral_files.md
     - Interface to the calling model: Explanations/interface.md
 
