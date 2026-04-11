@@ -9,15 +9,15 @@ PROTEUS is a coupled framework for modelling the formation and evolution of rock
 
 ## AGNI and radiative transfer
 
-AGNI models a planetary atmosphere as a single 1D column, split into levels defined logarithmically in pressure space between the surface and the top of the atmosphere. At each step of the solver loop, AGNI solves for the temperature profile that conserves energy throughout the column, balancing radiative, convective, condensation, and sensible heat fluxes.
+AGNI models a planetary atmosphere as a single 1D column, split into levels defined logarithmically in pressure space between the surface and the top of the atmosphere. AGNI nominally simulates radiative transfer using SOCRATES, which solves the radiative transfer equation using a two-stream solution. At each step of the solver loop, AGNI passes cell-centre temperatures, pressures, geometric heights, and gas mixing ratios to SOCRATES, which returns upward and downward spectral fluxes at all cell edges for both the shortwave and longwave components.
 
-Radiative transfer is the primary energy transport mechanism handled by SOCRATES. AGNI nominally simulates radiative transfer using SOCRATES, which solves the radiative transfer equation using a two-stream solution. AGNI passes cell-centre temperatures, pressures, geometric heights, and gas mixing ratios to SOCRATES, which returns upward and downward spectral fluxes at all cell edges for both the shortwave (stellar) and longwave (thermal) components. These fluxes feed directly into AGNI's energy residual calculation, which drives the temperature solver toward a converged solution.
+---
 
 ## Technical integration
 
-AGNI is written in Julia while SOCRATES is written in Fortran. SOCRATES is accessed via a Julia interface, with the SOCRATES binaries included directly in the precompiled AGNI code, which significantly improves runtime performance.
+AGNI is written in Julia while SOCRATES is written in Fortran. SOCRATES is accessed via a Julia interface originally written by Stuart Daines, with the SOCRATES binaries included directly in the precompiled AGNI code, which significantly improves performance. For aerosols, AGNI generates band-averaged optical properties files at runtime using `scatter_average_90`, then inserts these into the runtime spectral file using `prep_spec`, alongside the stellar spectrum and Rayleigh scattering terms.
 
-At each solver evaluation, AGNI assembles a runtime spectral file and passes it to SOCRATES alongside the atmospheric state. For aerosols, band-averaged optical properties are generated at runtime using `scatter_average_90` and inserted into the spectral file using `prep_spec`, alongside the stellar spectrum and Rayleigh scattering terms.
+---
 
 ## Opacity and absorption
 
@@ -30,12 +30,14 @@ Opacity is handled using the **correlated-k approximation**, with either random 
 
 The spectral files used within PROTEUS have been generated specifically for exoplanet and planetary science applications, covering atmospheric compositions relevant to rocky planet evolution including H₂O, CO₂, CH₄, H₂, He, CO, N₂, NH₃, SO₂, and rock vapour species (SiO, SiO₂). Multiple spectral resolutions are available, from low-resolution files suitable for coupled PROTEUS runs to high-resolution files for benchmarking and comparison with observations such as JWST.
 
+---
 
 ## Surface boundary conditions
 
-Surface reflectivity can be modelled as a greybody with an albedo from 0 to 1. Alternatively, the surface can be modelled using empirical spectral reflectance data that varies with wavelength, provided as a file tabulating spherical reflectance, hemispherical emissivity, or single scattering albedo. This is passed to SOCRATES as part of the boundary conditions at each solver call.
+Surface reflectivity can be modelled as a greybody with an albedo from 0 to 1. Alternatively, the surface can be modelled using empirical reflectance data that varies with wavelength. The file can tabulate any one of: spherical reflectance, hemispherical emissivity, or single scattering albedo.
 
+---
 
 ## Validation
 
-AGNI includes an interface to the [Reference Forward Model (RFM)](https://eodg.atm.ox.ac.uk/RFM/) which provides a straightforward way to validate and benchmark SOCRATES radiative transfer calculations independently.
+AGNI includes an interface to the [Reference Forward Model (RFM)](https://eodg.atm.ox.ac.uk/RFM/), which provides a straightforward way to validate and benchmark SOCRATES radiative transfer calculations independently.
