@@ -30,6 +30,7 @@ Mk_cmd
 julia/lib/*.so
 julia/gen/*.jl
 julia/gen/*.f90
+julia/**/*.cov
 
 # Outputs
 spectraltools/output
