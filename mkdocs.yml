@@ -12,25 +12,24 @@ nav:
 
   - How-to guides:
       - Installation: How-to/installation.md
-    
-  - Tutorials:
-      - First SOCRATES run: How-to/usage.md
 
   - Explanations:
     - Physical model description:
       - Overview: Explanations/overview.md
       - Two-stream radiation code: Explanations/two_stream.md
       - Spherical harmonic code: Explanations/spherical_harmonic.md
+    - Integration into PROTEUS: proteus_integration.md
     - Spectral files: Explanations/spectral_files.md
     - Interface to the calling model: Explanations/interface.md
 
   - Reference:
-    - Publications: publications.md
-    - Spectral files: spectral_files_reference.md
+    - Spectral files: 
+      - MET Office spectral files: Reference/spectral_file_reference.md
+      - PROTEUS spectral files: Reference/proteus_spectral_file_reference.md
+    
 
   - Community:
       - Contact: Community/contact.md
-      - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
       - Developers: https://proteus-framework.org/people
       - Issues: https://github.com/FormingWorlds/SOCRATES/issues
@@ -128,7 +127,8 @@ extra_javascript:
   - javascripts/header-links.js
 
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/proteus_theme.css
+  - stylesheets/subtitle.css
   - stylesheets/footnotes.css
 
 plugins:
