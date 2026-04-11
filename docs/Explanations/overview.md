@@ -39,7 +39,7 @@ The spherical harmonic code solves for the full angular radiance field by expand
 - The **TMS source function technique** [^cite-NT88] to accelerate convergence by separating single and multiple scattering.
 - A fast block-recurrence linear solver that reduces the dominant operation count from $O(18N^3 L)$ to $O(6N^3 L)$.
 
-### [Spectral files](../spectral_files.md)
+### [Spectral files](spectral_files.md)
 
 Both solvers rely on **spectral files**: external, user-supplied files that define the frequency discretisation and store all spectrally dependent optical property data. This includes:
 
