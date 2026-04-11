@@ -1,7 +1,7 @@
 # Interface to the calling model
 
 !!! note
-    This overview is taken from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide).
+    This overview is adapted from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide). It is under Crown Copyright. 
 
 ## Overview
 

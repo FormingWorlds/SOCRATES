@@ -1,7 +1,7 @@
 # Spectral files
 
 !!! note
-    This overview is taken from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide).
+    This overview is based on the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide). It is under Crown Copyright. 
 
 ## Overview
 

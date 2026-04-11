@@ -1,7 +1,7 @@
 # Two-stream radiation code
 
 !!! note
-    This overview is taken from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen  (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide). 
+    This overview is adapted from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen  (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide).  It is under Crown Copyright. 
 
 ## Overview
 
@@ -162,13 +162,17 @@ Represented by adding a **band-constant value** to the scattering and total exti
 Droplet properties depend on both mass mixing ratio $L$ and **effective radius** $r_e$. Three parametrisation forms are available:
 
 **Slingo & Schrecker (1982)** [^cite-SS82]:
+
 $$k^{(e)} = L(a + b/r_e), \quad k^{(s)} = k^{(e)}(1 - c - dr_e), \quad g = e + fr_e$$
 
 **Ackerman & Stephens / Hu & Stamnes** [^cite-AS87] [^cite-HS93]:
+
 $$k^{(e)} = L(a_1 r_e^{b_2} + c_1), \quad \ldots$$
+
 *(More flexible but computationally expensive due to exponentials; rarely used in practice.)*
 
 **Padé approximants** (recommended for wide size ranges):
+
 $$k^{(e)} = L \cdot \frac{p_1 + p_2 r_e + p_3 r_e^2}{1 + p_4 r_e + p_5 r_e^2 + p_6 r_e^3}, \quad \ldots$$
 
 ### Ice crystals
@@ -261,7 +265,8 @@ are assembled upward from the surface boundary condition, progressively eliminat
 
 **Back substitution:** Once downward fluxes at each level are known, upward fluxes are recovered from the recurrence.
 
-> **Technical note:** No pivoting is performed. Given that the single-scattering albedo $\omega$ is perturbed away from 1 to avoid rescaling singularities and that elimination begins at the surface with an albedo less than 1, pivoting is not required.
+!!! note "Technical note"
+    No pivoting is performed. Given that the single-scattering albedo $\omega$ is perturbed away from 1 to avoid rescaling singularities and that elimination begins at the surface with an albedo less than 1, pivoting is not required.
 
 ### Approximate scattering in the longwave
 

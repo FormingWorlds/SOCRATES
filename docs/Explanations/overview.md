@@ -1,7 +1,7 @@
 # Physical model description
 
 !!! note
-    This overview is based on the SOCRATES technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide).
+    This overview is based on the SOCRATES technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide). It is under Crown Copyright. 
 
 ## What is SOCRATES?
 
@@ -35,13 +35,13 @@ The spherical harmonic code solves for the full angular radiance field by expand
 
 - A **complementary function** built from eigensolutions of a symmetric tridiagonal system, with careful numerical stabilisation for conservative scattering and large optical depths.
 - **Particular integrals** for thermal emission (linear and quadratic Planckian variation) and the direct solar beam, with regularisation for small optical depths.
-- **Marshak boundary conditions** at the top of atmosphere, and a full **BRDF surface boundary condition** — including an ocean surface model with Fresnel reflection, Snell's law refraction, and particulate/absorption parametrisations.
+- **Marshak boundary conditions** at the top of atmosphere, and a full **BRDF surface boundary condition**, including an ocean surface model with Fresnel reflection, Snell's law refraction, and particulate/absorption parametrisations.
 - The **TMS source function technique** [^cite-NT88] to accelerate convergence by separating single and multiple scattering.
 - A fast block-recurrence linear solver that reduces the dominant operation count from $O(18N^3 L)$ to $O(6N^3 L)$.
 
 ### [Spectral files](../spectral_files.md)
 
-Both solvers rely on **spectral files** — external, user-supplied files that define the frequency discretisation and store all spectrally dependent optical property data. This includes:
+Both solvers rely on **spectral files**: external, user-supplied files that define the frequency discretisation and store all spectrally dependent optical property data. This includes:
 
 - Band limits and solar fractions
 - k-distribution fits for gaseous absorption
@@ -53,7 +53,7 @@ The separation of spectral data from the radiation code itself makes SOCRATES hi
 
 ### [Interface to the calling model](../interface.md)
 
-SOCRATES is designed to be embedded in any atmospheric model through a clean, well-defined interface. All inputs and outputs are wrapped into eight structured types — `control`, `dimen`, `spectrum`, `atm`, `cld`, `aer`, `bound`, and `radout` — passed to the core routine `radiance_calc`. This design keeps the radiation code self-contained and straightforward to couple to new models.
+SOCRATES is designed to be embedded in any atmospheric model through a clean, well-defined interface. All inputs and outputs are wrapped into eight structured types, `control`, `dimen`, `spectrum`, `atm`, `cld`, `aer`, `bound`, and `radout`, passed to the core routine `radiance_calc`. This design keeps the radiation code self-contained and straightforward to couple to new models.
 
 ---
 
