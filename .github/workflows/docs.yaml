@@ -62,6 +62,7 @@ jobs:
             }
 
             core.setOutput("run_id", String(selectedRunId));
+
       - name: Download docs PDFs from latest successful build
         uses: actions/download-artifact@v5
         with:
@@ -69,9 +70,19 @@ jobs:
           path: docs
           run-id: ${{ steps.latest-pdf-run.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Place docs PDFs in MkDocs assets
+
+      - name: Unzip downloaded docs-pdf artifact
         run: |
           set -euo pipefail
+          ls -l docs
+          mapfile -t ZIP_FILES < <(find docs -type f -name '*.zip')
+          if [ "${#ZIP_FILES[@]}" -eq 0 ]; then
+            echo "No zip files found in downloaded docs-pdf artifact."
+            exit 1
+          fi
+          for zip_file in "${ZIP_FILES[@]}"; do
+            unzip -o "${zip_file}" -d docs
+          done
           mkdir -p docs/assets/pdfs
           USERGUIDE_PDF="$(find docs -type f -name 'socrates_userguide.pdf' | head -n 1)"
           TECHGUIDE_PDF="$(find docs -type f -name 'socrates_techguide.pdf' | head -n 1)"
@@ -81,6 +92,7 @@ jobs:
           fi
           cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
           cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
+
       - run: pip install zensical markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
       - run: zensical build --clean 
       - uses: actions/upload-pages-artifact@v4
