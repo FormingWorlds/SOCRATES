@@ -1,0 +1,73 @@
+name: Documentation website
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Find latest successful docs PDF build
+        id: latest-pdf-run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "build-docs-pdf.yaml",
+              branch: "main",
+              status: "completed",
+              per_page: 50,
+            });
+
+            const latest = data.workflow_runs.find((run) => run.conclusion === "success");
+
+            if (!latest) {
+              core.setFailed("No successful build-docs-pdf.yaml runs found on branch main.");
+              return;
+            }
+            core.info(`Using build-docs-pdf run ${latest.id} from ${latest.created_at} on branch main.`);
+            core.setOutput("run_id", String(latest.id));
+      - name: Download docs PDFs from latest successful build
+        uses: actions/download-artifact@v5
+        with:
+          name: docs-pdf
+          path: docs
+          run-id: ${{ steps.latest-pdf-run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Place docs PDFs in MkDocs assets
+        run: |
+          set -euo pipefail
+          mkdir -p docs/assets/pdfs
+          USERGUIDE_PDF="$(find docs -type f -name 'socrates_userguide.pdf' | head -n 1)"
+          TECHGUIDE_PDF="$(find docs -type f -name 'socrates_techguide.pdf' | head -n 1)"
+          if [ -z "${USERGUIDE_PDF}" ] || [ -z "${TECHGUIDE_PDF}" ]; then
+            echo "Could not locate expected docs PDFs after artifact download."
+            exit 1
+          fi
+          cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
+          cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
+      - run: pip install zensical markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
+      - run: zensical build --clean 
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
+        id: deployment
