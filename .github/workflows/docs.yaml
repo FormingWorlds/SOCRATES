@@ -75,14 +75,6 @@ jobs:
         run: |
           set -euo pipefail
           ls -l docs
-          mapfile -t ZIP_FILES < <(find docs -type f -name '*.zip')
-          if [ "${#ZIP_FILES[@]}" -eq 0 ]; then
-            echo "No zip files found in downloaded docs-pdf artifact."
-            exit 1
-          fi
-          for zip_file in "${ZIP_FILES[@]}"; do
-            unzip -o "${zip_file}" -d docs
-          done
           USERGUIDE_PDF=docs/userguide/socrates_userguide.pdf
           TECHGUIDE_PDF=docs/techguide/socrates_techguide.pdf
           if [ -z "${USERGUIDE_PDF}" ] || [ -z "${TECHGUIDE_PDF}" ]; then
