@@ -12,9 +12,6 @@ SOCRATES is a high-performance radiative transfer code for computing fluxes, hea
 
 SOCRATES solves the radiative transfer equation in a plane-parallel atmosphere, computing monochromatic and broad-band radiative quantities across the shortwave and longwave spectral regions. Its primary solver is the two-stream radiation code, driven by **spectral files**: external files that encode the frequency discretisation, absorption data, and optical properties for gases, clouds, aerosols, and scattering. In PROTEUS, there are spectral files available created specifically for exoplanet applications, covering a wide range of atmospheric compositions including H₂O, CO₂, CH₄, H₂, He, CO, N₂, NH₃, SO₂, and rock vapour species.
 
-### Integration into PROTEUS
- 
-Within PROTEUS, SOCRATES serves as the radiative transfer engine of [AGNI](https://www.h-nicholls.space/AGNI/dev/), the atmospheric structure and climate model. At each step of the AGNI solver loop, atmospheric profiles are passed to SOCRATES, which returns shortwave and longwave spectral fluxes throughout the column. Opacity is handled using the correlated-k approximation with cross-section data from [DACE](https://dace.unige.ch/opacityDatabase/). Full details of the AGNI-SOCRATES interface are given in the [AGNI documentation](https://www.h-nicholls.space/AGNI/dev/explanation/model/).
 
 
 
