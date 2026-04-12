@@ -7,20 +7,20 @@ SOCRATES is a high-performance radiative transfer code for computing fluxes, hea
 !!! info "PROTEUS framework"
     This documentation describes SOCRATES as integrated into the PROTEUS framework for exoplanet atmosphere modelling. The original Met Office repository can be found [here](https://github.com/MetOffice/socrates).
 
----
 ## Overview
 
-SOCRATES solves the radiative transfer equation in a plane-parallel atmosphere, computing monochromatic and broad-band radiative quantities across the shortwave and longwave spectral regions. Its primary solver is the two-stream radiation code, driven by **spectral files**: pre-computed data files that encode absorption data, optical properties for gases, clouds, aerosols, and scattering. In PROTEUS, there are spectral files available created specifically for exoplanet applications, covering a wide range of atmospheric compositions.
+SOCRATES solves the radiative transfer equation in a plane-parallel atmosphere, computing monochromatic and broad-band radiative quantities across the shortwave and longwave spectral regions. Its primary solver is the two-stream radiation code, driven by spectral files: pre-computed data files that encode absorption data, optical properties for gases, clouds, aerosols, and scattering. In PROTEUS, there are spectral files available created specifically for exoplanet applications, covering a wide range of atmospheric compositions.
 
 
+The official documentation PDFs can be found online:
 
+ - [Technical guide](Reference/documentation_pdfs.md#technical-guide)
+ - [User guide](Reference/documentation_pdfs.md#user-guide)
 
----
 
 ## Citation
 
-If you use SOCRATES as part of PROTEUS, please cite the original code description:
+Please cite these papers if you use SOCRATES:
 
 - Edwards, J. M. and Slingo, A. (1996):  [10.1002/qj.49712253107](https://doi.org/10.1002/qj.49712253107)
 - Manners, J. (2024):  [10.1063/5.0185476](https://doi.org/10.1063/5.0185476)
-
