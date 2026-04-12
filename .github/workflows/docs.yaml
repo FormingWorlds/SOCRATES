@@ -83,13 +83,13 @@ jobs:
           for zip_file in "${ZIP_FILES[@]}"; do
             unzip -o "${zip_file}" -d docs
           done
-          mkdir -p docs/assets/pdfs
-          USERGUIDE_PDF="$(find docs -type f -name 'socrates_userguide.pdf' | head -n 1)"
-          TECHGUIDE_PDF="$(find docs -type f -name 'socrates_techguide.pdf' | head -n 1)"
+          USERGUIDE_PDF=docs/userguide/socrates_userguide.pdf
+          TECHGUIDE_PDF=docs/techguide/socrates_techguide.pdf
           if [ -z "${USERGUIDE_PDF}" ] || [ -z "${TECHGUIDE_PDF}" ]; then
             echo "Could not locate expected docs PDFs after artifact download."
             exit 1
           fi
+          mkdir -p docs/assets/pdfs
           cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
           cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
 
