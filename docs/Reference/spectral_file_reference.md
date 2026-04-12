@@ -1,7 +1,7 @@
 # Standard spectral files
 
 !!! note
-    The spectral files described here are the **standard Met Office files** distributed with SOCRATES, originally developed for use in the Unified Model (UM) and associated climate configurations. They are described in detail in the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide). 
+    The spectral files described here are the **standard Met Office files** distributed with SOCRATES, originally developed for use in the Unified Model (UM) and associated climate configurations. They are described in detail in the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), found [here](documentation_pdfs.md#technical-guide). 
 
 ---
 

@@ -1,7 +1,7 @@
 # Two-stream radiation code
 
 !!! note
-    This overview is adapted from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen  (Met Office, 2017), which can be found [here](https://github.com/FormingWorlds/SOCRATES/tree/main/docs/techguide).  It is under Crown Copyright. 
+    This overview is adapted from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen  (Met Office, 2017), which can be found [here](../Reference/documentation_pdfs.md#technical-guide).  It is under Crown Copyright. 
 
 ## Overview
 

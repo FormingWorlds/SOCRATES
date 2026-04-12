@@ -52,6 +52,18 @@ jobs:
           path: docs
           run-id: ${{ steps.latest-pdf-run.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Place docs PDFs in MkDocs assets
+        run: |
+          set -euo pipefail
+          mkdir -p docs/assets/pdfs
+          USERGUIDE_PDF="$(find docs -type f -name 'socrates_userguide.pdf' | head -n 1)"
+          TECHGUIDE_PDF="$(find docs -type f -name 'socrates_techguide.pdf' | head -n 1)"
+          if [ -z "${USERGUIDE_PDF}" ] || [ -z "${TECHGUIDE_PDF}" ]; then
+            echo "Could not locate expected docs PDFs after artifact download."
+            exit 1
+          fi
+          cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
+          cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
       - run: pip install zensical markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
       - run: zensical build --clean 
       - uses: actions/upload-pages-artifact@v4
