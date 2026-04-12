@@ -15,6 +15,8 @@ docs/**/*.blg
 docs/**/*.toc
 docs/**/*.bbl
 
+*.cov
+site/
 
 # Model files
 set_rad_env
