@@ -419,7 +419,7 @@ SUBROUTINE solve_band_ses(ierr                                          &
 !       Initialise rather than increment channel diagnostics
     , l_initial_channel_tile(dimen%nd_channel)
 !       Initialise rather than increment channel diagnostics on tiles
-    
+
 !                   Flags for flux calculations
   LOGICAL, INTENT(IN) ::                                                &
       l_actinic
@@ -797,7 +797,7 @@ SUBROUTINE solve_band_ses(ierr                                          &
         ELSE
           DO l=1, n_profile
             flux_direct_ground_part(l) = flux_direct_part(l, n_layer)
-          END DO          
+          END DO
         END IF
       END IF
       CALL augment_tiled_radiance(control, spectrum, radout             &
@@ -821,19 +821,19 @@ SUBROUTINE solve_band_ses(ierr                                          &
 
 !   Extract optical depth to output if requested
   IF (control%l_tau_band) THEN
-    DO i = 1, n_layer
+    DO j = 1, n_layer
       DO l = 1, n_profile
         ! Clear-sky optical depth
-        IF (i < n_cloud_top) THEN
-          radout%tau_band_clr(l, i, i_band) = ss_prop%tau_clr(l, i)
-          radout%tau_band_clr_dir(l, i, i_band) = ss_prop%tau_clr_dir(l, i)
+        IF (j < n_cloud_top) THEN
+          radout%tau_band_clr(l, j, i_band) = ss_prop%tau_clr(l, j)
+          radout%tau_band_clr_dir(l, j, i_band) = ss_prop%tau_clr_dir(l, j)
         ELSE
-          radout%tau_band_clr(l, i, i_band) = ss_prop%tau(l, i, 0)
-          radout%tau_band_clr_dir(l, i, i_band) = ss_prop%tau_dir(l, i, 0)
+          radout%tau_band_clr(l, j, i_band) = ss_prop%tau(l, j, 0)
+          radout%tau_band_clr_dir(l, j, i_band) = ss_prop%tau_dir(l, j, 0)
         END IF
         ! All-sky optical depth (including clouds)
-        radout%tau_band(l, i, i_band) = ss_prop%tau(l, i, 0)
-        radout%tau_band_dir(l, i, i_band) = ss_prop%tau_dir(l, i, 0)
+        radout%tau_band(l, j, i_band) = ss_prop%tau(l, j, 0)
+        radout%tau_band_dir(l, j, i_band) = ss_prop%tau_dir(l, j, 0)
       END DO
     END DO
   END IF
