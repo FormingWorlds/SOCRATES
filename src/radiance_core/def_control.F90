@@ -518,6 +518,8 @@ TYPE StrCtrl
 !   Calculate total aerosol scattering per band
   LOGICAL :: l_aerosol_asymmetry_band                             = .FALSE.
 !   Calculate total aerosol asymmetry (weighted by scattering) per band
+  LOGICAL :: l_tau_band                                           = .FALSE.
+!   Output optical depth per band
   LOGICAL :: l_spherical_path_diag                                = .FALSE.
 !   Output the direct beam path through spherical layers
   LOGICAL :: l_contrib_func                                       = .FALSE.

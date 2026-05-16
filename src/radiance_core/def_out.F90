@@ -160,6 +160,16 @@ TYPE StrOut
   REAL (RealK), ALLOCATABLE :: spherical_path(:, :, :)
 !   Path length for direct beam through spherical layers
 
+! Optical depth diagnostics
+  REAL (RealK), ALLOCATABLE :: tau_band(:, :, :)
+!   Optical depth per band
+  REAL (RealK), ALLOCATABLE :: tau_band_clr(:, :, :)
+!   Clear-sky optical depth per band
+  REAL (RealK), ALLOCATABLE :: tau_band_dir(:, :, :)
+!   Direct optical depth per band (for scaled direct calculations)
+  REAL (RealK), ALLOCATABLE :: tau_band_clr_dir(:, :, :)
+!   Clear-sky direct optical depth per band (for scaled direct calculations)
+
 END TYPE StrOut
 
 
@@ -517,6 +527,25 @@ IF (control%l_spherical_path_diag) THEN
                                                  0:dimen%nd_layer+1          ))
 END IF
 
+IF (control%l_tau_band) THEN
+  IF (.NOT. ALLOCATED(radout%tau_band))                                        &
+    ALLOCATE(radout%tau_band                   ( dimen%nd_flux_profile,        &
+                                                 dimen%nd_layer,               &
+                                                 sp%dim%nd_band              ))
+  IF (.NOT. ALLOCATED(radout%tau_band_clr))                                    &
+    ALLOCATE(radout%tau_band_clr               ( dimen%nd_2sg_profile,         &
+                                                 dimen%nd_layer,               &
+                                                 sp%dim%nd_band              ))
+  IF (.NOT. ALLOCATED(radout%tau_band_dir))                                    &
+    ALLOCATE(radout%tau_band_dir               ( dimen%nd_flux_profile,        &
+                                                 dimen%nd_layer,               &
+                                                 sp%dim%nd_band              ))
+  IF (.NOT. ALLOCATED(radout%tau_band_clr_dir))                               &
+    ALLOCATE(radout%tau_band_clr_dir           ( dimen%nd_2sg_profile,         &
+                                                 dimen%nd_layer,               &
+                                                 sp%dim%nd_band              ))
+END IF
+
 IF (control%l_contrib_func) THEN
   IF (.NOT. ALLOCATED(radout%contrib_funci))                                   &
     ALLOCATE(radout%contrib_funci              ( dimen%nd_flux_profile,        &
@@ -557,6 +586,14 @@ IF (ALLOCATED(radout%contrib_funci)) &
     DEALLOCATE(radout%contrib_funci)
 IF (ALLOCATED(radout%spherical_path)) &
     DEALLOCATE(radout%spherical_path)
+IF (ALLOCATED(radout%tau_band_clr_dir)) &
+    DEALLOCATE(radout%tau_band_clr_dir)
+IF (ALLOCATED(radout%tau_band_dir)) &
+    DEALLOCATE(radout%tau_band_dir)
+IF (ALLOCATED(radout%tau_band_clr)) &
+    DEALLOCATE(radout%tau_band_clr)
+IF (ALLOCATED(radout%tau_band)) &
+    DEALLOCATE(radout%tau_band)
 IF (ALLOCATED(radout%aerosol_asymmetry_band)) &
     DEALLOCATE(radout%aerosol_asymmetry_band)
 IF (ALLOCATED(radout%aerosol_scattering_band)) &

@@ -819,6 +819,25 @@ SUBROUTINE solve_band_ses(ierr                                          &
 
   END DO
 
+!   Extract optical depth to output if requested
+  IF (control%l_tau_band) THEN
+    DO i = 1, n_layer
+      DO l = 1, n_profile
+        ! Clear-sky optical depth
+        IF (i < n_cloud_top) THEN
+          radout%tau_band_clr(l, i, i_band) = ss_prop%tau_clr(l, i)
+          radout%tau_band_clr_dir(l, i, i_band) = ss_prop%tau_clr_dir(l, i)
+        ELSE
+          radout%tau_band_clr(l, i, i_band) = ss_prop%tau(l, i, 0)
+          radout%tau_band_clr_dir(l, i, i_band) = ss_prop%tau_dir(l, i, 0)
+        END IF
+        ! All-sky optical depth (including clouds)
+        radout%tau_band(l, i, i_band) = ss_prop%tau(l, i, 0)
+        radout%tau_band_dir(l, i, i_band) = ss_prop%tau_dir(l, i, 0)
+      END DO
+    END DO
+  END IF
+
 
   IF (lhook) CALL dr_hook(ModuleName//':'//RoutineName,zhook_out,zhook_handle)
 
