@@ -157,6 +157,16 @@ function gen_julia_propertynames(
                     :$(field[:name]),
         """)
     end
+    if type_name == "StrPlanck" && !any(x -> x[:name] == "flux", type_fields)
+        write(f, """
+                    :flux,
+        """)
+    end
+    if type_name == "StrPlanck"
+        write(f, """
+                    :flux_diff,
+        """)
+    end
 
     write(f, """
             ]
@@ -219,6 +229,13 @@ function gen_julia_getproperty(
 
     """)
     _gen_julia_cptr(f, ismember)
+    if type_name == "StrPlanck"
+        write(f, """
+                if field == :flux_diff
+                    field = :diff
+                end
+        """)
+    end
 
     if !ismember
         write(f, """

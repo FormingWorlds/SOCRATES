@@ -26,6 +26,7 @@ for member_name in [ # TYPE members of StrSpecData
 end
 include("../gen/StrSpecData_JL.jl")
 include("../gen/StrDim_JL.jl")
+include("../gen/StrPlanck_JL.jl")
 include("../gen/StrAtm_JL.jl")
 include("../gen/StrCld_JL.jl")
 include("../gen/StrAer_JL.jl")
@@ -601,6 +602,43 @@ function deallocate_bound(bound::StrBound)
         Cvoid,
         (Ptr{Cvoid},),
         bound.cptr,
+    )
+    return nothing
+end
+
+##############################################
+# StrPlanck
+# radiance_core/def_planck.F90
+##############################################
+
+function allocate_planck(planck::StrPlanck, dimen::StrDim)
+    ccall(
+        (:PS_allocate_planck, libSOCRATES_C),
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid},),
+        planck.cptr, dimen.cptr,
+    )
+    return nothing
+end
+
+function deallocate_planck(planck::StrPlanck)
+    ccall(
+        (:PS_deallocate_planck, libSOCRATES_C),
+        Cvoid,
+        (Ptr{Cvoid},),
+        planck.cptr,
+    )
+    return nothing
+end
+
+function diff_planck_source(
+    control::StrCtrl, dimen::StrDim, spectrum::StrSpecData, atm::StrAtm, bound::StrBound, i_band::Int, planck::StrPlanck
+)
+    ccall(
+        (:PS_diff_planck_source, libSOCRATES_C),
+        Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Cint, Ptr{Cvoid}),
+        control.cptr, dimen.cptr, spectrum.cptr, atm.cptr, bound.cptr, i_band, planck.cptr,
     )
     return nothing
 end
