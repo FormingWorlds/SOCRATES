@@ -85,7 +85,7 @@ jobs:
           cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
           cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
 
-      - run: pip install zensical markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
+      - run: pip install zensical==0.0.39 markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
       - run: zensical build --clean 
       - uses: actions/upload-pages-artifact@v4
         with:
