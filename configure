@@ -23,6 +23,9 @@ else
     prec_def=""
 fi
 
+# Get version from file
+version=$(head -n1 version)
+
 # Remove old files
 rm -rf "bin/"
 rm -f "set_rad_env"
@@ -33,7 +36,8 @@ rm -f "sbin/Cscale_field"
 # Prepare Mk_cmd file
 genpath="make/Mk_cmd"
 echo "Generating $genpath"
-echo "    precision: $precision"
+echo "    version:       $version"
+echo "    precision:     $precision"
 echo "    optimisations: $optim"
 rm -f $genpath
 
@@ -41,6 +45,7 @@ rm -f $genpath
 echo "# Generated automatically" >> $genpath
 echo "# System: $(uname -a) " >> $genpath
 echo "# Date: $(date) " >> $genpath
+echo "# Version: $version " >> $genpath
 echo "# Precision: $precision " >> $genpath
 echo " " >> $genpath
 
