@@ -1,8 +1,8 @@
-# SOCRATES 
+# SOCRATES
 
 <p class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>
 
-SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/). 
+SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/).
 
 !!! info "PROTEUS framework"
     This documentation describes SOCRATES as integrated into the PROTEUS framework for exoplanet atmosphere modelling. The original Met Office repository can be found [here](https://github.com/MetOffice/socrates).
@@ -10,6 +10,10 @@ SOCRATES is a high-performance radiative transfer code for computing fluxes, hea
 ## Overview
 
 SOCRATES solves the radiative transfer equation in a plane-parallel atmosphere, computing monochromatic and broad-band radiative quantities across the shortwave and longwave spectral regions. Its primary solver is the two-stream radiation code, driven by spectral files: pre-computed data files that encode absorption data, optical properties for gases, clouds, aerosols, and scattering. In PROTEUS, there are spectral files available created specifically for exoplanet applications, covering a wide range of atmospheric compositions.
+
+Installation steps are available in the tutorials page:
+
+- [Installation](How-to/installation.md)
 
 
 The official documentation PDFs can be found online:
