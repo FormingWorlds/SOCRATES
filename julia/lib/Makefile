@@ -13,12 +13,13 @@ FFLAGS_BASE = -O3 -Wall -fPIC
 ifdef FORTCOMP
     # Extract the compiler path (first word of FORTCOMP)
     FC := $(firstword $(FORTCOMP))
-    # Extract precision flags (-freal-8-real-4, -DSINGLE_PRECISION, -cpp) from SOCRATES config
-    PREC_FLAGS := $(filter -freal-8-real-4 -DSINGLE_PRECISION -cpp -real-size%,$(FORTCOMP))
+    # Extract precision flags (-freal-8-real-4, -DSINGLE_PRECISION, -cpp/-fpp) from SOCRATES config
+    PREC_FLAGS := $(filter -freal-8-real-4 -DSINGLE_PRECISION -cpp -fpp -real-size%,$(FORTCOMP))
     FFLAGS = $(FFLAGS_BASE) $(PREC_FLAGS)
 else
     FC = gfortran
-    FFLAGS = $(FFLAGS_BASE)
+    # gfortran does not preprocess .f90 by default; enable it for #ifdef in SOCRATES_C.f90
+    FFLAGS = $(FFLAGS_BASE) -cpp
 endif
 
 ifeq ($(shell uname -s),Darwin)

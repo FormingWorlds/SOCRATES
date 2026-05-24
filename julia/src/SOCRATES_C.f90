@@ -129,11 +129,11 @@ contains
             l_cn, l_ch3cl, l_ch3f, l_ch3br, &
             l_all_gases
 
-        #ifdef SINGLE_PRECISION
-            real(c_float), intent(in), optional :: wavelength_blue
-        #else
-            real(c_double), intent(in), optional :: wavelength_blue
-        #endif
+#ifdef SINGLE_PRECISION
+        real(c_float), intent(in), optional :: wavelength_blue
+#else
+        real(c_double), intent(in), optional :: wavelength_blue
+#endif
 
 
         ! local variables

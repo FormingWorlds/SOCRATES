@@ -27,7 +27,7 @@ sbin/Cinc_field
 sbin/Cscale_field
 *.o
 *.mod
-make/Mk_cmd
+/make/Mk_cmd
 Mk_cmd
 julia/lib/*.so
 julia/gen/*.jl
