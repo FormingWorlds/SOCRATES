@@ -10,7 +10,44 @@ module GenFortranWrappers
 
 include("ParseFortran.jl")
 
-Creal_str = "Cfloat" # this is the default, but can be overridden by passing fortran_realtype="real(crealk)" to gen_wrappers
+Creal_str = "Cdouble" # default; updated in gen_wrappers based on build precision
+
+"""
+Return the default path to `realtype_rd.F90` under RAD_DIR.
+"""
+function _default_realtype_file()
+    return joinpath(ENV["RAD_DIR"], "src", "modules_core", "realtype_rd.F90")
+end
+
+"""
+Inspect Mk_cmd files for SINGLE_PRECISION flags or precision annotations.
+Returns true if SINGLE_PRECISION is indicated, false if DOUBLE_PRECISION is indicated, and nothing if no indication found.
+"""
+function determine_singleprec_from_mkcmd()
+
+    mk_cmd_path = joinpath(ENV["RAD_DIR"], "make", "Mk_cmd")
+    if !isfile(mk_cmd_path)
+        error("Unable to find Mk_cmd at expected path $mk_cmd_path")
+    end
+
+    for line in eachline(mk_cmd_path)
+        if occursin("-dsingle_precision", lowercase(line))
+            return true 
+        end 
+    end
+    return false
+end
+
+"""
+Determine the C and Julia Creal types for the configured SOCRATES precision.
+"""
+function determine_creal_types()
+    if determine_singleprec_from_mkcmd()
+        return :c_float, "Cfloat"
+    else
+        return :c_double, "Cdouble"
+    end
+end
 
 """
     gen_wrappers
@@ -32,6 +69,9 @@ function gen_wrappers(
     fortran_file,
     svn_rev,
 )
+    creal_c, creal_jl = determine_creal_types()
+    global Creal_str = creal_jl
+
     gen_julia_wrapper(
         type_name*member_name, type_fields,
         var_name=var_name,
@@ -51,6 +91,7 @@ function gen_wrappers(
         cfortran_filename=cfortran_filename,
         fortran_module_name=fortran_module_name,
         fortran_realtype=fortran_realtype,
+        fortran_c_realtype=creal_c,
         fortran_file=fortran_file,
         svn_rev=svn_rev,
     )
@@ -515,6 +556,7 @@ function gen_cfortran_wrapper(
     cfortran_filename="$(type_name)$(membername)_C.f90",
     fortran_module_name="$(type_name)$(membername)_C",
     fortran_realtype,
+    fortran_c_realtype="c_double",
     fortran_file,
     svn_rev
 )
@@ -551,11 +593,11 @@ function gen_cfortran_wrapper(
         gen_cfortran_set(f, type_name, type_fields, "integer", "c_int", var_name=var_name, member_name=member_name)
 
         gen_cfortran_get(
-            f, type_name, type_fields, fortran_realtype, "c_double",
+            f, type_name, type_fields, fortran_realtype, fortran_c_realtype,
             var_name=var_name, ftype_emit_fortran="real", member_name=member_name
         )
         gen_cfortran_set(
-            f, type_name, type_fields, fortran_realtype, "c_double",
+            f, type_name, type_fields, fortran_realtype, fortran_c_realtype,
             var_name=var_name, ftype_emit_fortran="real", member_name=member_name
         )
 
