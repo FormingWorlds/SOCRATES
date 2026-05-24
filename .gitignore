@@ -15,6 +15,8 @@ docs/**/*.blg
 docs/**/*.toc
 docs/**/*.bbl
 
+*.cov
+site/
 
 # Model files
 set_rad_env
@@ -30,6 +32,7 @@ Mk_cmd
 julia/lib/*.so
 julia/gen/*.jl
 julia/gen/*.f90
+julia/**/*.cov
 
 # Outputs
 spectraltools/output
@@ -43,3 +46,6 @@ __pycache__
 *.pyc
 .pytest_cache
 bin/
+
+# documentation site
+site/

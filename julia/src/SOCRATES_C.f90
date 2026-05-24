@@ -24,7 +24,10 @@ USE def_atm
 USE def_cld
 USE def_aer
 USE def_bound
+USE def_planck, ONLY: StrPlanck, allocate_planck, deallocate_planck
 USE def_out
+USE diff_planck_source_mod, ONLY: diff_planck_source
+USE realtype_rd, ONLY: RealK
 
 implicit none
 
@@ -533,6 +536,94 @@ contains
         call deallocate_bound(bound)
 
     end subroutine PS_deallocate_bound
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! StrPlanck
+    !   Planckian emission fields used internally by radiance_core
+    ! radiance_core/def_planck.F90
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ! C-bound wrapper for allocate_planck
+    subroutine PS_allocate_planck(planck_Cptr, dimen_Cptr) bind(C, name='PS_allocate_planck')
+        implicit none
+
+        type(c_ptr), value, intent(in)          :: planck_Cptr
+        type(c_ptr), value, intent(in)          :: dimen_Cptr
+
+        ! local variables
+        type(StrPlanck), pointer                :: planck
+        type(StrDim), pointer                   :: dimen
+
+        ! convert types
+        call C_F_POINTER(planck_Cptr, planck)
+        call C_F_POINTER(dimen_Cptr, dimen)
+
+        call allocate_planck(planck, dimen)
+
+    end subroutine PS_allocate_planck
+
+    ! C-bound wrapper for deallocate_planck
+    subroutine PS_deallocate_planck(planck_Cptr) bind(C, name='PS_deallocate_planck')
+        implicit none
+
+        type(c_ptr), value, intent(in)          :: planck_Cptr
+
+        ! local variables
+        type(StrPlanck), pointer                :: planck
+
+        ! convert types
+        call C_F_POINTER(planck_Cptr, planck)
+
+        call deallocate_planck(planck)
+
+    end subroutine PS_deallocate_planck
+
+    ! C-bound wrapper for diff_planck_source
+    subroutine PS_diff_planck_source( &
+        control_Cptr, dimen_Cptr, spectrum_Cptr, atm_Cptr, bound_Cptr, i_band, planck_Cptr &
+        ) bind(C, name='PS_diff_planck_source')
+
+        implicit none
+
+        type(c_ptr), value, intent(in)          :: control_Cptr
+        type(c_ptr), value, intent(in)          :: dimen_Cptr
+        type(c_ptr), value, intent(in)          :: spectrum_Cptr
+        type(c_ptr), value, intent(in)          :: atm_Cptr
+        type(c_ptr), value, intent(in)          :: bound_Cptr
+        integer(c_int), value, intent(in)       :: i_band
+        type(c_ptr), value, intent(in)          :: planck_Cptr
+
+        ! local variables
+        type(StrCtrl), pointer                  :: control
+        type(StrDim), pointer                   :: dimen
+        type(StrSpecData), pointer              :: spectrum
+        type(StrAtm), pointer                   :: atm
+        type(StrBound), pointer                 :: bound
+        type(StrPlanck), pointer                :: planck
+        integer, allocatable                    :: i_rad_layer(:)
+        real(RealK), allocatable                :: frac_rad_layer(:)
+
+        ! convert types
+        call C_F_POINTER(control_Cptr, control)
+        call C_F_POINTER(dimen_Cptr, dimen)
+        call C_F_POINTER(spectrum_Cptr, spectrum)
+        call C_F_POINTER(atm_Cptr, atm)
+        call C_F_POINTER(bound_Cptr, bound)
+        call C_F_POINTER(planck_Cptr, planck)
+
+        ! Placeholders unless spherical-harmonic angular integration is active.
+        allocate(i_rad_layer(dimen%nd_viewing_level))
+        allocate(frac_rad_layer(dimen%nd_viewing_level))
+        i_rad_layer(:) = 1
+        frac_rad_layer(:) = 0.0_RealK
+
+        call diff_planck_source(control, dimen, spectrum, atm, bound, &
+            i_band, i_rad_layer, frac_rad_layer, planck)
+
+        deallocate(frac_rad_layer)
+        deallocate(i_rad_layer)
+
+    end subroutine PS_diff_planck_source
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! StrOut

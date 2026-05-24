@@ -1,0 +1,94 @@
+name: Documentation website
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Find latest successful docs PDF artifact
+        id: latest-pdf-run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runsResp = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "build-docs-pdf.yaml",
+              branch: "main",
+              status: "completed",
+              per_page: 50,
+            });
+
+            let selectedRunId = null;
+            for (const run of runsResp.data.workflow_runs) {
+              if (run.conclusion !== "success") continue;
+              const artifactsResp = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id,
+                per_page: 100,
+              });
+              const artifact = artifactsResp.data.artifacts.find(
+                (a) => a.name === "docs-pdf" && !a.expired
+              );
+              if (artifact) {
+                selectedRunId = run.id;
+                core.info(`Using docs-pdf artifact ${artifact.id} from run ${run.id}.`);
+                break;
+              }
+            }
+
+            if (!selectedRunId) {
+              core.setFailed("No non-expired docs-pdf artifact found in recent successful build-docs-pdf.yaml runs on main.");
+              return;
+            }
+
+            core.setOutput("run_id", String(selectedRunId));
+
+      - name: Download docs PDFs from latest successful build
+        uses: actions/download-artifact@v5
+        with:
+          name: docs-pdf
+          path: docs
+          run-id: ${{ steps.latest-pdf-run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unzip downloaded docs-pdf artifact
+        run: |
+          set -euo pipefail
+          ls -l docs
+          USERGUIDE_PDF=docs/userguide/socrates_userguide.pdf
+          TECHGUIDE_PDF=docs/techguide/socrates_techguide.pdf
+          if [ -z "${USERGUIDE_PDF}" ] || [ -z "${TECHGUIDE_PDF}" ]; then
+            echo "Could not locate expected docs PDFs after artifact download."
+            exit 1
+          fi
+          mkdir -p docs/assets/pdfs
+          cp "${USERGUIDE_PDF}" docs/assets/pdfs/socrates_userguide.pdf
+          cp "${TECHGUIDE_PDF}" docs/assets/pdfs/socrates_techguide.pdf
+
+      - run: pip install zensical markdown-include pymdown-extensions mkdocstrings mkdocstrings-python
+      - run: zensical build --clean 
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
+        id: deployment

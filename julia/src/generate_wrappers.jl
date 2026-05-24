@@ -1,19 +1,20 @@
 # Generate socrates wrappers
 
-SOCRATES_DIR = ENV["RAD_DIR"]
-SVN_REV=1642
+SOCRATES_DIR = normpath(ENV["RAD_DIR"])
+gendir = joinpath(SOCRATES_DIR,"julia","gen")
+libdir = joinpath(SOCRATES_DIR,"julia","lib")
+
 println("Generating wrappers")
 println("SOCRATES_DIR = $SOCRATES_DIR")
-println("SVN_REV = $SVN_REV")
+
+SOCRATES_VER = readchomp(joinpath(SOCRATES_DIR, "version"))
+
+# Clean up
+include("clean_wrappers.jl")
 
 # Tools
 include("ParseFortran.jl")
 include("GenFortranWrappers.jl")
-
-# Clean up
-gendir = joinpath(SOCRATES_DIR,"julia","gen")
-rm(gendir, force=true, recursive=true)
-mkdir(gendir)
 
 ######################################################################
 # Generate Julia and ISO_CBINDING Fortran wrappers for SOCRATES Types
@@ -24,6 +25,7 @@ wrappers = [
     ("Ctrl", "control", "control"),
     ("Dim", "dimen", "dimen"),
     ("SpecData", "spectrum", "spectrum"),
+    ("Planck", "planck", "planck"),
     ("Atm", "atm", "atm"),
     ("Cld", "cld", "cld"),
     ("Aer", "aer", "aer"),
@@ -39,7 +41,7 @@ for (strsuffix, modsuffix, var_name) in wrappers
         var_name=var_name,
         fortran_module_dependencies=["def_$(modsuffix)"],
         fortran_file=ffile,
-        svn_rev=SVN_REV,
+        svn_rev=SOCRATES_VER,
     )
 end
 
@@ -56,7 +58,7 @@ for member_name in [
         var_name="spectrum",
         fortran_module_dependencies=["def_spectrum"],
         fortran_file=ffile,
-        svn_rev=SVN_REV,
+        svn_rev=SOCRATES_VER,
     )
 end
 
@@ -79,9 +81,8 @@ for (srcdir, modname, fext) in mod_pars
     )
     GenFortranWrappers.gen_pars(
         joinpath(SOCRATES_DIR,"julia/gen/$modname.jl"), modname, pars_pcf,
-        fortran_file=ffile, svn_rev=SVN_REV)
+        fortran_file=ffile, svn_rev=SOCRATES_VER)
 end
 
 println("Done")
 # readdir(joinpath(SOCRATES_DIR,"julia","gen"))
-
