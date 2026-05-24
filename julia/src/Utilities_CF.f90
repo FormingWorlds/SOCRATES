@@ -3,6 +3,7 @@
 module UTILITIES_CF
 
 use, intrinsic :: iso_c_binding
+use realtype_rd, ONLY: RealK
 
 implicit none
 
@@ -36,10 +37,19 @@ contains
     ! minimal function to test argument passing from/to C via Julia
     function test_double_val(din) result(dout) bind(C, NAME='PS_test_double_val')
         implicit none
+#ifdef SINGLE_PRECISION
+        real(c_float), value :: din
+        real(c_float) :: dout
+#else
         real(c_double), value :: din
-        real(c_double) :: dout       
+        real(c_double) :: dout
+#endif
 
-        dout = din + 1.0
+#ifdef SINGLE_PRECISION
+        dout = din + 1.0_c_float
+#else
+        dout = din + 1.0_c_double
+#endif
 
     end function test_double_val
 
@@ -47,16 +57,38 @@ contains
     ! If din is passed as a C null pointer, Fortran sees this as a missing optional argument
     function test_double_ref(din) result(dout) bind(C, NAME='PS_test_double_ref')
         implicit none
+#ifdef SINGLE_PRECISION
+        real(c_float), optional :: din
+        real(c_float) :: dout
+#else
         real(c_double), optional :: din
-        real(c_double) :: dout       
+        real(c_double) :: dout
+#endif
 
         if (PRESENT(din)) then
-            dout = din + 1.0
+#ifdef SINGLE_PRECISION
+            dout = din + 1.0_c_float
+#else
+            dout = din + 1.0_c_double
+#endif
         else
-            dout = -1.0
+#ifdef SINGLE_PRECISION
+            dout = -1.0_c_float
+#else
+            dout = -1.0_c_double
+#endif
         endif
 
     end function test_double_ref
+
+    ! report the byte-size of the RealK kind used by this build
+    function real_kind_bytes() result(bytes) bind(C, NAME='PS_real_kind_bytes')
+        implicit none
+        integer(c_int) :: bytes
+        real(RealK) :: tmp
+
+        bytes = storage_size(tmp) / 8
+    end function real_kind_bytes
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Utility functions for internal use

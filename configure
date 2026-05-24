@@ -6,6 +6,26 @@ optim="-Ofast -march=native"
 # optim="-O3"
 # optim=""
 
+# Floating point precision: "single" or "double" (default)
+precision="double"
+
+# Get precision from command line argument if provided
+if [ "$1" == "single" ]; then
+    precision="single"
+fi
+
+# Set precision-related flags based on choice
+if [ "$precision" == "single" ]; then
+    prec_flag="-freal-8-real-4"
+    prec_def="-DSINGLE_PRECISION"
+else
+    prec_flag=""
+    prec_def=""
+fi
+
+# Get version from file
+version=$(head -n1 version)
+
 # Remove old files
 rm -rf "bin/"
 rm -f "set_rad_env"
@@ -13,32 +33,38 @@ rm -f "sbin/Cgen_null"
 rm -f "sbin/Cinc_field"
 rm -f "sbin/Cscale_field"
 
-# Prepare Mk_cmd file 
+# Prepare Mk_cmd file
 genpath="make/Mk_cmd"
+echo "Generating $genpath"
+echo "    version:       $version"
+echo "    precision:     $precision"
+echo "    optimisations: $optim"
 rm -f $genpath
 
-#    header 
-echo "# Generated automatically" >> $genpath 
+#    header
+echo "# Generated automatically" >> $genpath
 echo "# System: $(uname -a) " >> $genpath
 echo "# Date: $(date) " >> $genpath
+echo "# Version: $version " >> $genpath
+echo "# Precision: $precision " >> $genpath
 echo " " >> $genpath
 
-#    compiler and linker 
+#    compiler and linker
 fc="$(command -v gfortran)"
-if [ -z "$fc" ]; then 
+if [ -z "$fc" ]; then
     echo "Cannot find gfortran"
     exit 1
 fi
 if  [[ "$OSTYPE" == "darwin"* ]]; then
     extra="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
-else 
+else
     extra=""
-fi 
-echo "FORTCOMP        = $fc $optim -fPIC -fallow-argument-mismatch $extra -c " >> $genpath
-echo "LINK            = $fc $optim -fPIC -fallow-argument-mismatch $extra " >> $genpath
+fi
+echo "FORTCOMP        = $fc $optim -fPIC -fallow-argument-mismatch -cpp $prec_flag $prec_def $extra -c " >> $genpath
+echo "LINK            = $fc $optim -fPIC -fallow-argument-mismatch $prec_flag $extra " >> $genpath
 
 ar="$(command -v ar)"
-if [ -z "$ar" ]; then 
+if [ -z "$ar" ]; then
     echo "Cannot find ar"
     exit 1
 fi
@@ -46,10 +72,10 @@ echo "LIBLINK         = $ar rvu " >> $genpath
 
 #    NetCDF paths
 nf="$(command -v nf-config)"
-if [ -z "$nf" ]; then 
+if [ -z "$nf" ]; then
     echo "Cannot find nf-config"
     exit 1
-fi 
+fi
 cdfinc="$($nf --includedir) $($nf --fflags)"
 echo "INCCDF_PATH     = $cdfinc " >> $genpath
 cdflib="$($nf --flibs | cut -d " " -f 1 | tail -c +3)"
@@ -60,11 +86,11 @@ echo "LIBCDF_NAME     = netcdff " >> $genpath
 echo "OMPARG          = -fopenmp " >> $genpath
 
 #    other things
-echo " " >> $genpath 
+echo " " >> $genpath
 echo "LIBSUFFIX       = a " >> $genpath
 echo " " >> $genpath
-echo ".SUFFIXES: \$(SUFFIXES) .f90 " >> $genpath 
+echo ".SUFFIXES: \$(SUFFIXES) .f90 " >> $genpath
 echo " " >> $genpath
 
-# End 
+# End
 exit 0
