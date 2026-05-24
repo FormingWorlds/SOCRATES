@@ -7,7 +7,12 @@ optim="-Ofast -march=native"
 # optim=""
 
 # Floating point precision: "single" or "double" (default)
-precision="single"
+precision="double"
+
+# Get precision from command line argument if provided
+if [ "$1" == "single" ]; then
+    precision="single"
+fi
 
 # Set precision-related flags based on choice
 if [ "$precision" == "single" ]; then
@@ -27,6 +32,9 @@ rm -f "sbin/Cscale_field"
 
 # Prepare Mk_cmd file
 genpath="make/Mk_cmd"
+echo "Generating $genpath"
+echo "    precision: $precision"
+echo "    optimisations: $optim"
 rm -f $genpath
 
 #    header

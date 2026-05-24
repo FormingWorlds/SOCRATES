@@ -12,7 +12,12 @@ using OffsetArrays
 
 const libSOCRATES_C = joinpath(@__DIR__, "../lib/libSOCRATES_C.so")
 
-const Creal = Cfloat
+const SOCRATES_REAL_BYTES = let bytes = ccall((:PS_real_kind_bytes, libSOCRATES_C), Cint, ())
+    bytes == 4 || bytes == 8 || error("Unsupported SOCRATES real kind size: $(bytes) bytes")
+    bytes
+end
+const Creal = SOCRATES_REAL_BYTES == 4 ? Cfloat : Cdouble
+const JReal = SOCRATES_REAL_BYTES == 4 ? Float32 : Float64
 
 include("../gen/rad_pcf.jl")
 include("../gen/gas_list_pcf.jl")
@@ -207,7 +212,7 @@ function set_spectrum(;
     l_ch3f      ::Union{Bool, Ptr{Nothing}} = C_NULL,
     l_ch3br     ::Union{Bool, Ptr{Nothing}} = C_NULL,
     l_all_gases::Union{Bool, Ptr{Nothing}} = C_NULL,
-    wavelength_blue::Union{Float64, Ptr{Nothing}} = C_NULL,
+    wavelength_blue::Union{JReal, Ptr{Nothing}} = C_NULL,
 )
 
     # NB: Fortran logical(c_bool) <-> C99 _Bool <->  Julia Cuchar
@@ -707,13 +712,13 @@ end
 # Test functions for argument passing
 #####################################
 
-function test_double_val(din::Float64)
+function test_double_val(din::JReal)
     dout = ccall((:PS_test_double_val, libSOCRATES_C), Creal, (Creal, ), din)
     return dout
 end
 
 # din = C_NULL -> Fortran optional argument not present
-function test_double_ref(din::Union{Float64, Ptr{Nothing}} = C_NULL)
+function test_double_ref(din::Union{JReal, Ptr{Nothing}} = C_NULL)
     din_C = din === C_NULL ? C_NULL : Ref{Creal}(din)
     dout = ccall((:PS_test_double_ref, libSOCRATES_C), Creal, (Ptr{Cvoid}, ), din_C)
     return dout
