@@ -27,7 +27,9 @@ function determine_singleprec_from_mkcmd()
 
     mk_cmd_path = joinpath(ENV["RAD_DIR"], "make", "Mk_cmd")
     if !isfile(mk_cmd_path)
-        error("Unable to find Mk_cmd at expected path $mk_cmd_path")
+        println("Unable to find Mk_cmd at expected path $mk_cmd_path")
+        println("Assuming double precision")
+        return false
     end
 
     for line in eachline(mk_cmd_path)
