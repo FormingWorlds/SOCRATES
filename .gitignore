@@ -34,12 +34,16 @@ julia/gen/*.jl
 julia/gen/*.f90
 julia/**/*.cov
 
+AGNI
+SocSpecGen
+
 # Outputs
-spectraltools/output
-spectraltools/output/
-spectraltools/data
-spectraltools/data/
-spectraltools/moleculesUV/
+spectraltools/data/*
+spectraltools/output/*
+spectraltools/moleculesUV/*
+!spectraltools/src/*.py
+!spectraltools/**/_readme.txt
+
 __pycache__
 .vscode
 .idea

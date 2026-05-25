@@ -171,3 +171,21 @@ def read_netcdf_point(fpath:str, idx:int):
 
     return arr_nu, arr_k
 
+def read_netcdf_nu(fpath:str):
+    """Read netCDF wavenumber array.
+
+    Parameters
+    ----------
+    fpath : str
+        Path to netCDF file
+
+    Returns
+    -------
+    np.ndarray
+        Wavenumber array [cm-1]
+    """
+
+    ds = Dataset(fpath, "r", format="NETCDF4")
+    arr_nu = np.array(ds.variables["nu"][:]) / 100.0   # m-1 to cm-1
+    ds.close()
+    return arr_nu

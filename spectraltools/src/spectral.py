@@ -5,7 +5,7 @@ import os
 import subprocess
 import time
 import src.utils as utils
-from netCDF4 import Dataset
+import src.netcdf as netcdf
 
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
@@ -423,8 +423,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     logging_path = os.path.join(utils.dirs["output"],"%s_%s.log"%    (alias,formula)); utils.rmsafe(logging_path)
 
     # Check wavelength range for this volatile
-    nc_ds = Dataset(nc_xsc_path,'r')
-    nc_nu = np.array(nc_ds.variables['nu'][:], dtype=float) / 100.0 # convert m-1 to cm-1
+    nc_nu = netcdf.read_netcdf_nu(nc_xsc_path)
     vol_wlmin = utils.wn2wl(nc_nu[-1]) * 1.0e-9 # convert nm to m
     vol_wlmax = utils.wn2wl(nc_nu[0])  * 1.0e-9 # convert nm to m
 
@@ -912,4 +911,3 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
 
     return spec_path
-
