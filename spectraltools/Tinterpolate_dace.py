@@ -9,11 +9,15 @@ def main():
     # --- PARAMETERS ---
 
     # Intended target pressures [bar]
-    p_arr = np.logspace(-6, 3, 5)
+    # p_arr = np.logspace(-6, 3, 5)
+
+    p_arr = [1e-3, 1e-2]
 
     # Intended target temperatures [K]
-    t_arr = np.linspace(60.0, 2900.0, 5) - 5.0
-    t_arr = np.append(t_arr, [75.0, 100.0])
+    # t_arr = np.linspace(60.0, 2900.0, 5) - 5.0
+    # t_arr = np.append(t_arr, [75.0, 100.0])
+
+    t_arr = [100.0, 300.0]
 
     # Uncomment one of the blocks below or write your own
     #isotopologue = '1H2-16O'
@@ -28,11 +32,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/H2/"
 
-    #isotopologue = '12C-16O'
-    #linelist = 'HITEMP2019'
-    #linelist_version = 1.0
-    #t_lims = (50.0, 8900.0)
-    #outdir = utils.dirs["dace"] + "/CO/"
+    isotopologue = '12C-16O'
+    linelist = 'HITEMP2019'
+    linelist_version = 1.0
+    t_lims = (50.0, 8900.0)
+    outdir = utils.dirs["dace"] + "/CO/"
 
     #isotopologue = '12C-16O2'
     #linelist = 'UCL-4000'
@@ -94,11 +98,11 @@ def main():
     #t_lims = (50.0, 2900.0)
     #outdir = utils.dirs["dace"] + "/HCN/"
 
-    isotopologue = '32S-16O2'
-    linelist = 'ExoAmes'
-    linelist_version = 2.0
-    t_lims = (50.0, 1900.0)
-    outdir = utils.dirs["dace"] + "/SO2/"
+    # isotopologue = '32S-16O2'
+    # linelist = 'ExoAmes'
+    # linelist_version = 2.0
+    # t_lims = (50.0, 1900.0)
+    # outdir = utils.dirs["dace"] + "/SO2/"
 
     # -------------------
     # Na, NaO, Fe, FeO, FeH, K, SiO, SiO2, PH3, provided already by SOCRATES
@@ -129,7 +133,7 @@ def main():
     dace.download(isotopologue, linelist, linelist_version, p_arr, t_req, outdir)
 
     # Extend grid to temperatures outside of database range (if required)
-    dace.extend(outdir, t_drp)
+    # dace.extend(outdir, t_drp)
 
     # -----------------
     return

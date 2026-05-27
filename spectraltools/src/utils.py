@@ -81,7 +81,10 @@ def find_pt_close(arr_p, arr_t, target_p, target_t):
     iclose = np.argmin(dists)
     dclose = dists[iclose]
 
-    return iclose, dclose, arr_p[iclose], arr_t[iclose]
+    best_p = arr_p[iclose]
+    best_t = arr_t[iclose]
+
+    return iclose, dclose, best_p, best_t
 
 # Check if output folder exists
 def check_output_exists():

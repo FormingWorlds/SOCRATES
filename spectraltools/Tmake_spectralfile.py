@@ -4,7 +4,6 @@
 # Import local files
 import src.utils as utils
 import src.spectral as spectral
-import src.dace as dace
 import src.cross as cross
 import src.phys as phys
 import src.ptf as ptf
@@ -15,29 +14,30 @@ import numpy as np
 import time
 
 
-
 def main():
 
     # ------------ PARAMETERS ------------
-    source = "exocross"         # Source database (dace or exocross)
-    vols = ["CH4", "CO", "CO2", "H2", "H2O", "H2S", "HCN", "N2", "N2O", "NH3", "O3", "SO2"]   # List of gases
+    source = "dace"         # Source database (dace or exocross)
+    vols = ["CO"]   # List of gases
     alias = "Test"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 48              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
-    numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
-    numin = 1.0             # Clip to this minimum wavenumber [cm-1]
+    numax = 10000.0        # Clip to this maximum wavenumber [cm-1]
+    numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 1.0             # Downsample to this wavenumber resolution [cm-1]
     preNC = False           # Use pre-existing netCDF files in output/ if they are found
+
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
     lim = [None, None]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
 
     #tgt_p = np.logspace(-3.5, 3, 30)
     #tgt_t = np.linspace(100.0, 2895.0, 30)
 
-    tgt_p = np.logspace(-3.5, 3, 10)
-    tgt_t = np.linspace(100.0, 2895.0, 10)
+    tgt_p = [1e-3, 1e-2]
+    tgt_t = [100.0, 300.0]
+
 
     # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
     # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
@@ -100,7 +100,7 @@ def main():
         print("    checking %s"%v)
         #     read first file
         formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, ptf.list_files(source, formula_path)[0])
+        temp_xc = cross.xsec(v, source, ptf.list_files(source, v)[0])
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
         temp_xc.plot("wavelength", [None,None], show=False)
 
@@ -112,7 +112,7 @@ def main():
         print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
 
         #     get tmin, tmax
-        _,at,_ = ptf.list_all_ptf(formula_path)
+        _,at,_ = ptf.list_all_ptf(source, v)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
 
@@ -128,19 +128,23 @@ def main():
     print("    numin, numax set to %.1f, %.1f cm-1 \n"%(numin, numax)) # Set the nu limits to encompass all volatile nus (least restrictive)
 
     # ===========
-    # Determine p,t grid using last of the absorbers
-    formula_path = os.path.join(utils.dirs[source], vols[-1]+"/")
-    arr_p, arr_t, arr_f = ptf.map_ptf(source, vols[-1], tgt_p , tgt_t)
+    # Determine flattened p,t grid using last of the absorbers
+    arr_p, arr_t  = ptf.best_pt(source, vols[-1], tgt_p, tgt_t)
 
+    # Ensure pressure grid is ascending and unique
+    # if not utils.is_ascending(arr_p):
+    #     raise Exception("Pressure grid is not strictly ascending!")
+    # if not utils.is_unique(arr_p):
+    #     raise Exception("Pressure grid is not unique (contains repeated values)!")
 
     # ===========
     # Get nu array for required range and resolution (also using last absorber)
-    nu_arr = cross.xsec(vols[-1], source, ptf.list_files(source, vols[-1])[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
+    nu_arr = cross.xsec(vols[-1], source, 
+                            ptf.list_files(source, vols[-1])[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
 
     # ===========
     # Determine bands
     band_edges = spectral.best_bands(nu_arr, method, nband)
-
 
     # ===========
     # Write skeleton file and PT grids
@@ -154,7 +158,7 @@ def main():
     for iv,v in enumerate(vols):
         # For this volatile...
 
-        # Output path
+        # Determine output path
         ncp = os.path.join(utils.dirs["output"] , alias+"_"+v+".nc")
         nc_paths[v] = ncp
         if os.path.exists(ncp) and preNC:
@@ -162,43 +166,18 @@ def main():
             continue
 
         # Get numin, numax for this volatile
-        formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
-        temp_xc.parse_binname()
-        str_numin = "%05d"%int(temp_xc.numin)
-        str_numax = "%05d"%int(temp_xc.numax)
+        formula_path = ptf.get_formula_path(source, v)
+        temp_xc = cross.xsec(v, source, ptf.list_files(source, v)[0])
+        temp_xc.parse_name()
+        
+        # Map files, finding the closest p,t point to each target p,t point
+        vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
 
-        # Get files for this volatile using the pt->f map from vols[-1]
-        # This is for performance reasons, but is also critical for ensuring that the volatiles all use the same p,t points
-        files = []
-        print("Using pt->f map from %s for %s"%(vols[-1],v))
-        for f in arr_f:
-            # Try simply substituting volatile name and wavenumber range
-            ftry = list(str(f).replace(vols[-1], v))
-            ftry[-26:-21] = str_numin[:]
-            ftry[-20:-15] = str_numax[:]
-            ftry = "".join(ftry)
-
-            if os.path.exists(ftry):
-                files.append(ftry)
-                continue
-
-            # Try also substituting "out"<->"itp"
-            if "Itp" in ftry:
-                ftry = ftry.replace("Itp", "Out")
-            else:
-                ftry = ftry.replace("Out", "Itp")
-            if os.path.exists(ftry):
-                files.append(ftry)
-                continue
-
-            raise Exception("Could not find bin file for '%s' corresponding to '%s'"%(v,f))
-
-        if (len(files) != len(arr_f)):
-            raise Exception("Could not map '%s' files to '%s' files" % (v, vols[-1]))
+        # Write these p,t,f to csv file for reference
+        ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
 
         # Write netCDF from BIN files
-        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source, arr_p, arr_t, files, dnu=dnu, numin=numin, numax=numax)
+        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source, arr_p, arr_t, vol_f, dnu=dnu, numin=numin, numax=numax)
 
         # Check resolution
         if (iv > 0) and (not np.isclose(dnu_last, dnu_this)):

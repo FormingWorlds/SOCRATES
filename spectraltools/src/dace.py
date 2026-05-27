@@ -10,23 +10,30 @@ import src.cross as cross
 import src.utils as utils
 import src.phys as phys
 
+def get_formula_path(formula:str):
+    path = os.path.join(utils.dirs["dace"], formula+"/")
+    if not os.path.exists(path):
+        raise Exception("Formula '%s' not found in DACE directory! Check chem_dict in phys.py" % formula)
+    return path
+
 # List DACE bin and itp files in directory
-def list_files(directory:str) -> list:
+def list_files(formula:str) -> list:
+    directory = get_formula_path(formula)
     files = list(glob.glob(directory+"/"+"Out*.bin"))
     files.extend(list(glob.glob(directory+"/"+"Itp*.bin")))
     if len(files) == 0:
         print("WARNING: No bin files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
 
-def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
+def find_bin_close(formula:str, p_aim:float, t_aim:float, quiet=False) -> str:
     """Search for DACE bin file.
 
     Finds the DACE bin file in the directory which most closely matches the target p,t values.
 
     Parameters
     ----------
-    directory : str
-        Directory containing bin files
+    formula : str
+        Formula name (e.g. "H2O")
     p_aim : float
         Target pressure [bar]
     t_aim : float
@@ -41,7 +48,8 @@ def find_bin_close(directory:str, p_aim:float, t_aim:float, quiet=False) -> str:
     if (p_aim < 0) or (t_aim < 0):
         raise Exception("Target pressure and temperature must be positive values")
 
-    files = list_files(directory)
+    directory = get_formula_path(formula)
+    files = list_files(formula)
     count = len(files)
     if count == 0:
         raise Exception("No bin files found in '%s'"%directory)

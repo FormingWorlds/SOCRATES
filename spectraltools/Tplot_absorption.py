@@ -4,6 +4,7 @@
 # Import local files
 import src.cross as cross
 import src.utils as utils
+import src.ptf as ptf
 
 import os
 import argparse
@@ -12,23 +13,12 @@ import argparse
 def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, xaxis:str, saveout:bool):
 
     safe = utils.sourcesafe(source)
-    formula_path =  os.path.join(utils.dirs[safe], formula.strip())
 
     print("Plotting absorption spectrum of %s from %s at %.2e bar and %.2f K" % (formula, source, float(target_p), float(target_t)))
 
-    match safe:
-        case "dace":
-            import src.dace as dace
-            close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))
-        case "hitran":
-            import src.hitran as hitran
-            close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
-        case "exocross":
-            import src.exocross as exocross
-            close_path = exocross.find_xsec_close(formula_path, float(target_p), float(target_t))
-        case _:
-            raise Exception(f"Invalid source {safe}")
-
+    close_path = ptf.find_closest_file(source, formula, 
+                                       float(target_p), float(target_t))
+                             
     yunits = yunits.strip().lower()
     match yunits:
         case "cm2g-1":          yunits_int=0

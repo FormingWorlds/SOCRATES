@@ -308,11 +308,11 @@ class xsec():
         for s in splt:
             # pressure 
             if s.startswith("P") and s.endswith("bar"):
-                self.p = float(s[1:-3])
+                self.p = float(s.replace("P","").replace("bar",""))
 
             # temperature
             elif s.startswith("T") and s.endswith("K"):
-                self.t = float(s[1:-2])
+                self.t = float(s.replace("T","").replace("K",""))
         
         return self
 
@@ -568,11 +568,11 @@ class xsec():
         if saveout:
             print("Saving plot to '%s'"%path)
             fig.savefig(path, bbox_inches="tight", dpi=400)
-            plt.close()
 
         if show:
             plt.show()
             return
         else:
+            plt.close()
             return fig,ax
         

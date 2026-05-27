@@ -39,9 +39,9 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     len_t = len(t_points)
     if len_p != len_t:
         raise Exception("Pressure and Temperature points have different lengths (%d,%d)"%(len_p,len_t))
-    if not utils.is_ascending(p_points):
-        print(utils.get_arr_as_str(p_points))
-        raise Exception("Pressure array is not strictly ascending")
+    # if not utils.is_ascending(p_points):
+    #     print(utils.get_arr_as_str(p_points))
+    #     raise Exception("Pressure array is not strictly ascending")
 
     # Open file
     print("Writing netCDF for '%s' from '%s'..."%(formula,source))

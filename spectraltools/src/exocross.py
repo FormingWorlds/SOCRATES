@@ -6,14 +6,30 @@ import os
 import src.cross as cross
 import src.utils as utils
 
+
+def get_formula_path(formula:str):
+
+    directory = os.path.join(utils.dirs["exocross"])
+
+    sources = ("ExoMol", "HITRAN", "HITEMP")
+    for s in sources:
+        dir = os.path.join(directory, formula, s)
+        print(dir)
+        if os.path.exists(dir):
+            return dir
+
+    raise Exception("Formula '%s' not found in ExoCross directory! Check chem_dict in phys.py" % formula)
+
+
 # List ExoCross xsec files in directory
-def list_files(directory:str) -> list:
+def list_files(formula:str) -> list:
+    directory = get_formula_path(formula)
     files = glob(directory+"/*.xsec")
     if len(files) == 0:
         print("WARNING: No xsec files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
 
-def find_xsec_close(directory:str, p_aim:float, t_aim:float) -> str:
+def find_xsec_close(formula:str, p_aim:float, t_aim:float) -> str:
     """Search for ExoCross xsec file.
 
     Finds the ExoCross xsec file in the directory which most closely matches the target p,t values.
@@ -36,15 +52,9 @@ def find_xsec_close(directory:str, p_aim:float, t_aim:float) -> str:
     if (p_aim < 0) or (t_aim < 0):
         raise Exception("Target pressure and temperature must be positive values")
     
-    directory = os.path.abspath(directory)
+    directory = get_formula_path(formula)
 
-    sources = ("ExoMol", "HITRAN", "HITEMP")
-    for s in sources:
-        if os.path.exists(os.path.join(directory, s)):
-            directory = os.path.join(directory, s) 
-            break
-
-    files = list_files(directory)
+    files = list_files(formula)
     count = len(files)
     if count == 0:
         raise Exception("Could not find any xsec files in '%s'" % directory)
