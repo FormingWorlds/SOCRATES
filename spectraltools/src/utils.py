@@ -151,23 +151,24 @@ for i,g in enumerate(gas_list):
 
 # List of valid continuum combinations in SOCRATES/HITRAN
 cia_pairs = [
-    ["H2O","H2O"],
-    ["H2","CH4"],
-    ["H2","H2"],
-    ["H2","H"],
-    ["H2","He"],
-    ["He","H"],
-    ["N2","H2"],
-    ["N2","He"],
-    ["N2","N2"],
-    ["N2","H2O"],
-    ["O2","CO2"],
-    # ["O2","N2"],      # this one shows some strange behaviour
-    ["O2","O2"],
-    ["CO2","CO2"],
-    ["CO2","H2"],
-    ["CO2","He"],
-    ["CO2","CH4"],
-    ["CO2","Ar"],
-    ["CH4","He"]
+    ["H2", "CH4"],
+    ["H2", "H2"],
+    ["H2", "H"],
+    ["H2", "He"],
+    ["He", "H"],
+    ["N2", "H2"],
+    ["N2", "He"],
+    ["N2", "N2"],
+    ["N2", "H2O"],
+    ["O2", "CO2"],
+    # ["O2", "N2"], # shows strange behaviour
+    ["O2", "O2"],
+    ["CO2", "CO2"],
+    ["CO2", "H2"],
+    ["CO2", "He"],
+    ["CO2", "CH4"],
+    ["CO2", "Ar"],
+    ["CH4", "He"],
+    ["CH4", "Ar" ],
+    ["CH4", "CH4"],
 ]
