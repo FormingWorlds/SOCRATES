@@ -16,6 +16,7 @@ dirs["data"]   = os.path.join(dirs["tools"]   , "data/" )
 dirs["dace"]   = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
+dirs["hdf5"]  = os.path.join(dirs["data"]  , "hdf5/" )
 dirs["cia"]    = os.path.join(dirs["data"]     , "cia/" )
 dirs["moleculesUV"]    = os.path.join(dirs["tools"]     , "moleculesUV/" )
 
@@ -89,7 +90,7 @@ def check_output_exists():
 # Sanitise source string
 def sourcesafe(source:str):
     safe = source.strip().lower()
-    if safe not in ["dace", "hitran", "exomol", "direct"]:
+    if safe not in ["dace", "hitran", "exomol", "direct", "hdf5"]:
         raise Exception("Invalid source '%s'"% source)
     return safe
 
