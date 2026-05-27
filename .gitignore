@@ -36,6 +36,7 @@ julia/**/*.cov
 
 AGNI
 SocSpecGen
+PyExoCross
 
 # Outputs
 spectraltools/data/*
