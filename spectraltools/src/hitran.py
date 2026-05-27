@@ -47,7 +47,7 @@ def find_xsc_close(directory:str, p_aim:float, t_aim:float) -> str:
     t_arr = []  # temperature
     for f in files:
         temp = cross.xsec("", "hitran", f)
-        temp.read()
+        temp.read(UV=False)
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 

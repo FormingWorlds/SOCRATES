@@ -9,7 +9,7 @@ import os
 import argparse
 
 # Main function
-def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas:str):
+def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, xaxis:str, saveout:bool):
 
     safe = utils.sourcesafe(source)
     formula_path =  os.path.join(utils.dirs[safe], formula.strip())
@@ -23,8 +23,11 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
         case "hitran":
             import src.hitran as hitran
             close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
+        case "exocross":
+            import src.exocross as exocross
+            close_path = exocross.find_xsec_close(formula_path, float(target_p), float(target_t))
         case _:
-            raise Exception("Unsupported source")
+            raise Exception(f"Invalid source {safe}")
 
     yunits = yunits.strip().lower()
     match yunits:
@@ -35,8 +38,8 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
             raise Exception("Invalid units [%s]"%yunits)
 
     xc = cross.xsec(formula, safe, close_path)
-    xc.read()
-    xc.plot(yunits=yunits_int, saveout=saveas)
+    xc.read(UV=False)
+    xc.plot(xaxis=xaxis, lim=[None, None], yunits=yunits_int, saveout=saveout, show=True)
 
 # Run main function
 if __name__ == "__main__":
@@ -47,17 +50,19 @@ if __name__ == "__main__":
     parser.add_argument('pres',     type=str, help='Target pressure [bar]')
     parser.add_argument('temp',     type=str, help='Target temperature [K]')
     parser.add_argument('--yunits', type=str, default="cm2g-1", help='y-axis units')
-    parser.add_argument('--saveas', type=str, default="", help='Save plot under this name')
+    parser.add_argument('--xaxis', type=str, default="wavenumber", help='x-axis units')
 
     args = parser.parse_args()
 
+    saveout = True
 
     main(args.absorber,   # absorber
          args.source,     # database
          args.pres,       # target pressure [bar]
          args.temp,       # target temperature [K],
          args.yunits,     # y-axis units
-         args.saveas      # Save name
+         args.xaxis,      # x-axis quantity
+         saveout     # Save plot to file
          )
 
 

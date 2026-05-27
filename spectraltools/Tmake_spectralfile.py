@@ -7,16 +7,19 @@ import src.spectral as spectral
 import src.dace as dace
 import src.cross as cross
 import src.phys as phys
+import src.ptf as ptf
 import src.netcdf as netcdf
 import os
 import glob
 import numpy as np
 import time
 
+
+
 def main():
 
     # ------------ PARAMETERS ------------
-    source = "hdf5"         # Source database (DO NOT CHANGE)
+    source = "exocross"         # Source database (dace or exocross)
     vols = ["CH4", "CO", "CO2", "H2", "H2O", "H2S", "HCN", "N2", "N2O", "NH3", "O3", "SO2"]   # List of gases
     alias = "Test"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
@@ -84,11 +87,11 @@ def main():
     # ===========
     # Test each volatile for its numin, numax, pmin, pmax, tmin, tmax
     print("Verifying domain of input data")
-    #     pressure grids are always the same
-    if np.amin(tgt_p) < 1.0e-8:
-        raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
-    if np.amax(tgt_p) > 1.0e3:
-        raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
+    if source == "dace":
+        if np.amin(tgt_p) < 1.0e-8:
+            raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
+        if np.amax(tgt_p) > 1.0e3:
+            raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
 
     #     check files directly
     dat_numin, dat_numax = np.inf, -np.inf
@@ -97,9 +100,9 @@ def main():
         print("    checking %s"%v)
         #     read first file
         formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
-        temp_xc.read(UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot(alias, UV, xaxis, lim, yunits=0)
+        temp_xc = cross.xsec(v, source, ptf.list_files(source, formula_path)[0])
+        temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
+        temp_xc.plot("wavelength", [None,None], show=False)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
@@ -109,7 +112,7 @@ def main():
         print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
 
         #     get tmin, tmax
-        _,at,_ = dace.list_all_ptf(formula_path)
+        _,at,_ = ptf.list_all_ptf(formula_path)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
 
@@ -127,12 +130,12 @@ def main():
     # ===========
     # Determine p,t grid using last of the absorbers
     formula_path = os.path.join(utils.dirs[source], vols[-1]+"/")
-    arr_p, arr_t, arr_f = dace.map_ptf(formula_path, tgt_p , tgt_t)
+    arr_p, arr_t, arr_f = ptf.map_ptf(source, vols[-1], tgt_p , tgt_t)
 
 
     # ===========
     # Get nu array for required range and resolution (also using last absorber)
-    nu_arr = cross.xsec(vols[-1], source, dace.list_files(formula_path)[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
+    nu_arr = cross.xsec(vols[-1], source, ptf.list_files(source, vols[-1])[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
 
     # ===========
     # Determine bands

@@ -1,4 +1,4 @@
-# Tools for handling exomol files
+# Tools for handling exomol 'sigma' files
 
 from glob import glob 
 import os
@@ -47,7 +47,7 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     t_arr = []  # temperature
     for f in files:
         temp = cross.xsec("", "exomol", f)
-        temp.read()
+        temp.read(UV=False)
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 

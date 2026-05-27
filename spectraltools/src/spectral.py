@@ -58,7 +58,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # Simple case
     if nband == 1:
-        return [numin, numax]
+        return np.array([numin, numax], dtype=float)
 
     # Other cases ...
     if (nband == 2) and (method > 2):
@@ -120,7 +120,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             dist_last = dist
         if (method==9) and (set_band == nband+1):
             break
-    bands_out = np.array(bands_out)
+    bands_out = np.array(bands_out, dtype=float)
 
     suggest = "Try a different method, choose fewer bands, or increase the source resolution"
     if not utils.is_unique(bands_out):
@@ -206,7 +206,9 @@ def read_band_edges(sfpath:str) -> list:
     return band_edgesm
 
 
-def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list, dry:bool=False):
+def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, 
+                    volatile_list:list, band_edges:list, 
+                    dry:bool=False):
     """Create skeleton spectral file.
 
     Creates a spectral file with meta-data. Does not calculate k-terms or other physical properties.

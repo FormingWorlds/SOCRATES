@@ -161,7 +161,7 @@ def chemsafe(name:str):
         return name
 
     # nope
-    return None
+    raise Exception("Chemical '%s' not recognised! Check chem_dict in phys.py" % name)
 
 # Formulae's MMW in g/mol (taken from src/radiance_core/gas_list_pcf.f90 -- see references therein)
 form_mmw = {

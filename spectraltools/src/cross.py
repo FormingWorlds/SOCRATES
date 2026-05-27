@@ -53,6 +53,15 @@ class xsec():
         if not self.loaded:
             raise Exception("Cannot get k values from unloaded xsec object")
         return self.arr_k
+    
+    def parse_name(self):
+        match self.source:
+            case "dace":
+                self.parse_binname()
+            case "exocross":
+                self.parse_exocrossname()
+            case _:
+                self.read()
 
     # Read bin filename information and use it to set scalar variables in this object
     def parse_binname(self):
@@ -206,7 +215,7 @@ class xsec():
         return self
 
     # Read HITRAN xsc file
-    def readxsc(self, numin=0, numax=np.inf, dnu=0.0):
+    def readxsc(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         if not (self.source == "hitran"):
             print("WARNING: Cannot execute readxsc because source (%s) is not HITRAN" % self.source)
 
@@ -247,7 +256,7 @@ class xsec():
         return self
 
     # Read ExoMol sigma file
-    def readsigma(self, numin=0, numax=np.inf, dnu=0.0):
+    def readsigma(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         if not (self.source == "exomol"):
             print("WARNING: Cannot execute readsigma because source (%s) is not ExoMol" % self.source)
 
@@ -288,10 +297,68 @@ class xsec():
         # Flag as loaded
         self.loaded = True
         return self
+    
+    def parse_exocrossname(self):
+        if not (self.source == "exocross"):
+            print("WARNING: Cannot execute parse_exocrossname because source (%s) is not ExoCross" % self.source)
 
+        # Process filename
+        # Loop through prats and identify p, t
+        splt = os.path.basename(self.fname).split("_")
+        for s in splt:
+            # pressure 
+            if s.startswith("P") and s.endswith("bar"):
+                self.p = float(s[1:-3])
+
+            # temperature
+            elif s.startswith("T") and s.endswith("K"):
+                self.t = float(s[1:-2])
+        
+        return self
+
+
+    # Read data from exocross xsec format 
+    def readexocross(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
+        if not (self.source == "exocross"):
+            print("WARNING: Cannot execute readexocross because source (%s) is not ExoCross" % self.source)
+
+        # check conflicts
+        if self.loaded:
+            raise Exception("This xsec object already contains data")
+        if not os.access(self.fname, os.R_OK):
+            raise Exception("Cannot read file '%s'" % self.fname)
+
+        # Process filename
+        # Loop through prats and identify p, t, numin, numax
+        self.parse_exocrossname()
+            
+        data = np.loadtxt(self.fname).T
+        self.arr_nu = data[0] # wavenumber [cm-1]
+        self.arr_k  = data[1] * phys.N_av / (self.mmw * 1000.0) # convert cm2/molecule to cm2/gram
+        self.arr_k  = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
+        self.nbins  = len(data[0])
+
+        tmp_nu = []
+        tmp_k  = []
+        nulast = -999999999.0
+        for i,nu in enumerate(self.arr_nu):
+            if (numin <= nu <= numax) and (nu + dnu > nulast):
+                tmp_nu.append(nu)
+                tmp_k.append(self.arr_k[i])
+                nulast= nu
+
+        self.arr_nu = np.array(tmp_nu)
+        self.arr_k = np.array(tmp_k)
+        self.numin = self.arr_nu[0]
+        self.numax = self.arr_nu[-1]
+        self.nbins = len(self.arr_nu)
+
+        # Flag as loaded
+        self.loaded = True
+        return self
 
     # Read input variables instead of from a file (bar, K, cm-1, cm2/g)
-    def readdirect(self, p, t, nu_arr, k_arr, numin=0, numax=np.inf, dnu=0.0):
+    def readdirect(self, p:float, t:float, nu_arr:list, k_arr:list, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         # check conflicts
         if self.loaded:
             raise Exception("This xsec object already contains data")
@@ -319,13 +386,16 @@ class xsec():
         self.loaded = True
         return self
 
-
     # Read source file
-    def read(self, UV:bool, p=None, t=None, nu_arr=None, k_arr=None, numin=0, numax=np.inf, dnu=0.0):
+    def read(self, UV:bool=False, p=None, t=None, 
+                nu_arr=None, k_arr=None, 
+                numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
+        
         match self.source:
             case "dace":   self.readbin(UV, numin=numin, numax=numax, dnu=dnu)
             case "hitran": self.readxsc(numin=numin, numax=numax, dnu=dnu)
             case "exomol": self.readsigma(numin=numin, numax=numax, dnu=dnu)
+            case "exocross": self.readexocross(numin=numin, numax=numax, dnu=dnu)
             case "direct": self.readdirect(p,t,nu_arr,k_arr,numin=numin, numax=numax, dnu=dnu)
         return self
 
@@ -404,14 +474,13 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, alias:str, UV:bool, xaxis:str, lim:list, yunits=0, fig=None, ax=None, show=True, saveout="plot_"):
+    def plot(self, xaxis:str, lim:list, yunits=0, show=True, saveout=True):
         import matplotlib.pyplot as plt
 
         if not self.loaded:
             raise Exception("Cannot plot data because xsec object is empty!")
 
-        if (fig==None) or (ax==None):
-            fig,ax = plt.subplots(figsize=(10,5))
+        fig,ax = plt.subplots(figsize=(10,5))
 
         lw=0.4
         col = 'k'
@@ -454,7 +523,8 @@ class xsec():
             xmin = 1e7/xmin
 
             ax.set_xlabel("Wavelength [nm]", fontsize=18)
-            ax.set_xlim(xmin, xmax)
+            ax.set_xlim(xmax*1.1, xmin/1.1)
+            ax.set_xscale('log')
 
         elif xaxis == 'wavenumber':
             # Crop data
@@ -488,23 +558,16 @@ class xsec():
         ax.tick_params(axis='x', labelsize=14)
         ax.tick_params(axis='y', labelsize=14)
 
-        if UV == True:
-            title = self.form
-        else:
-            title = self.form + " : %.3e bar, %.2f K" % (self.p, self.t)
-
+        title = str(self.form) + " : %.3e bar, %.2f K" % (self.p, self.t)
         ax.set_title(title, fontsize=20)
 
-        if len(saveout) > 0:
-            path = os.path.join(utils.dirs["output"]+alias+'/plots')
-            os.makedirs(path, exist_ok=True)
+        path = os.path.join(utils.dirs["output"],f'plot_{self.form}.pdf')
+        if os.path.exists(path):
+            os.remove(path)
 
-            save_path = os.path.join(path, saveout)
-            print("Saving plot to '%s'"%save_path)
-
-            utils.rmsafe(save_path)
-            fig.savefig(save_path+self.form, bbox_inches="tight", dpi=200)
-            show=True
+        if saveout:
+            print("Saving plot to '%s'"%path)
+            fig.savefig(path, bbox_inches="tight", dpi=400)
             plt.close()
 
         if show:
