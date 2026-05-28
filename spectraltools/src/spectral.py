@@ -7,6 +7,16 @@ import time
 import src.utils as utils
 import src.netcdf as netcdf
 
+CCORRK_NPROC    = 20        # Number of processes to use for Ccorr_k. 
+CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
+CCORRK_N_TERMS  = 10        # Use this many k-terms. 
+CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
+CCORRK_B_MAXERR = 1.0e-2    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
+CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
+CCORRK_CIA_TOLTYPE = 'b'
+CCORRK_LBL_TOLTYPE = 't'
+
+
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
 
@@ -404,11 +414,6 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     print("Calculating k-coefficients for '%s' line absorption for '%s'..."%(formula, alias))
 
-    # Parameters
-    max_path = 1.0e1
-    tol_type = 't'
-    nproc = 20
-
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     pt_lbl      = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias)
@@ -451,12 +456,12 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write("Ccorr_k")
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
     f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
-    f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -l %s %.3e"%(absid, CCORRK_MAXPATH))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
 
-    match tol_type:
-        case 'n': f.write(" -n 20")         # Use this many k-terms
-        case 't': f.write(" -t 5.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-        case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+    match CCORRK_LBL_TOLTYPE:
+        case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
+        case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+        case 'b': f.write(f" -b {CCORRK_B_MAXERR:.1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -466,7 +471,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
-    f.write(" -np %s"%nproc)            # Doesn't seem to work for LbL calculation
+    f.write(" -np %s"%CCORRK_NPROC)            # Doesn't seem to work for LbL calculation
     f.write(" \n ")
 
     f.close()
@@ -493,7 +498,8 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool=False):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool=False,
+                    ):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -517,12 +523,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     str
         Path to file containing the new k-coefficients
     """
-
-    # Parameters
-    max_path = 1.0e1
-    tol_type = 'b'
-    nproc = 30          # Number of processes
-    nu_cutoff = 2500.0  # Line cutoff [m-1]
 
     # Re-order pair and check if valid
     p_in = [formula_A.strip(),formula_B.strip()]
@@ -590,14 +590,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
         f.write(" -R %d %d"%(iband[0], iband[1]))
-        f.write(" -c %.3f"%nu_cutoff)
+        f.write(" -c %.3f"%CCORRK_CIA_CUTOFF)
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
 
-        match tol_type:
-            case 'n': f.write(" -n 10")         # Use this many k-terms
-            case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-            case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        match CCORRK_CIA_TOLTYPE:
+            case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
+            case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+            case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
         f.write(" -s %s"%skel_path)
@@ -607,7 +607,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
         f.write(" -lm %s"%lbl_map_path)
-        f.write(" -np %s"%nproc)
+        f.write(" -np %s"%CCORRK_NPROC)
         f.write(" \n ")
 
         #   Ccorr_k -F $CONT_PT_FILE \
@@ -630,12 +630,12 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -CIA %s"%db_cia)
         f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
 
-        match tol_type:
-            case 'n': f.write(" -n 4")
-            case 't': f.write(" -t 1.0e-3")
-            case 'b': f.write(" -b 1.0e-3")
+        match CCORRK_CIA_TOLTYPE:
+            case 'n': f.write(f" -n {CCORRK_N_TERMS:d}") # this many k-terms
+            case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}") # calculate k-terms needed to keep RMS error in the transmission below this value
+            case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}") # calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
 
         f.write(" -s %s"%skel_path)
         f.write(" +p")
@@ -643,7 +643,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
-        f.write(" -np %d"%nproc)
+        f.write(" -np %d"%CCORRK_NPROC)
         f.write(" \n ")
 
     f.close()
