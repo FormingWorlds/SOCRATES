@@ -50,7 +50,7 @@ nav:
       - SPIDER: https://proteus-framework.org/SPIDER/
       - Atmodeller: https://atmodeller.readthedocs.io/en/latest/
       - FastChem: https://newstrangeworlds.github.io/FastChem/
-      - PLATON: https://platon.readthedocs.io/en/latest/
+      - PetitRADTRANS: https://petitradtrans.readthedocs.io/en/latest/
 
 theme:
   name: material
