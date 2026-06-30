@@ -1,3 +1,12 @@
+---
+title: SOCRATES
+hide: 
+  - toc
+  - navigation
+---
+
+<div style="padding-left: 1em; padding-right : 1em" markdown = 1>
+
 # SOCRATES
 
 <p class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>
@@ -28,3 +37,5 @@ Please cite these papers if you use SOCRATES:
 
 - Edwards, J. M. and Slingo, A. (1996):  [10.1002/qj.49712253107](https://doi.org/10.1002/qj.49712253107)
 - Manners, J. (2024):  [10.1063/5.0185476](https://doi.org/10.1063/5.0185476)
+
+</div>
