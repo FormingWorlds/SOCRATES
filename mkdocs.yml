@@ -129,6 +129,7 @@ extra_css:
   - stylesheets/proteus_theme.css
   - stylesheets/subtitle.css
   - stylesheets/footnotes.css
+  - stylesheets/diagram.css
 
 plugins:
   - search
