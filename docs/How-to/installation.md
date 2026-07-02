@@ -75,10 +75,7 @@ To set this permanently:
 ### Setting `FWL_DATA` (optional)
 
 `FWL_DATA` is the directory where PROTEUS shared data files, including spectral files, are
-stored. It is only required if you plan to use the
-[PROTEUS spectral files](../Reference/proteus_spectral_file_reference.md). Choose a
-location with sufficient disk space (spectral files range from a few MB up to ~1 GB for
-high-resolution files).
+stored. Choose a location with sufficient disk space.
 
 To set this temporarily:
 
