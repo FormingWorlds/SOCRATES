@@ -8,6 +8,8 @@ The companion paper describing the fast two-stream flux/cooling-rate algorithms:
 
 - Edwards, J. M. (1996). Efficient calculation of infrared fluxes and cooling rates using the two-stream equations. *Journal of the Atmospheric Sciences, 53*(14), 1921-1932. [https://doi.org/10.1175/1520-0469(1996)053%3C1921:ECOIFA%3E2.0.CO;2](https://doi.org/10.1175/1520-0469(1996)053%3C1921:ECOIFA%3E2.0.CO;2)
 
+## Adaption and application
+
 SOCRATES has since been adapted and validated for hot-Jupiter and brown dwarf atmospheres:
 
 - Amundsen, D. S., Baraffe, I., Tremblin, P., Manners, J., Hayek, W., Mayne, N. J., & Acreman, D. M. (2014). Accuracy tests of radiation schemes used in hot Jupiter global circulation models. *Astronomy & Astrophysics, 564*, A59. [https://doi.org/10.1051/0004-6361/201323169](https://doi.org/10.1051/0004-6361/201323169)
@@ -16,5 +18,7 @@ SOCRATES has since been adapted and validated for hot-Jupiter and brown dwarf at
 And for its use as the radiation scheme within terrestrial-planet GCMs (e.g. LFRic-atmosphere, used by SOCRATES-based tools like AGNI):
 
 - Sergeev, D. E., Mayne, N. J., Bendall, T., Boutle, I. A., Brown, A., Kavčič, I., Kent, J., Kohary, K., Manners, J., Melvin, T., Olivier, E., Ragta, L. K., Shipway, B., Wakelin, J., Wood, N., & Zerroukat, M. (2023). Simulations of idealised 3D atmospheric flows on terrestrial planets using LFRic-atmosphere. *Geoscientific Model Development, 16*(19), 5601-5626. [https://doi.org/10.5194/gmd-16-5601-2023](https://doi.org/10.5194/gmd-16-5601-2023)
+
+## Use in PROTEUS framework
 
 Finally, SOCRATES is used in all publications that make use of the PROTEUS framework, which can be found [here](https://proteus-framework.org/publications).
