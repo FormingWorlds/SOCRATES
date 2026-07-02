@@ -9,9 +9,7 @@ single-column water-vapour atmosphere. By the end you will have:
 - run SOCRATES, and
 - understood the output.
 
-**Prerequisites:** SOCRATES installed with `RAD_DIR` set (see [Installation](../How-to/installation.md)).
-The `FWL_DATA` environment variable must also be set. This is the directory where shared
-data files including spectral files are stored.
+**Prerequisites:** SOCRATES installed with `RAD_DIR` set and the `FWL_DATA` environment variable set (see [Installation](../How-to/installation.md)). Make sure you also have a [working Python environment](../How-to/installation.md#set-up-a-python-environment-optional) with the necessary dependencies. 
 
 !!! note "Spectral file used in this tutorial"
     We use **Frostflow-256**, a water-vapour-only file with 256 spectral bands from the
