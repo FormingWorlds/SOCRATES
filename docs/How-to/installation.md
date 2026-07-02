@@ -1,14 +1,20 @@
 # Installation
 
 !!! tip "Installation within the PROTEUS framework"
-    If used within PROTEUS, SOCRATES is installed alongside other modules following the [PROTEUS installation guide](https://proteus-framework.org/PROTEUS/How-to/installation.html). It can also be installed within the atmosphere models [AGNI](https://www.h-nicholls.space/AGNI/dev/howto/getting_started/) or [JANUS](https://proteus-framework.org/JANUS). Only use the instructions below if you would like a **standalone version of SOCRATES on your system**. 
+    If used within PROTEUS, SOCRATES is installed alongside other modules following the
+    [PROTEUS installation guide](https://proteus-framework.org/PROTEUS/How-to/installation.html).
+    It can also be installed within the atmosphere models
+    [AGNI](https://www.h-nicholls.space/AGNI/dev/howto/getting_started/) or
+    [JANUS](https://proteus-framework.org/JANUS). Only use the instructions below if you
+    would like a **standalone version of SOCRATES on your system**.
 
-SOCRATES is supported on the following platforms:
+## Supported platforms
 
 - **Linux (x86_64 / AMD64):** Ubuntu, Fedora, RedHat, CentOS, Arch, Debian
 - **macOS (ARM64 / Apple Silicon)**
 
-Older Intel-based Mac systems and Linux running on ARM64 architectures are not currently supported.
+Older Intel-based Mac systems and Linux running on ARM64 architectures are not currently
+supported.
 
 !!! info "Software requirements"
     The following tools must be available on your system before installing SOCRATES:
@@ -43,68 +49,76 @@ Older Intel-based Mac systems and Linux running on ARM64 architectures are not c
 
 ### Setting `RAD_DIR`
 
-SOCRATES needs the location of its root directory, referred to as `RAD_DIR`, available as an environment variable in your terminal/shell.
+SOCRATES needs the location of its root directory, referred to as `RAD_DIR`, available as
+an environment variable. Run the following commands from inside the SOCRATES directory.
 
 To set this temporarily, for the current terminal session only:
+
 ```bash
 export RAD_DIR=$(pwd)
 ```
 
-To set this permanently, add the export to your shell's startup file:
+To set this permanently:
 
-**Bash**
-```bash
-echo "export RAD_DIR=$(pwd)" >> ~/.bashrc
-```
+=== "Bash"
+    ```bash
+    echo "export RAD_DIR=$(pwd)" >> ~/.bashrc
+    source ~/.bashrc
+    ```
 
-**Zsh** (e.g. on macOS)
-```bash
-echo "export RAD_DIR=$(pwd)" >> ~/.zshrc
-```
-
-Restart your terminal, or run `source ~/.bashrc` (or `~/.zshrc`), for the change to take effect.
+=== "Zsh"
+    ```zsh
+    echo "export RAD_DIR=$(pwd)" >> ~/.zshrc
+    source ~/.zshrc
+    ```
 
 ### Setting `FWL_DATA` (optional)
 
-`FWL_DATA` is the directory where PROTEUS shared data files, including spectral files, are stored.
+`FWL_DATA` is the directory where PROTEUS shared data files, including spectral files, are
+stored. It is only required if you plan to use the
+[PROTEUS spectral files](../Reference/proteus_spectral_file_reference.md). Choose a
+location with sufficient disk space (spectral files range from a few MB up to ~1 GB for
+high-resolution files).
 
-Choose a location with sufficient disk space and set the variable:
+To set this temporarily:
 
 ```bash
 export FWL_DATA=/path/to/fwl_data
 ```
 
-To set this permanently, add the line to your shell startup file:
+To set this permanently:
 
-**Bash**
-```bash
-echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.bashrc
-```
+=== "Bash"
+    ```bash
+    echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.bashrc
+    source ~/.bashrc
+    ```
 
-**Zsh** (e.g. on macOS)
-```bash
-echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.zshrc
-```
+=== "Zsh"
+    ```zsh
+    echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+
+Spectral files will be downloaded into `$FWL_DATA/spectral_files/`.
 
 ### Set up a Python environment (optional)
 
-An easy way to work with SOCRATES is by accessing it via Python, which requires a Python installation with additional dependencies. If you have Conda installed, create a clean environment via:
+An easy way to work with SOCRATES is by accessing it via Python, which requires a Python
+installation with additional dependencies. If you have Conda installed, create a clean
+environment and install the required dependencies:
 
 ```bash
 conda create -n socrates python=3.12 -y
 conda activate socrates
-```
-
-And install required dependencies:
-
-```bash
 pip install -r python/requirements.txt
 ```
 
-
 ## Installing via other frameworks
 
-This SOCRATES fork is most commonly used as a component of a larger framework rather than installed standalone. Installation instructions for these are available in their respective documentation:
+This SOCRATES fork is most commonly used as a component of a larger framework rather than
+installed standalone. Installation instructions for these are available in their respective
+documentation:
 
 - [PROTEUS framework](https://proteus-framework.org/PROTEUS/): see [installing SOCRATES within PROTEUS](https://proteus-framework.org/PROTEUS/How-to/manual_installation.html#5-install-socrates-radiative-transfer)
 - [AGNI](https://www.h-nicholls.space/AGNI/) atmosphere model, which provides a `get_socrates.sh` script to automate this installation process
