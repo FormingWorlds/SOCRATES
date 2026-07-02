@@ -64,6 +64,44 @@ echo "export RAD_DIR=$(pwd)" >> ~/.zshrc
 
 Restart your terminal, or run `source ~/.bashrc` (or `~/.zshrc`), for the change to take effect.
 
+### Setting `FWL_DATA` (optional)
+
+`FWL_DATA` is the directory where PROTEUS shared data files, including spectral files, are stored.
+
+Choose a location with sufficient disk space and set the variable:
+
+```bash
+export FWL_DATA=/path/to/fwl_data
+```
+
+To set this permanently, add the line to your shell startup file:
+
+**Bash**
+```bash
+echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.bashrc
+```
+
+**Zsh** (e.g. on macOS)
+```bash
+echo 'export FWL_DATA=/path/to/fwl_data' >> ~/.zshrc
+```
+
+### Set up a Python environment (optional)
+
+An easy way to work with SOCRATES is by accessing it via Python, which requires a Python installation with additional dependencies. If you have Conda installed, create a clean environment via:
+
+```bash
+conda create -n socrates python=3.12 -y
+conda activate socrates
+```
+
+And install required dependencies:
+
+```bash
+pip install -r python/requirements.txt
+```
+
+
 ## Installing via other frameworks
 
 This SOCRATES fork is most commonly used as a component of a larger framework rather than installed standalone. Installation instructions for these are available in their respective documentation:
