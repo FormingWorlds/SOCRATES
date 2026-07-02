@@ -31,9 +31,9 @@ Because parametrisations that require spectrally dependent data can only be sele
 
 ## Spectral bands
 
-The spectral region is divided into bands within which all radiative quantities — except gaseous absorption coefficients — are treated as frequency-independent. The total flux is the sum of partial fluxes over bands (see [Two-stream radiation code](two_stream.md#spectral-integration)).
+The spectral region is divided into bands within which all radiative quantities (except gaseous absorption coefficients) are treated as frequency-independent. The total flux is the sum of partial fluxes over bands (see [Two-stream radiation code](two_stream.md#spectral-integration)).
 
-In some shortwave spectral files, certain bands share the same wavelength limits. These are **not true spectral bands** — they represent a computational splitting for efficiency, and only the sum of fluxes across such paired bands is physically meaningful. The excluded sub-ranges are specified in block 14 (see below).
+In some shortwave spectral files, certain bands share the same wavelength limits. These are **not true spectral bands**: they represent a computational splitting for efficiency, and only the sum of fluxes across such paired bands is physically meaningful. The excluded sub-ranges are specified in block 14 (see below).
 
 ---
 
@@ -44,19 +44,19 @@ The spectral file is organised into numbered **blocks**, each corresponding to a
 | Block | Contents | Notes |
 |---|---|---|
 | 0 | Number and identities of gaseous and aerosol species | Gases indexed by type number from `gas_list_pcf`; aerosols from `rad_pcf` |
-| 1 | Spectral band limits (wavelengths in metres) | Some bands may share limits — see split bands below |
+| 1 | Spectral band limits (wavelengths in metres) | Some bands may share limits, see split bands below |
 | 2 | Fraction of solar spectrum in each band | Shortwave only |
 | 3 | Rayleigh scattering coefficients | Shortwave only |
 | 4 | List of gaseous absorbers active in each band | First gas listed must be the primary absorber |
 | 5 | k-distribution fits to gaseous transmissions | Includes scaling functions or look-up tables |
 | 6 | Polynomial fit to the Planck function in each band | Longwave only |
-| 7 | *(Obsolete — not present in current files)* | — |
+| 7 | *(Obsolete, not present in current files)* | — |
 | 8 | List of continuum absorbers in each band | Primarily self- and foreign-broadened water vapour continua |
 | 9 | Continuum absorption coefficients | — |
 | 10 | Single-scattering parametrisations for cloud droplets | May contain multiple types; valid size range recorded |
 | 11 | Aerosol optical properties | Selection varies by file; hygroscopic aerosols include humidity dependence via look-up table |
 | 12 | Single-scattering parametrisations for ice crystals | May contain multiple types; valid size range recorded |
-| 13 | Heuristic Doppler broadening adjustments | Longwave only; obsolescent — will move to block 5 |
+| 13 | Heuristic Doppler broadening adjustments | Longwave only; obsolescent, will move to block 5 |
 | 14 | Band exclusions (split bands) | Defines sub-ranges excluded from a band's limits |
 | 15 | Monochromatic aerosol absorption/scattering coefficients | At specific wavelengths, for aerosol optical depth diagnostics |
 
@@ -65,13 +65,13 @@ The spectral file is organised into numbered **blocks**, each corresponding to a
 Gaseous absorption data are stored as **k-distribution** fits. For each active gas in each band, absorption coefficients are either:
 
 - **Scaled** from a reference value using a pressure- and temperature-dependent scaling function (two functional forms are supported; see [Two-stream radiation code](two_stream.md#gaseous-absorption)), or
-- **Interpolated** directly from a look-up table of coefficients at a grid of pressures and temperatures — now the preferred approach.
+- **Interpolated** directly from a look-up table of coefficients at a grid of pressures and temperatures, now the preferred approach.
 
 The first gas listed in block 4 for each band is the **primary absorber**; minor gases may be treated via the equivalent extinction approximation rather than full random overlap.
 
 ### Cloud and ice parametrisations (blocks 10 and 12)
 
-Blocks 10 and 12 may contain data for **multiple types** of droplet or ice crystal parametrisation within a single file. The term *type* is deliberately flexible — different types may represent:
+Blocks 10 and 12 may contain data for **multiple types** of droplet or ice crystal parametrisation within a single file. The term *type* is deliberately flexible; different types may represent:
 
 - Different assumed size distributions
 - Different spectral averaging methods (thin or thick averaging)
@@ -105,7 +105,7 @@ Two utility programs handle format conversion between namelist and text formats:
 
 ## Generating and modifying spectral files
 
-Spectral files are generated using the **pre-processing suite** of the offline Edwards–Slingo radiation code. Generation requires expertise in radiative transfer — most users will use standard provided files and should not modify them.
+Spectral files are generated using the **pre-processing suite** of the offline Edwards–Slingo radiation code. Generation requires expertise in radiative transfer.
 
 When a new requirement arises (e.g. adding a new absorbing gas, updating continuum data, or incorporating a new aerosol type), users should contact the radiation group rather than modifying files independently. Aerosol optical property data in particular are generated in consultation with aerosol modelling specialists.
 
