@@ -8,6 +8,10 @@ The companion paper describing the fast two-stream flux/cooling-rate algorithms:
 
 - Edwards, J. M. (1996). Efficient calculation of infrared fluxes and cooling rates using the two-stream equations. *Journal of the Atmospheric Sciences, 53*(14), 1921-1932. [https://doi.org/10.1175/1520-0469(1996)053%3C1921:ECOIFA%3E2.0.CO;2](https://doi.org/10.1175/1520-0469(1996)053%3C1921:ECOIFA%3E2.0.CO;2)
 
+A major update was published in 2024:
+
+- Manners, J. (2024, January). A fast and flexible scheme for photolysis and radiative heating of the whole atmosphere. In _AIP Conference Proceedings_ (Vol. 2988, No. 1, p. 030002). AIP Publishing LLC. [https://doi.org/10.1063/5.0185476](https://doi.org/10.1063/5.0185476)
+
 ## Adaption and application
 
 SOCRATES has since been adapted and validated for hot-Jupiter and brown dwarf atmospheres:
