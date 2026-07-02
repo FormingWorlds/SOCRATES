@@ -3,7 +3,7 @@ hide:
   - navigation
 ---
 
-<div style="padding-left: 1em" markdown="1">
+<div class="socrates-getstarted" markdown = 1> 
 
 # Get started
 

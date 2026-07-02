@@ -5,7 +5,7 @@ hide:
   - navigation
 ---
 
-<div style="padding-left: 1em; padding-right : 1em" markdown = 1>
+<div class="socrates-index" markdown = 1>
 
 <h1 align = "center"> SOCRATES </h1>
 
