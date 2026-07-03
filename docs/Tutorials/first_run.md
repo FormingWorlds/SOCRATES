@@ -14,8 +14,7 @@ single-column water-vapour atmosphere. By the end you will have:
 !!! note "Spectral file used in this tutorial"
     We use **Frostflow-256**, a water-vapour-only file with 256 spectral bands from the
     DACE opacity database. For quick debugging runs, a 16-band version is available on
-    Zenodo with its own record ID. For production work, the 4096-band version provides
-    benchmark-quality results.
+    [Zenodo](https://zenodo.org/records/15799743). For production work, the [4096-band version](https://zenodo.org/records/15799776) provides the highest resolution.
 
 ---
 
@@ -33,12 +32,6 @@ wget "https://zenodo.org/records/15799754/files/Frostflow.sf?download=1"   -O Fr
 wget "https://zenodo.org/records/15799754/files/Frostflow.sf_k?download=1" -O Frostflow.sf_k
 ```
 
-!!! note "16-band files"
-    A 16-band Frostflow is available for fast debugging runs. Its Zenodo record has a
-    different ID — check the [PROTEUS spectral files reference](../Reference/proteus_spectral_file_reference.md)
-    for the link. The file structure and download procedure are identical; only the record
-    ID and the value of `N_BANDS` (below) change.
-
 ---
 
 ## 2. Create a working directory
@@ -54,11 +47,11 @@ cd socrates_tutorial
 
 The downloaded spectral file needs a thermal source function (Block 6) added before it
 can be used for longwave calculations. Copy it into your working directory first, then
-modify the local copy — this leaves the original in `$FWL_DATA` untouched.
+modify the local copy, leaving the original in `$FWL_DATA` untouched. While in `socrates_tutorial`:
 
 ```bash
-cp $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf   ~/socrates_tutorial/Frostflow.sf
-cp $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf_k ~/socrates_tutorial/Frostflow.sf_k
+cp $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf   Frostflow.sf
+cp $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf_k Frostflow.sf_k
 ```
 
 Source the SOCRATES environment to put `prep_spec` on your path:
@@ -68,7 +61,7 @@ source $RAD_DIR/set_rad_env
 ```
 
 Now add Block 6 (thermal source function, tabulated over 100–4000 K at 250 temperature
-points). This uses the `prep_spec` utility interactively via a here-string:
+points). This uses the `prep_spec` utility interactively:
 
 ```bash
 printf "%s\n" \
@@ -92,7 +85,7 @@ What each input does:
 | `$HOME/socrates_tutorial/Frostflow.sf` | File name | Full path to the local copy |
 | `a` | Append or new? | Append to existing file |
 | `6` | Block type | Block 6: thermal source function |
-| `y` | Block already exists — continue? | Yes, overwrite |
+| `y` | Block already exists; continue? | Yes, overwrite |
 | `n` | Filter required? | No |
 | `T` | Table or polynomial? | Tabulate |
 | `100 4000` | Temperature range (K) | Covers cold stratospheres to magma ocean surfaces |
@@ -116,18 +109,20 @@ SOCRATES reads the atmospheric state from a set of netCDF files that share a com
 The atmosphere is divided into N homogeneous layers, bounded by N+1 levels. Layer
 mid-point values go into most files; level-edge temperatures go into `.tl`.
 
-We will set up a 10-layer hot steam atmosphere — the kind of conditions relevant to a
+We will set up a 10-layer hot steam atmosphere, the kind of conditions relevant to a
 post-magma-ocean planet.
 
 ### 4.1 Install dependencies
 
+If you have not yet installed the necessary Python dependencies:
+
 ```bash
-pip install netCDF4 f90nml
+pip install -r ../python/requirements.txt
 ```
 
 ### 4.2 Write the input script
 
-Save the following as `make_inputs.py` in `~/socrates_tutorial/`:
+Save the following as `make_inputs.py` in `socrates_tutorial/`:
 
 ```python
 import numpy as np
@@ -137,7 +132,7 @@ import os
 
 BASENAME = "atm"
 
-# --- Atmosphere structure ---
+# Atmosphere structure
 N_LAYERS = 10
 p_surf = 1.0e7   # Pa  (100 bar)
 p_top  = 1.0e2   # Pa  (1 mbar)
@@ -311,11 +306,11 @@ SOCRATES writes one netCDF output file per flux quantity under `out/`:
 
 | File | Contents |
 |------|----------|
-| `out/atm.uflx` | Upward flux (W m⁻²) |
-| `out/atm.dflx` | Diffuse downward flux (W m⁻²) |
-| `out/atm.vflx` | Total downward flux (W m⁻²) |
-| `out/atm.nflx` | Net downward flux (W m⁻²) |
-| `out/atm.hrts` | Heating rates (K day⁻¹) |
+| `out/atm.uflx` | Upward flux (W m$^{-2}$) |
+| `out/atm.dflx` | Diffuse downward flux (W m$^{-2}$) |
+| `out/atm.vflx` | Total downward flux (W m$^{-2}$) |
+| `out/atm.nflx` | Net downward flux (W m$^{-2}$) |
+| `out/atm.hrts` | Heating rates (K day$^{-1}$) |
 
 Read and plot the upward flux profile:
 
@@ -333,17 +328,17 @@ plt.figure()
 plt.plot(flux, pres / 1e2, "b-o")
 plt.gca().invert_yaxis()
 plt.yscale("log")
-plt.xlabel("Upward flux (W m⁻²)")
+plt.xlabel(r"Upward flux (W m$^{-2}$)")
 plt.ylabel("Pressure (hPa)")
-plt.title("Upward longwave flux — Frostflow-256, pure H₂O")
+plt.title(r"Upward longwave flux; Frostflow-256, pure H$_{2}$O")
 plt.tight_layout()
 plt.savefig("out/flux_profile.png", dpi=150)
 
 olr = flux[0]  # upward flux at top of atmosphere (lowest pressure level)
-print(f"OLR: {olr:.1f} W m⁻²")
+print(f"OLR: {olr:.1f} W m$^{-2}$")
 ```
 
-The upward flux at the top of atmosphere is the **outgoing longwave radiation (OLR)** —
+The upward flux at the top of atmosphere is the **outgoing longwave radiation (OLR)**, 
 the rate at which the atmosphere loses energy to space.
 
 ---
@@ -356,7 +351,7 @@ the rate at which the atmosphere loses energy to space.
   and `.sazim` input files.
 - **Change planetary parameters.** Edit `atm.nml` to set the correct gravity, radius,
   and molecular weight for your target planet.
-- **Increase resolution.** The 4096-band Frostflow provides benchmark-quality results.
+- **Increase resolution.** The 4096-band Frostflow provides higher-resolution results.
 
 For information on all available spectral files and their absorbers, see
 [PROTEUS spectral files](../Reference/proteus_spectral_file_reference.md).
