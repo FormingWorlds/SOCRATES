@@ -65,7 +65,7 @@ points). This uses the `prep_spec` utility interactively:
 
 ```bash
 printf "%s\n" \
-  "$HOME/socrates_tutorial/Frostflow.sf" \
+  "Frostflow.sf" \
   "a" \
   "6" \
   "y" \
@@ -125,14 +125,18 @@ pip install -r ../python/requirements.txt
 Save the following as `make_inputs.py` in `socrates_tutorial/`:
 
 ```python
-import numpy as np
-from netCDF4 import Dataset
-import f90nml
+import sys
 import os
+import numpy as np
+import f90nml
+
+# Import netCDF helpers from SOCRATES
+sys.path.insert(0, os.path.join(os.environ['RAD_DIR'], 'python'))
+from nctools import ncout_surf, ncout2d, ncout3d
 
 BASENAME = "atm"
 
-# Atmosphere structure
+# --- Atmosphere structure ---
 N_LAYERS = 10
 p_surf = 1.0e7   # Pa  (100 bar)
 p_top  = 1.0e2   # Pa  (1 mbar)
@@ -151,83 +155,7 @@ t_lev = np.interp(p_lev, p_mid[::-1], t_mid[::-1])[::-1]
 # H2O mass mixing ratio: pure steam
 h2o = np.ones(N_LAYERS)
 
-# -------------------------------------------------------------------
-# netCDF helpers 
-# -------------------------------------------------------------------
-
-def create_cdf(path):
-    return Dataset(path, 'w', format='NETCDF3_CLASSIC', clobber=True)
-
-def write_dim(ds, n_val, vals, name, vtype, dims, units, title):
-    ds.createDimension(name, n_val)
-    v = ds.createVariable(name, vtype, dims)
-    v.units = units
-    v.title = title
-    v[:] = vals
-
-def write_var(ds, vals, name, vtype, dims, units, title):
-    v = ds.createVariable(name, vtype, dims)
-    if isinstance(units, str): v.units = units
-    if isinstance(title, str): v.title = title
-    v[:] = vals
-
-def ncout_surf(file, lon, lat, basis, alb):
-    """Write a .surf file with basis-function albedo structure."""
-    n_lon  = np.size(lon)
-    n_lat  = np.size(lat)
-    levels = np.size(basis)
-    albs   = np.zeros(n_lon * n_lat * levels) + float(alb)
-    ds = create_cdf(file)
-    write_dim(ds, n_lon,  np.atleast_1d(lon),   'lon',   'f4', 'lon',   'degree', 'LONGITUDE')
-    write_dim(ds, n_lat,  np.atleast_1d(lat),   'lat',   'f4', 'lat',   'degree', 'LATITUDE')
-    write_dim(ds, levels, np.atleast_1d(basis), 'basis', 'i2', 'basis', 'None',   'BASIS FUNCTION')
-    write_var(ds, albs.reshape(levels, n_lat, n_lon),
-              'alb', 'f4', ('basis', 'lat', 'lon'), 'None', 'ALBEDO WEIGHTS')
-    ds.close()
-
-def ncout2d(file, lon, lat, val, name, longname=None, units=None):
-    """Write a single-level (surface/TOA) scalar file."""
-    n_lon = np.size(lon)
-    n_lat = np.size(lat)
-    vals  = np.zeros(n_lon * n_lat) + float(val)
-    ds = create_cdf(file)
-    write_dim(ds, n_lon, np.atleast_1d(lon), 'lon', 'f4', 'lon', 'degree', 'LONGITUDE')
-    write_dim(ds, n_lat, np.atleast_1d(lat), 'lat', 'f4', 'lat', 'degree', 'LATITUDE')
-    write_var(ds, vals.reshape(n_lat, n_lon), name, 'f4', ('lat', 'lon'), units, longname)
-    ds.close()
-
-def ncout3d(file, lon, lat, p, val, name, longname=None, units=None):
-    """Write a 3-D pressure-level file. Pressures are sorted ascending."""
-    p   = np.array(p,   dtype=float)
-    val = np.array(val, dtype=float)
-    n_lon  = np.size(lon)
-    n_lat  = np.size(lat)
-    levels = len(p)
-
-    if val.size == levels:
-        vals = np.zeros((levels, n_lat, n_lon))
-        for i in range(levels):
-            vals[i, :, :] = val[i]
-    else:
-        vals = val.reshape(levels, n_lat, n_lon)
-
-    # Sort pressures ascending (SOCRATES convention)
-    order = np.argsort(p)
-    if not np.all(p[order] == p):
-        p    = p[order]
-        vals = vals[order, :, :]
-
-    ds = create_cdf(file)
-    write_dim(ds, n_lon,  np.atleast_1d(lon), 'lon',  'f4', 'lon',  'degree', 'LONGITUDE')
-    write_dim(ds, n_lat,  np.atleast_1d(lat), 'lat',  'f4', 'lat',  'degree', 'LATITUDE')
-    write_dim(ds, levels, p,                  'plev', 'f4', 'plev', 'Pa',     'PRESSURE')
-    write_var(ds, vals, name, 'f4', ('plev', 'lat', 'lon'), units, longname)
-    ds.close()
-
-# -------------------------------------------------------------------
-# Write input files
-# -------------------------------------------------------------------
-
+# --- Write input files ---
 ncout3d(f"{BASENAME}.t",  0, 0, p_mid, t_mid, 't',  longname="Temperature", units='K')
 ncout3d(f"{BASENAME}.tl", 0, 0, p_lev, t_lev, 'tl', longname="Temperature", units='K')
 ncout3d(f"{BASENAME}.p",  0, 0, p_mid, p_mid, 'p',  longname="Pressure",    units='PA')
@@ -238,7 +166,7 @@ ncout2d(f"{BASENAME}.pstar", 0, 0, p_surf, 'pstar', longname="Surface Pressure",
 
 ncout_surf(f"{BASENAME}.surf", 0, 0, 1, 0.0)
 
-# Planetary namelist: SOCRATES uses Earth defaults without this
+# Planetary namelist — SOCRATES uses Earth defaults without this
 nml = {
     'socrates_constants': {
         'planet_radius':  6.371e6,   # m
