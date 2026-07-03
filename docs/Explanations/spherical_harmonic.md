@@ -119,7 +119,7 @@ $$I_{i,lm}(\tau_i) = I_{i+1,lm}(0), \quad 1 \leq i \leq N, \quad \forall\, l, m$
 
 ### Upper boundary
 
-At the top of the atmosphere, the downward radiance is specified as $I(n) = I^{(0)}(n)$ for $n \in \Omega^-$. Since the full boundary condition cannot be imposed in a truncated system, **Marshak's conditions** [^cite-Marshak] are used — the inner product of the residual with odd-parity harmonics is set to zero:
+At the top of the atmosphere, the downward radiance is specified as $I(n) = I^{(0)}(n)$ for $n \in \Omega^-$. Since the full boundary condition cannot be imposed in a truncated system, **Marshak's conditions** [^cite-Marshak] are used; the inner product of the residual with odd-parity harmonics is set to zero:
 
 $$\sum_l \kappa_{ll'm} (I_{lm} - I^{(0)}_{lm}) = 0$$
 
@@ -233,7 +233,7 @@ This introduces errors of $O(\sqrt{\varepsilon})$ only in a neighbourhood of the
 
 ## Fast solution of the linear equations
 
-A more efficient algorithm for the core linear system — not yet fully implemented — reduces the dominant operation count from $O(18N^3 L)$ (banded solver with partial pivoting) to $O(6N^3 L)$.
+A more efficient algorithm for the core linear system, not yet fully implemented, reduces the dominant operation count from $O(18N^3 L)$ (banded solver with partial pivoting) to $O(6N^3 L)$.
 
 ### Block structure
 

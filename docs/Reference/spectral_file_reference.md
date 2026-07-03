@@ -39,11 +39,11 @@ Sections are identical to `sp_sw_ga3_0` except for changes to the spectral bands
 
 The six bands are identical to `sp_sw_ga3_0` except that the combined bands 2 and 3 are now properly split into two true bands at 505 nm.
 
-**Solar spectrum:** "Lean 12" — a mean over 2000–2011 from the SPARC/SOLARIS group recommendation [^cite-Lean00], with associated updates to Rayleigh scattering coefficients.
+**Solar spectrum:** "Lean 12", a mean over 2000–2011 from the SPARC/SOLARIS group recommendation [^cite-Lean00], with associated updates to Rayleigh scattering coefficients.
 
 **Gaseous absorption:** Newly derived for all gases using HITRAN 2012 [^cite-HITRAN] and the CAVIAR water vapour continuum. Absorption coefficients are scaled via a look-up table of 59 pressures × 5 temperatures, based on a mid-latitude summer profile. Total of **41 major gas k-terms**.
 
-Gases included: H₂O, O₃, CO₂, O₂, N₂O, CH₄, SO₂ (experimental), OCS (experimental).
+Gases included: H$_2$O, O$_3$, CO$_2$, O$_2$, N$_2$O, CH$_4$, SO$_2$ (experimental), OCS (experimental).
 
 Ozone cross-sections from Serdyuchenko et al. [^cite-Serd14] and Gorshelev et al. [^cite-Gors14] for UV/visible; Brion–Daumont–Malicet for the far UV. In band 1, one k-term per 20 nm sub-interval (200–320 nm); in band 2, sub-intervals at 320–400 nm and 400–505 nm to allow the incoming solar flux to be supplied on finer wavelength bands for solar spectral variability experiments.
 
@@ -69,11 +69,11 @@ Sections are identical to `sp_lw_ga3_0` except for changes to gaseous absorption
 
 Bands 3 and 5 are split bands (see [Spectral files: split bands](../Explanations/spectral_files.md#split-bands-block-14)).
 
-**Gaseous absorption:** Newly derived for all gases (except CO₂ in band 4) using HITRAN 2012 and CAVIAR. Total of **81 major gas k-terms**.
+**Gaseous absorption:** Newly derived for all gases (except CO$_2$ in band 4) using HITRAN 2012 and CAVIAR. Total of **81 major gas k-terms**.
 
-Greenhouse gases included: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a, SO₂ (experimental), OCS (experimental).
+Greenhouse gases included: H$_2$O, CO$_2$, O$_3$, N$_2$O, CH$_4$, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a, SO$_2$ (experimental), OCS (experimental).
 
-The improved representation of CO₂ in the window region (more minor gas k-terms in bands 5 and 6) provides a better forcing response to increases in CO₂ (tested up to ×32 present-day). The new method of hybrid scattering may be used with this spectral file: 27 of the major gas k-terms (where their nominal optical depth is less than 10 in a mid-latitude summer atmosphere) use the full scattering solver; the remaining 54 (optical depth > 10) use a cheaper non-scattering solver.
+The improved representation of CO$_2$ in the window region (more minor gas k-terms in bands 5 and 6) provides a better forcing response to increases in CO$_2$ (tested up to ×32 present-day). The new method of hybrid scattering may be used with this spectral file: 27 of the major gas k-terms (where their nominal optical depth is less than 10 in a mid-latitude summer atmosphere) use the full scattering solver; the remaining 54 (optical depth > 10) use a cheaper non-scattering solver.
 
 **Thermal emission:** Planck function fitted by a quartic polynomial over 160–330 K. This increases the lower bound of the fit from 150 K used with `sp_lw_ga3_0` and slightly improves the fit over the important temperature range for the Earth's atmosphere.
 
@@ -85,13 +85,13 @@ The improved representation of CO₂ in the window region (more minor gas k-term
 
 Sections are identical to `spec3a_sw_hadgem1_5o_rlfx` except for changes to the solar spectrum (including Rayleigh coefficients), gaseous absorption, aerosols, and ice crystals.
 
-**Spectral bands:** Identical to `sp_sw_ga7` except bands 2 and 3 are not true spectral bands — they share the combined range 320–690 nm and only the sum of fluxes in these two bands is physically meaningful.
+**Spectral bands:** Identical to `sp_sw_ga7` except bands 2 and 3 are not true spectral bands, they share the combined range 320–690 nm and only the sum of fluxes in these two bands is physically meaningful.
 
-**Solar spectrum:** Lean (2000, updated) [^cite-Lean00] — based on satellite observations at wavelengths shorter than 735 nm with the Kurucz spectrum [^cite-Kurucz95] at longer wavelengths, meaned over the last two solar cycles (1983–2004).
+**Solar spectrum:** Lean (2000, updated) [^cite-Lean00], based on satellite observations at wavelengths shorter than 735 nm with the Kurucz spectrum [^cite-Kurucz95] at longer wavelengths, meaned over the last two solar cycles (1983–2004).
 
-**Gaseous absorption:** Revised O₃ k-terms in bands 1–3 for improved ozone heating rate calculations and to better incorporate solar variability [^cite-Zhong08]. The UV band is divided into six narrow sub-bands, each with a single ozone k-term.
+**Gaseous absorption:** Revised O$_3$ k-terms in bands 1–3 for improved ozone heating rate calculations and to better incorporate solar variability [^cite-Zhong08]. The UV band is divided into six narrow sub-bands, each with a single ozone k-term.
 
-Gases included: H₂O, O₃, CO₂, O₂.
+Gases included: H$_2$O, O$_3$, CO$_2$, O$_2$.
 
 **Aerosols:** Addition of four aerosol species: fresh and aged OCFF (organic carbon fossil fuel), delta aerosol, and nitrate aerosol. The optical properties of the six divisions of mineral dust have been revised using refractive indices from Balkanski et al. [^cite-Balk07], making mineral dust less absorbing in the SW and more absorbing in the LW.
 
@@ -105,9 +105,9 @@ Used for climate configurations where a more accurate treatment of the stratosph
 
 **Spectral bands:** Identical to `sp_lw_ga7` (nine bands; bands 3 and 5 split).
 
-**Gaseous absorption:** New k-terms for CO₂ (band 4) and O₃ (band 6) [^cite-ZhongH00], increasing the total number of k-terms by 14 relative to `spec3a_lw_hadgem1_5C` to allow a more accurate treatment of stratospheric absorption.
+**Gaseous absorption:** New k-terms for CO$_2$ (band 4) and O$_3$ (band 6) [^cite-ZhongH00], increasing the total number of k-terms by 14 relative to `spec3a_lw_hadgem1_5C` to allow a more accurate treatment of stratospheric absorption.
 
-Greenhouse gases: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a.
+Greenhouse gases: H$_2$O, CO$_2$, O$_3$, N$_2$O, CH$_4$, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-134a.
 
 **Thermal emission:** Quartic fit over 150–330 K. The previous fit (180–330 K in `spec3a_lw_hadgem1_5C`) could give negative emission at very cold temperatures sometimes seen at the top of the model.
 
@@ -117,7 +117,7 @@ Greenhouse gases: H₂O, CO₂, O₃, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCF
 
 ### `sp_lw_ga3_1`
 
-Used for forecast configurations where speed of computation and a more accurate treatment of the troposphere are required. Sections are identical to `spec3a_lw_hadgem1_5C` except for changes to aerosols and ice crystals — the same additions as `sp_sw_ga3_0` — with the extra CO₂ and O₃ k-terms of `sp_lw_ga3_0` not included.
+Used for forecast configurations where speed of computation and a more accurate treatment of the troposphere are required. Sections are identical to `spec3a_lw_hadgem1_5C` except for changes to aerosols and ice crystals, the same additions as `sp_sw_ga3_0`, with the extra CO$_2$ and O$_3$ k-terms of `sp_lw_ga3_0` not included.
 
 ---
 
@@ -151,7 +151,7 @@ Used in the HadGEM2-A model and the global forecast model from PS20. All section
 
 **Solar spectrum:** Kurucz (1995) [^cite-Kurucz95].
 
-**Gaseous absorption:** H₂O (with CKD 2.4 continuum [^cite-CKD]), O₃, CO₂, O₂. Foreign continuum combined with line data and fitted as one entity; self-broadened continuum represented explicitly. Spectroscopic data from HITRAN 2000 [^cite-HITRAN] with published corrections, augmented by theoretical weak lines.
+**Gaseous absorption:** H$_2$O (with CKD 2.4 continuum [^cite-CKD]), O$_3$, CO$_2$, O$_2$. Foreign continuum combined with line data and fitted as one entity; self-broadened continuum represented explicitly. Spectroscopic data from HITRAN 2000 [^cite-HITRAN] with published corrections, augmented by theoretical weak lines.
 
 **Aerosols:** Five standard climatological aerosols [^cite-Cusack98], plus two sulphate modes (Aitken and accumulation), two black carbon modes (fresh and aged), two sea-salt modes (film and jet), two biomass smoke modes (fresh and aged), and six mineral dust size bins.
 
@@ -167,7 +167,7 @@ Used in the HadGEM2-A model and the global forecast model from PS20. All section
 
 **Thermal emission:** Quartic fit over 180–330 K.
 
-**Gaseous absorption:** H₂O, O₃, CO₂, N₂O, CH₄, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-125, HFC-134a. Spectroscopic data from HITRAN 92 for most gases; CKD 2.4 continuum for water vapour [^cite-CKD]. Halocarbon cross-sections from K. Shine (pers. comm.).
+**Gaseous absorption:** H$_2$O, O$_3$, CO$_2$, N$_2$O, CH$_4$, CFC-11, CFC-12, CFC-113, HCFC-22, HFC-125, HFC-134a. Spectroscopic data from HITRAN 92 for most gases; CKD 2.4 continuum for water vapour [^cite-CKD]. Halocarbon cross-sections from K. Shine (pers. comm.).
 
 **Cloud droplets and ice crystals:** As per `spec3a_sw_hadgem1_3`. Only type 1 droplet data initially available for LW; types 4 and 5 (Padé fits) now recommended.
 
