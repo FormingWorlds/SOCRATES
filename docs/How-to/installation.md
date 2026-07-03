@@ -5,7 +5,7 @@
     [PROTEUS installation guide](https://proteus-framework.org/PROTEUS/How-to/installation.html).
     It can also be installed within the atmosphere models
     [AGNI](https://www.h-nicholls.space/AGNI/dev/howto/getting_started/) or
-    [JANUS](https://proteus-framework.org/JANUS). Only use the instructions below if you
+    [JANUS](https://proteus-framework.org/JANUS), as outlined in [Installing via other frameworks](#installing-via-other-frameworks). Use the instructions below if you
     would like a **standalone version of SOCRATES on your system**.
 
 ## Supported platforms
