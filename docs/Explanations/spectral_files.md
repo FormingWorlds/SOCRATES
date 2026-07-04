@@ -24,7 +24,7 @@ The spectral file serves as the single source of truth for all spectrally depend
 
 Because parametrisations that require spectrally dependent data can only be selected if such data are present in the spectral file, **the choice of spectral file determines which physical parametrisations are available** at runtime. Spectral files should therefore be selected with care to match the intended configuration.
 
-!!! warning "Modidying spectral files"
+!!! warning "Modifying spectral files"
     Generating or modifying spectral files requires detailed knowledge of radiative transfer. Standard files are provided for common configurations; users should not modify these unless they have the necessary expertise.
 
 ---
