@@ -12,7 +12,7 @@ A major update was published in 2024:
 
 - Manners, J. (2024, January). A fast and flexible scheme for photolysis and radiative heating of the whole atmosphere. In _AIP Conference Proceedings_ (Vol. 2988, No. 1, p. 030002). AIP Publishing LLC. [https://doi.org/10.1063/5.0185476](https://doi.org/10.1063/5.0185476)
 
-## Adaption and application
+## Adaptation and application
 
 SOCRATES has since been adapted and validated for hot-Jupiter and brown dwarf atmospheres:
 
