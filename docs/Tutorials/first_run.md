@@ -186,8 +186,8 @@ Run it:
 python make_inputs.py
 ```
 
-You should see eight files: `atm.nml`, `atm.p`, `atm.pstar`, `atm.q`, `atm.surf`,
-`atm.t`, `atm.tl`, `atm.tstar`.
+You should see eight files under `out/`: `out/atm.nml`, `out/atm.p`, `out/atm.pstar`, `out/atm.q`, `out/atm.surf`,
+`out/atm.t`, `out/atm.tl`, `out/atm.tstar`.
 
 ---
 
