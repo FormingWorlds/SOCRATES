@@ -155,12 +155,11 @@ h2o = np.ones(N_LAYERS)
 # --- Write input files ---
 ncout3d(f"{BASENAME}.t",  0, 0, p_mid, t_mid, 't',  longname="Temperature", units='K')
 ncout3d(f"{BASENAME}.tl", 0, 0, p_lev, t_lev, 'tl', longname="Temperature", units='K')
-ncout3d(f"{BASENAME}.p",  0, 0, p_mid, p_mid, 'p',  longname="Pressure",    units='PA')
+ncout3d(f"{BASENAME}.p",  0, 0, p_mid, p_mid, 'p',  longname="Pressure",    units='Pa')
 ncout3d(f"{BASENAME}.q",  0, 0, p_mid, h2o,   'q',  longname="q",           units='kg/kg')
 
 ncout2d(f"{BASENAME}.tstar", 0, 0, T_surf, 'tstar', longname="Surface Temperature", units='K')
-ncout2d(f"{BASENAME}.pstar", 0, 0, p_surf, 'pstar', longname="Surface Pressure",    units='PA')
-
+ncout2d(f"{BASENAME}.pstar", 0, 0, p_surf, 'pstar', longname="Surface Pressure",    units='Pa')
 ncout_surf(f"{BASENAME}.surf", 0, 0, 1, 0.0)
 
 # Planetary namelist — SOCRATES uses Earth defaults without this
