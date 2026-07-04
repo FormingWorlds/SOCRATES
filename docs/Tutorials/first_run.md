@@ -68,13 +68,11 @@ printf "%s\n" \
   "Frostflow.sf" \
   "a" \
   "6" \
-  "y" \
   "n" \
   "T" \
   "100 4000" \
   "250" \
   "-1" \
-  "EOF" \
   | prep_spec
 ```
 
@@ -85,7 +83,6 @@ What each input does:
 | `$HOME/socrates_tutorial/Frostflow.sf` | File name | Full path to the local copy |
 | `a` | Append or new? | Append to existing file |
 | `6` | Block type | Block 6: thermal source function |
-| `y` | Block already exists; continue? | Yes, overwrite |
 | `n` | Filter required? | No |
 | `T` | Table or polynomial? | Tabulate |
 | `100 4000` | Temperature range (K) | Covers cold stratospheres to magma ocean surfaces |
@@ -95,7 +92,7 @@ What each input does:
 Set a shell variable pointing to the prepared spectral file:
 
 ```bash
-SPECTRUM=~/socrates_tutorial/Frostflow.sf
+SPECTRUM=Frostflow.sf
 N_BANDS=256
 ```
 
@@ -134,7 +131,7 @@ import f90nml
 sys.path.insert(0, os.path.join(os.environ['RAD_DIR'], 'python'))
 from nctools import ncout_surf, ncout2d, ncout3d
 
-BASENAME = "atm"
+BASENAME = "out/atm"
 
 # --- Atmosphere structure ---
 N_LAYERS = 10
@@ -209,12 +206,12 @@ Cl_run_cdf \
   -g 2 \
   -C 5 \
   -u \
-  -N atm.nml
+  -N out/atm.nml
 ```
 
 | Option | Meaning |
 |--------|---------|
-| `-B out/atm` | Basename — output files written to `out/` with prefix `atm` |
+| `-B out/atm` | Basename: output files written to `out/` with prefix `atm` |
 | `-s $SPECTRUM` | Path to the prepared spectral file |
 | `-R 1 $N_BANDS` | Use spectral bands 1 to N_BANDS |
 | `-ch $N_BANDS` | Number of channels (must match `-R`) |
@@ -222,7 +219,7 @@ Cl_run_cdf \
 | `-g 2` | Correlated-k gas overlap |
 | `-C 5` | Cloud scheme 5 (clear-sky — no cloud input files needed) |
 | `-u` | Write upward flux output files |
-| `-N atm.nml` | Namelist file with planetary parameters |
+| `-N out/atm.nml` | Namelist file with planetary parameters |
 
 If the run succeeds you will see a short diagnostic summary printed to the terminal.
 
@@ -240,7 +237,7 @@ SOCRATES writes one netCDF output file per flux quantity under `out/`:
 | `out/atm.nflx` | Net downward flux (W m$^{-2}$) |
 | `out/atm.hrts` | Heating rates (K day$^{-1}$) |
 
-Read and plot the upward flux profile:
+Read and plot the upward flux profile by pasting the following code in `plot.py`:
 
 ```python
 import netCDF4 as nc
@@ -248,7 +245,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 ds = nc.Dataset("out/atm.uflx")
-flux = ds.variables["uflx"][:, 0, 0]
+flux = np.sum(ds.variables["uflx"][:, :, 0, 0], axis=0)
 pres = ds.variables["plev"][:]
 ds.close()
 
@@ -258,12 +255,18 @@ plt.gca().invert_yaxis()
 plt.yscale("log")
 plt.xlabel(r"Upward flux (W m$^{-2}$)")
 plt.ylabel("Pressure (hPa)")
-plt.title(r"Upward longwave flux; Frostflow-256, pure H$_{2}$O")
+plt.title(r"Upward longwave flux: Frostflow-256, pure H$_2$O")
 plt.tight_layout()
 plt.savefig("out/flux_profile.png", dpi=150)
 
-olr = flux[0]  # upward flux at top of atmosphere (lowest pressure level)
-print(f"OLR: {olr:.1f} W m$^{-2}$")
+olr = flux[0]
+print(f"OLR: {olr:.1f} W/m2")
+```
+
+Then:
+
+```bash
+python plot.py
 ```
 
 The upward flux at the top of atmosphere is the **outgoing longwave radiation (OLR)**, 
