@@ -9,7 +9,6 @@ screenlog.0
 
 docs/**/*.aux
 docs/**/*.out
-docs/**/*.pdf
 docs/**/*.toc
 docs/**/*.blg
 docs/**/*.toc
