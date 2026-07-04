@@ -62,7 +62,7 @@ version used, and include an acknowledgement.
 
 ## License
 
-SOCRATES is released under the [BSD 3-Clause Licence](https://github.com/FormingWorlds/SOCRATES/blob/main/LICENSE).
+SOCRATES is released under the [BSD 3-Clause Licence](https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE).
 
 !!! info "Licenses across the PROTEUS framework"
     Different components within the PROTEUS framework carry different licenses. Please find information about the use of licenses within the PROTEUS framework on the website's [license page](https://proteus-framework.org/license/).
