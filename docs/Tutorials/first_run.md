@@ -114,7 +114,7 @@ post-magma-ocean planet.
 If you have not yet installed the necessary Python dependencies:
 
 ```bash
-pip install -r ../python/requirements.txt
+pip install -r "$RAD_DIR/python/requirements.txt"
 ```
 
 ### 4.2 Write the input script
