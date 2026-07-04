@@ -175,9 +175,9 @@ nml = {
 f90nml.write(nml, f"{BASENAME}.nml")
 
 print("Input files written:")
-for f in sorted(os.listdir(".")):
-    if f.startswith(BASENAME + "."):
-        print(f"  {f}")
+for f in sorted(os.listdir("out")):
+    if f.startswith("atm."):
+        print(f"  out/{f}")
 ```
 
 Run it:
