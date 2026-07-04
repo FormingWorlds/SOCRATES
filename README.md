@@ -1,40 +1,13 @@
 
 # Socrates - Suite Of Community RAdiative Transfer codes based on Edwards and Slingo
 
-## Contributing Guidelines
+<a href="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml"><img alt="Documentation" src="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml/badge.svg"></a>
+<a href="https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/License-BSD--3--Clause-blue.svg"></a>
 
-Welcome!
+SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. This fork of SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/).
 
-The following links are here to help set clear expectations for everyone
-contributing to this project. By working together under a shared understanding,
-we can continuously improve the project while creating a friendly, inclusive
-space for all contributors.
-
-### Contributors Licence Agreement
-
-Please see the
-[Momentum Contributors Licence Agreement](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
-
-Agreement of the CLA can be shown by adding yourself to the CONTRIBUTORS file
-alongside this one, and is a requirement for contributing to this project.
-
-### Code of Conduct
-
-Please be aware of and follow the
-[Momentum Code of Coduct](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
-
-### Working Practices
-
-This project is managed as part of the Simulation Systems group of repositories.
-
-Please follow the Simulation Systems
-[Working Practices.](https://metoffice.github.io/simulation-systems/index.html)
-
-Questions are encouraged in the Simulation Systems
-[Discussions.](https://github.com/MetOffice/simulation-systems/discussions)
-
-Please be aware of and follow the Simulation Systems
-[AI Policy.](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html)
+Please visit the [documentation website](https://proteus-framework.org/SOCRATES/) for installation instructions, a tutorial, reference information and a model overview. Additionally, the latest documentation PDFs built by GitHub Actions are available from the
+[Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
 
 ## What's included?
 
@@ -58,10 +31,7 @@ See the CONTENTS in each directory under examples/ for instructions.
 `idl/` and `python/` contain scripts to generate atmospheric profiles etc
 in netCDF format to be used as input for the radiation code (l_run_cdf).
 
-`docs/` contain the user guide and technical guide for the Socrates code.
-
-The latest PDFs built by GitHub Actions are available from the
-[Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
+`docs/` contain documentation, as well as the user guide and technical guide for the Socrates code.
 
 ## Compiling the source code within the Met Office
 
@@ -176,7 +146,5 @@ This has to be done manually and will require editing a lot of files. The easies
 You should also make sure to avoid the 'lazy' way to extend FORTRAN arrays where remaining values are filled in bulk, because the `generate_wrappers.jl` script will not be able to parse the FORTRAN source code.
 
 ## References
-* [1]  https://code.metoffice.gov.uk/trac/socrates
-* [2]  https://doi.org/10.1002/qj.49712253107
-* [3]  https://doi.org/10.1051/0004-6361/201323169
-* [4]  https://doi.org/10.5194/gmd-16-5601-2023
+
+All references can be found in the [bibliography](https://proteus-framework.org/SOCRATES/Reference/publications.html) on the documentation website. 
