@@ -9,7 +9,7 @@
 
 Each spectral file is identified by a codename and a band count; several codenames are available at multiple resolutions. All files are in the standard SOCRATES spectral file format.
 
-Spectroscopic data sources are abbreviated as follows: **HITRAN**, [HITRAN database](https://hitran.org/); **EXOMOL**, [ExoMol database](https://www.exomol.com/); **DACE**, [DACE opacity database](https://dace.unige.ch/opacityDatabase/).
+Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitran.org/), [**ExoMol**](https://www.exomol.com/), [**ExoAtom**](https://exomol.com/exoatom/), [**DACE**](https://dace.unige.ch/opacityDatabase/).
 
 ---
 
