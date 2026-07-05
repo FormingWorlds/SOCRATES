@@ -226,7 +226,7 @@ If the run succeeds you will see a short diagnostic summary printed to the termi
 
 ## 6. Inspect the output
 
-SOCRATES writes one netCDF output file per flux quantity under `out/`:
+SOCRATES writes one netCDF output file per flux quantity under `out/`. These are NetCDF files, although their file extensions are different. Each file also contains the wavelengths of each spectral band, and the pressure grid used.
 
 | File | Contents |
 |------|----------|
