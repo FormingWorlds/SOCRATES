@@ -243,23 +243,37 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Open the NetCDF file
 ds = nc.Dataset("out/atm.uflx")
-flux = np.sum(ds.variables["uflx"][:, :, 0, 0], axis=0)
+
+# Read the spectral upward-longwave fluxes at each layer
+spec_flux = ds.variables["uflx"][:, :, 0, 0]
+
+# Sum over all spectral bands to get bolometric flux
+bolo_flux = np.sum(spec_flux, axis=0)
+
+# Read pressure grid
 pres = ds.variables["plev"][:]
+
+# close the file
 ds.close()
 
-plt.figure()
-plt.plot(flux, pres / 1e2, "b-o")
+# Make the plot of flux versus pressure (i.e. height)
+plt.figure(dpi=300)
+plt.plot(bolo_flux, pres / 1e5, "b-o")
 plt.gca().invert_yaxis()
 plt.yscale("log")
 plt.xlabel(r"Upward flux (W m$^{-2}$)")
-plt.ylabel("Pressure (hPa)")
-plt.title(r"Upward longwave flux: Frostflow-256, pure H$_2$O")
+plt.ylabel("Pressure (bar)")
+plt.title(r"Upward bolometric longwave flux, Frostflow-256, pure H$_2$O")
 plt.tight_layout()
-plt.savefig("out/flux_profile.png", dpi=150)
+plt.savefig("out/flux_profile.pdf", bbox_inches="tight")
 
-olr = flux[0]
-print(f"OLR: {olr:.1f} W/m2")
+# Print the outgoing longwave radiation flux
+olr = bolo_flux[0]
+print(f"OLR: {olr:.1f} W/m^2")
+
+plt.show()
 ```
 
 Then:
