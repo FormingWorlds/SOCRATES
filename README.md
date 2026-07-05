@@ -6,6 +6,8 @@
 
 SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. This fork of SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/).
 
+## Documentation
+
 Please visit the [documentation website](https://proteus-framework.org/SOCRATES/) for installation instructions, a tutorial, reference information and a model overview. Additionally, the latest documentation PDFs built by GitHub Actions are available from the
 [Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
 
@@ -33,45 +35,52 @@ in netCDF format to be used as input for the radiation code (l_run_cdf).
 
 `docs/` contain documentation, as well as the user guide and technical guide for the Socrates code.
 
-## Compiling the source code within the Met Office
+## Standalone install
 
-For users within the Met Office simply run the command:
+1. Clone SOCRATES from GitHub:
+   ```bash
+   git clone https://github.com/FormingWorlds/SOCRATES.git
+   ```
+2. Change into the new directory:
+   ```bash
+   cd SOCRATES
+   ```
+3. Configure the installation:
+   ```bash
+   ./configure
+   ```
+4. Compile the code:
+   ```bash
+   ./build_code
+   ```
 
-`./build_code`
+### Setting `RAD_DIR`
 
-to compile the entire suite. To setup your path to the executables
-and man pages you should then source the following file:
+SOCRATES needs the location of its root directory, referred to as `RAD_DIR`, available as
+an environment variable. Run the following commands from inside the SOCRATES directory.
 
-`. ./set_rad_env`
+To set this temporarily, for the current terminal session only:
 
-Individual programs can also be compiled using the build_code script
-(build_code will take as an argument the target to pass to the makefile).
+```bash
+export RAD_DIR=$(pwd)
+```
 
-For example, to build the routines that don't require netCDF:
+To set this permanently:
 
-`./build_code cdl`
+**Bash**:
+```bash
+echo "export RAD_DIR=$(pwd)" >> ~/.bashrc
+source ~/.bashrc
+```
 
-To build just the two-stream/radiance code (netCDF version):
+**Zsh**:
 
-`./build_code l_run_cdf`
+```bash
+echo "export RAD_DIR=$(pwd)" >> ~/.zshrc
+source ~/.zshrc
+```
 
-## Compiling the source code externally
-
-For external users it should only be necessary to edit the file
-make/Mk_cmd to allow compilation of the code on your system. FORTCOMP
-and LINK can be changed to your local Fortran compiler. To use the netCDF
-routines you must also change INCCDF_PATH and LIBCDF_PATH to point to
-your local netCDF installation.
-
-The following commands can then be run to build the suite and setup
-your path to the executables and man pages:
-
-`./build_code`\
-`. ./set_rad_env`
-
-See previous section for building individual routines.
-
-## Compilation of scripts in sbin
+### Compilation of scripts in sbin
 
 There are a small number of utilities in sbin/ which are written
 in C and require compilation. A Makefile has been provided:
@@ -81,39 +90,39 @@ in C and require compilation. A Makefile has been provided:
 
 ## Running the code
 
-Once you have set your path to the man pages (see section 2/3) you can
-find up-to-date instructions for running the following routines:
+Set up your path to the executables and man pages:
 
-Two-stream and spherical harmonics radiance codes using netCDF or
-text CDL input files:
+```
+source $RAD_DIR/set_rad_env
+```
 
-`man Cl_run_cdf`\
-`man Cl_run_cdl`
+Then find up-to-date instructions for running the following routines:
 
-A Mie scattering code for determining optical properties of aerosol
-and cloud particles:
+1. Two-stream and spherical harmonics radiance codes using netCDF or text CDL input files:
 
-`man Cscatter`
+   `man Cl_run_cdf`\
+   `man Cl_run_cdl`
 
-A correlated-k code for the calculation of gaseous absorption
-coefficients for the spectral files either directly from HITRAN
-.par or .xsc databases or line-by-line absorption coefficients in
-a netCDF input file:
+2. A Mie scattering code for determining optical properties of aerosol and cloud particles:
 
-`man Ccorr_k`
+   `man Cscatter`
 
-Auxillary routines for format conversion, interpolation etc:
+3. A correlated-k code for the calculation of gaseous absorption coefficients for the spectral files either directly from HITRAN .par or .xsc databases or line-by-line absorption coefficients in a netCDF input file:
 
-`man Ccdf2cdl`\
-`man Ccdl2cdf`\
-`man Cinterp`
+   `man Ccorr_k`
+
+4. Auxillary routines for format conversion, interpolation etc:
+
+   `man Ccdf2cdl`\
+   `man Ccdl2cdf`\
+   `man Cinterp`
 
 These scripts are a command line interface to interactive routines in
 the bin/ directory. These routines may be run directly if desired (eg.
 l_run_cdf).
 
-It is very useful to study the examples/ directory for common usage
-of the code.
+It is useful to study the examples/ directory for common usage
+of the code, or follow the python-based [tutorial](https://proteus-framework.org/SOCRATES/Tutorials/first_run.html) on the documentation website.
 
 ## Tested compilers
 
