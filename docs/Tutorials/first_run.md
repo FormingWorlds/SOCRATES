@@ -26,10 +26,9 @@ separate record. Download Frostflow at 256 bands
 
 ```bash
 mkdir -p $FWL_DATA/spectral_files/Frostflow/256
-cd $FWL_DATA/spectral_files/Frostflow/256
 
-wget "https://zenodo.org/records/15799754/files/Frostflow.sf?download=1"   -O Frostflow.sf
-wget "https://zenodo.org/records/15799754/files/Frostflow.sf_k?download=1" -O Frostflow.sf_k
+wget "https://zenodo.org/records/15799754/files/Frostflow.sf?download=1"   -O $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf
+wget "https://zenodo.org/records/15799754/files/Frostflow.sf_k?download=1" -O $FWL_DATA/spectral_files/Frostflow/256/Frostflow.sf_k
 ```
 
 ---
