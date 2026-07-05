@@ -219,13 +219,16 @@ Cl_run_cdf \
 | `-u` | Write upward flux output files |
 | `-N out/atm.nml` | Namelist file with planetary parameters |
 
-If the run succeeds you will see a short diagnostic summary printed to the terminal.
+Additionally, you can use the `-o` flag for verbose output.
+
+!!! tip "Adjust options"  
+    The command shown above can be adjusted if preferred. use `man CL_run_cdf` for all options and information.
 
 ---
 
 ## 6. Inspect the output
 
-SOCRATES writes one netCDF output file per flux quantity under `out/`. These are NetCDF files, although their file extensions are different. Each file also contains the wavelengths of each spectral band, and the pressure grid used.
+SOCRATES writes one netCDF output file per flux quantity under `out/`. These are netCDF files, although their file extensions are different. Each file also contains the wavelengths of each spectral band, and the pressure grid used.
 
 | File | Contents |
 |------|----------|
