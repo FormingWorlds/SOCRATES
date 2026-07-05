@@ -283,7 +283,7 @@ python plot.py
 ```
 
 The upward flux at the top of atmosphere is the **outgoing longwave radiation (OLR)**, 
-the rate at which the atmosphere loses energy to space.
+the rate at which the atmosphere thermally emits radiation energy to space.
 
 ---
 
