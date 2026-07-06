@@ -1,3 +1,10 @@
+---
+title: PROTEUS framework
+hide: 
+  - toc
+---
+
+<div class="socrates-proteus-framework">
 <h1 align="center">
     <a href="https://proteus-framework.org">
     <div>
@@ -6,15 +13,14 @@
     </div>
     </a>
 </h1>
+</div>
 
-SOCRATES is the radiative transfer code of <b>PROTEUS</b> (/ˈproʊtiəs, PROH-tee-əs), a modular Python framework that simulates the coupled evolution of the atmospheres and interiors of rocky planets and exoplanets. A schematic of PROTEUS components and corresponding modules can be found below.
-<br>
-<br>
-You can find the <b>documentation of each PROTEUS module</b> in the sidebar.
-<br>
-<br>
+<div class="socrates-proteus-framework" style="padding-top: 1em ; padding-bottom: .5em" markdown = 1>
+SOCRATES is the **radiative transfer code** of [PROTEUS](https://proteus-framework.org/PROTEUS) (/ˈproʊtiəs/, PROH-tee-əs), a modular Python framework for the coupled evolution of the atmospheres and interiors of rocky planets and exoplanets. A schematic of PROTEUS components and corresponding modules can be found below. Click any module in the diagram to open its documentation, or navigate to it from the sidebar.
+</div>
 
-<p align="center">
-      <img src="assets/schematic_round.png" style="max-width: 90%; height: auto;"><br>
-      <b>Schematic of PROTEUS components and corresponding modules.</b> <br>
-</p>
+<div  class="socrates-proteus-framework">
+<object type="image/svg+xml" data="https://cdn.jsdelivr.net/gh/FormingWorlds/PROTEUS@main/docs/assets/proteus_modules_schematic.svg" class="mod-diagram mod-diagram--light" aria-label="PROTEUS module schematic (light mode)">PROTEUS module schematic (light mode)</object>
+<object type="image/svg+xml" data="https://cdn.jsdelivr.net/gh/FormingWorlds/PROTEUS@main/docs/assets/proteus_modules_schematic_darkmode.svg" class="mod-diagram mod-diagram--dark" aria-label="PROTEUS module schematic (dark mode)">PROTEUS module schematic (dark mode)</object>
+<p style="text-align: center;"><strong>Schematic of PROTEUS components and corresponding modules.</strong></p>
+</div>

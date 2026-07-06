@@ -1,7 +1,7 @@
 # Interface to the calling model
 
-!!! note
-    This overview is adapted from the technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](../Reference/documentation_pdfs.md#technical-guide). It is under Crown Copyright. 
+!!! info "Based on technical guide"
+    This overview is based on the SOCRATES technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](../Reference/documentation_pdfs.md#technical-guide). It is under Crown Copyright. 
 
 ## Overview
 

@@ -1,6 +1,6 @@
 # Physical model description
 
-!!! note
+!!! info "Based on technical guide"
     This overview is based on the SOCRATES technical guide by James Manners, John M. Edwards, Peter Hill & Jean-Claude Thelen (Met Office, 2017), which can be found [here](../Reference/documentation_pdfs.md#technical-guide). It is under Crown Copyright. 
 
 ## What is SOCRATES?
@@ -19,7 +19,7 @@ SOCRATES provides two complementary approaches to solving the radiative transfer
 
 #### [Two-stream radiation code](two_stream.md)
 
-The two-stream code is the primary solver for computing broad-band radiative fluxes and heating rates efficiently. It represents the angular dependence of the radiation field with just two streams — an upward and a downward diffuse flux — together with a direct solar beam in the shortwave. The key steps are:
+The two-stream code is the primary solver for computing broad-band radiative fluxes and heating rates efficiently. It represents the angular dependence of the radiation field with just two streams, an upward and a downward diffuse flux, together with a direct solar beam in the shortwave. The key steps are:
 
 1. The spectrum is divided into **bands**, each further subdivided into quasi-monochromatic regions using a k-distribution method.
 2. Within each region, layer **transmission and reflection coefficients** are derived from the single-scattering properties (optical depth $\tau$, single-scattering albedo $\omega$, asymmetry parameter $g$).

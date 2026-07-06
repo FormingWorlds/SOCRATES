@@ -9,7 +9,7 @@
 
 Each spectral file is identified by a codename and a band count; several codenames are available at multiple resolutions. All files are in the standard SOCRATES spectral file format.
 
-Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN database](https://hitran.org/); **EXOMOL** — [ExoMol database](https://www.exomol.com/); **DACE** — [DACE opacity database](https://dace.unige.ch/opacityDatabase/).
+Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitran.org/), [**ExoMol**](https://www.exomol.com/), [**ExoAtom**](https://exomol.com/exoatom/), [**DACE**](https://dace.unige.ch/opacityDatabase/).
 
 ---
 
@@ -17,20 +17,20 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
  
 | Codename | Bands | Absorbers | Source | Notes |
 |---|---|---|---|---|
-| Legacy | 318 | CO₂, CH₄, O₂, N₂, H₂, He | HITRAN | Legacy file used in Lichtenberg et al. (2021) |
-| Oak | 318 | H₂O | HITRAN | Water-only file from HITRAN; intended for benchmarking |
-| Idwal | 318 | H₂O | HITRAN | Made redundant by Oak |
-| Balmora | 318 | H₂O | HITRAN | Made redundant by Oak |
-| Triangle | 318 | H₂O, H₂, CO₂ | HITRAN | Test file |
-| Mallard | 318 | H₂O, H₂, CO₂, CO, CH₄, O₂, N₂, He | HITRAN | HITRAN file with useful opacities |
-| Reach | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | HITRAN | Same as Mallard but with more opacities |
-| Vivec | 318 | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS | HITRAN | Same as Reach, compiled on macOS |
-| Alduin | 432 | H₂O | EXOMOL | |
-| Kynesgrove | 318 | O₂ | DACE | Validation of DACE cross-section data against SOCRATES line-by-line calculations |
-| Frostflow | 16 / 48 / 256 / 4096 | H₂O | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
-| Dayspring | 16 / 48 / 256 / 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂ | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
-| Honeyside | 16 / 48 / 256 / 4096 | H₂O, H₂, CO₂, CO, CH₄, N₂, NH₃, SO₂, N₂O, O₃, HCN, H₂S | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
-| Rocks | 64 / 128 / 256 | H₂, H₂O, O₂, SiO, SiO₂ | DACE | Rock vapours and key volatiles; 128-band file for JWST comparison |
+| Legacy | 318 | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He | HITRAN | Legacy file used in Lichtenberg et al. (2021) |
+| Oak | 318 | H$_2$O | HITRAN | Water-only file from HITRAN; intended for benchmarking |
+| Idwal | 318 | H$_2$O | HITRAN | Made redundant by Oak |
+| Balmora | 318 | H$_2$O | HITRAN | Made redundant by Oak |
+| Triangle | 318 | H$_2$O, H$_2$, CO$_2$ | HITRAN | Test file |
+| Mallard | 318 | H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, O$_2$, N$_2$, He | HITRAN | HITRAN file with useful opacities |
+| Reach | 318 | H$_2$O, CO$_2$, O$_3$, N$_2$O, CO, CH$_4$, O$_2$, NO, SO$_2$, NO$_2$, NH$_3$, HNO$_3$, N$_2$, H$_2$, He, OCS | HITRAN | Same as Mallard but with more opacities |
+| Vivec | 318 | H$_2$O, CO$_2$, O$_3$, N$_2$O, CO, CH$_4$, O$_2$, NO, SO$_2$, NO$_2$, NH$_3$, HNO$_3$, N$_2$, H$_2$, He, OCS | HITRAN | Same as Reach, compiled on macOS |
+| Alduin | 432 | H$_2$O | EXOMOL | |
+| Kynesgrove | 318 | O$_2$ | DACE | Validation of DACE cross-section data against SOCRATES line-by-line calculations |
+| Frostflow | 16 / 48 / 256 / 4096 | H$_2$O | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Dayspring | 16 / 48 / 256 / 4096 | H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, N$_2$ | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Honeyside | 16 / 48 / 256 / 4096 | H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, N$_2$, NH$_3$, SO$_2$, N$_2$O, O$_3$, HCN, H$_2$S | DACE | Multi-resolution; 4096 intended for benchmarking, 16 for debugging |
+| Rocks | 64 / 128 / 256 | H$_2$, H$_2$O, O$_2$, SiO, SiO$_2$ | DACE | Rock vapours and key volatiles; 128-band file for JWST comparison |
  
 ---
  
@@ -44,16 +44,16 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
     | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
  
-    **Absorbers:** H₂O, H₂, CO₂, CO, CH₄, N₂, NH₃, SO₂, N₂O, O₃, HCN, H₂S  
-    **Continua:** H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄  
+    **Absorbers:** H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, N$_2$, NH$_3$, SO$_2$, N$_2$O, O$_3$, HCN, H$_2$S  
+    **Continua:** H$_2$O-H$_2$O, H$_2$-CH$_4$, H$_2$-H$_2$, H$_2$-N$_2$, N$_2$-N$_2$, N$_2$-H$_2$O, CO$_2$-CO$_2$, CO$_2$-H$_2$, CO$_2$-CH$_4$  
     **Source:** DACE
  
 ??? info "Rocks"
     | Bands | Absorbers | Continua | NaN-clean | SOCRATES | Date | Platform | Creator | Notes |
     |---|---|---|---|---|---|---|---|---|
-    | 256 | O₂, SiO, SiO₂ | O₂-O₂ | Yes | 2407.2 | 2025-05-15 | Linux Intel | Alex McGinty | — |
-    | 128 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles. High resolution file for comparison with JWST observations of rock-vapour atmospheres |
-    | 64 | H₂, H₂O, O₂, SiO, SiO₂ | H₂O-H₂O, H₂-H₂, O₂-O₂ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles (low resolution) |
+    | 256 | O$_2$, SiO, SiO$_2$ | O$_2$-O$_2$ | Yes | 2407.2 | 2025-05-15 | Linux Intel | Alex McGinty | — |
+    | 128 | H$_2$, H$_2$O, O$_2$, SiO, SiO$_2$ | H$_2$O-H$_2$O, H$_2$-H$_2$, O$_2$-O$_2$ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles. High resolution file for comparison with JWST observations of rock-vapour atmospheres |
+    | 64 | H$_2$, H$_2$O, O$_2$, SiO, SiO$_2$ | H$_2$O-H$_2$O, H$_2$-H$_2$, O$_2$-O$_2$ | Yes | 2407.02 | 2025-05-15 | Linux Intel | Alex McGinty | Rock vapours and key volatiles (low resolution) |
  
     **Source:** DACE
  
@@ -65,8 +65,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
     | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
  
-    **Absorbers:** H₂O, H₂, CO₂, CO, CH₄, N₂  
-    **Continua:** H₂O-H₂O, H₂-CH₄, H₂-H₂, H₂-N₂, N₂-N₂, N₂-H₂O, CO₂-CO₂, CO₂-H₂, CO₂-CH₄  
+    **Absorbers:** H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, N$_2$  
+    **Continua:** H$_2$O-H$_2$O, H$_2$-CH$_4$, H$_2$-H$_2$, H$_2$-N$_2$, N$_2$-N$_2$, N$_2$-H$_2$O, CO$_2$-CO$_2$, CO$_2$-H$_2$, CO$_2$-CH$_4$  
     **Source:** DACE
  
 ??? info "Frostflow"
@@ -77,16 +77,16 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | 48 | ^ | ^ | ^ | ^ | ^ | ^ | Medium resolution |
     | 16 | ^ | ^ | ^ | ^ | ^ | ^ | Low resolution; intended for debugging |
  
-    **Absorbers:** H₂O  
-    **Continua:** H₂O  
+    **Absorbers:** H$_2$O  
+    **Continua:** H$_2$O  
     **Source:** DACE
  
 ??? info "Kynesgrove"
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | O₂ |
-    | Continua | O₂-O₂ |
+    | Absorbers | O$_2$ |
+    | Continua | O$_2$-O$_2$ |
     | Tolerance | 5.00E-04 |
     | Source | DACE |
     | NaN-clean | Yes |
@@ -100,8 +100,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS |
-    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Absorbers | H$_2$O, CO$_2$, O$_3$, N$_2$O, CO, CH$_4$, O$_2$, NO, SO$_2$, NO$_2$, NH$_3$, HNO$_3$, N$_2$, H$_2$, He, OCS |
+    | Continua | H$_2$O, CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | Yes |
@@ -115,8 +115,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O, H₂, CO₂, CO, CH₄, O₂, N₂, He |
-    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Absorbers | H$_2$O, H$_2$, CO$_2$, CO, CH$_4$, O$_2$, N$_2$, He |
+    | Continua | H$_2$O, CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | Yes |
@@ -130,8 +130,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 432 |
-    | Absorbers | H₂O |
-    | Continua | H₂O |
+    | Absorbers | H$_2$O |
+    | Continua | H$_2$O |
     | Tolerance | 1.00E-02 |
     | Source | EXOMOL |
     | NaN-clean | Yes |
@@ -145,8 +145,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O |
-    | Continua | H₂O |
+    | Absorbers | H$_2$O |
+    | Continua | H$_2$O |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | Yes |
@@ -160,7 +160,7 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | CO₂, CH₄, O₂, N₂, H₂, He |
+    | Absorbers | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He |
     | Continua | — |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
@@ -175,8 +175,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O, CO₂, O₃, N₂O, CO, CH₄, O₂, NO, SO₂, NO₂, NH₃, HNO₃, N₂, H₂, He, OCS |
-    | Continua | H₂O, CO₂, CH₄, O₂, N₂, H₂, He |
+    | Absorbers | H$_2$O, CO$_2$, O$_3$, N$_2$O, CO, CH$_4$, O$_2$, NO, SO$_2$, NO$_2$, NH$_3$, HNO$_3$, N$_2$, H$_2$, He, OCS |
+    | Continua | H$_2$O, CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | No |
@@ -190,8 +190,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O, H₂, CO₂ |
-    | Continua | H₂O, H₂, CO₂ |
+    | Absorbers | H$_2$O, H$_2$, CO$_2$ |
+    | Continua | H$_2$O, H$_2$, CO$_2$ |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | Yes |
@@ -205,8 +205,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O |
-    | Continua | H₂O |
+    | Absorbers | H$_2$O |
+    | Continua | H$_2$O |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | No |
@@ -220,8 +220,8 @@ Spectroscopic data sources are abbreviated as follows: **HITRAN** – [HITRAN da
     | Field | Value |
     |---|---|
     | Bands | 318 |
-    | Absorbers | H₂O |
-    | Continua | H₂O |
+    | Absorbers | H$_2$O |
+    | Continua | H$_2$O |
     | Tolerance | 1.00E-02 |
     | Source | HITRAN |
     | NaN-clean | No |
@@ -240,5 +240,5 @@ The appropriate spectral file depends on the atmospheric composition being model
 - For **benchmarking or comparison with observations**, use a high- or very-high-resolution configuration (256–4096 bands).
 - For **debugging**, use a low resolution spectral file with 16 bands.
 - For **water-dominated atmospheres**, Frostflow or Oak are appropriate depending on the required resolution and data source.
-- For **mixed volatile atmospheres** (H₂O, CO₂, CH₄, H₂, N₂ and more), Honeyside is the most complete option.
-- For **rock-vapour atmospheres** (relevant to magma ocean planets), use the Rocks files which include SiO and SiO₂ opacity.
+- For **mixed volatile atmospheres** (H$_2$O, CO$_2$, CH$_4$, H$_2$, N$_2$ and more), Honeyside is the most complete option.
+- For **rock-vapour atmospheres** (relevant to magma ocean planets), use the Rocks files which include SiO and SiO$_2$ opacity.

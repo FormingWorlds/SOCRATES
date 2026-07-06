@@ -1,40 +1,15 @@
 
 # Socrates - Suite Of Community RAdiative Transfer codes based on Edwards and Slingo
 
-## Contributing Guidelines
+<a href="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml"><img alt="Documentation" src="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml/badge.svg"></a>
+<a href="https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/License-BSD--3--Clause-blue.svg"></a>
 
-Welcome!
+SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. This fork of SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/).
 
-The following links are here to help set clear expectations for everyone
-contributing to this project. By working together under a shared understanding,
-we can continuously improve the project while creating a friendly, inclusive
-space for all contributors.
+## Documentation
 
-### Contributors Licence Agreement
-
-Please see the
-[Momentum Contributors Licence Agreement](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
-
-Agreement of the CLA can be shown by adding yourself to the CONTRIBUTORS file
-alongside this one, and is a requirement for contributing to this project.
-
-### Code of Conduct
-
-Please be aware of and follow the
-[Momentum Code of Coduct](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
-
-### Working Practices
-
-This project is managed as part of the Simulation Systems group of repositories.
-
-Please follow the Simulation Systems
-[Working Practices.](https://metoffice.github.io/simulation-systems/index.html)
-
-Questions are encouraged in the Simulation Systems
-[Discussions.](https://github.com/MetOffice/simulation-systems/discussions)
-
-Please be aware of and follow the Simulation Systems
-[AI Policy.](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html)
+Please visit the [documentation website](https://proteus-framework.org/SOCRATES/) for installation instructions, a tutorial, reference information and a model overview. Additionally, the latest documentation PDFs built by GitHub Actions are available from the
+[Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
 
 ## What's included?
 
@@ -58,50 +33,54 @@ See the CONTENTS in each directory under examples/ for instructions.
 `idl/` and `python/` contain scripts to generate atmospheric profiles etc
 in netCDF format to be used as input for the radiation code (l_run_cdf).
 
-`docs/` contain the user guide and technical guide for the Socrates code.
+`docs/` contain documentation, as well as the user guide and technical guide for the Socrates code.
 
-The latest PDFs built by GitHub Actions are available from the
-[Build docs PDFs workflow artifacts](https://github.com/FormingWorlds/SOCRATES/actions/workflows/build-docs-pdf.yaml).
+## Standalone install
 
-## Compiling the source code within the Met Office
+1. Clone SOCRATES from GitHub:
+   ```bash
+   git clone https://github.com/FormingWorlds/SOCRATES.git
+   ```
+2. Change into the new directory:
+   ```bash
+   cd SOCRATES
+   ```
+3. Configure the installation:
+   ```bash
+   ./configure
+   ```
+4. Compile the code:
+   ```bash
+   ./build_code
+   ```
 
-For users within the Met Office simply run the command:
+### Setting `RAD_DIR`
 
-`./build_code`
+SOCRATES needs the location of its root directory, referred to as `RAD_DIR`, available as
+an environment variable. Run the following commands from inside the SOCRATES directory.
 
-to compile the entire suite. To setup your path to the executables
-and man pages you should then source the following file:
+To set this temporarily, for the current terminal session only:
 
-`. ./set_rad_env`
+```bash
+export RAD_DIR=$(pwd)
+```
 
-Individual programs can also be compiled using the build_code script
-(build_code will take as an argument the target to pass to the makefile).
+To set this permanently:
 
-For example, to build the routines that don't require netCDF:
+**Bash**:
+```bash
+echo "export RAD_DIR=$(pwd)" >> ~/.bashrc
+source ~/.bashrc
+```
 
-`./build_code cdl`
+**Zsh**:
 
-To build just the two-stream/radiance code (netCDF version):
+```bash
+echo "export RAD_DIR=$(pwd)" >> ~/.zshrc
+source ~/.zshrc
+```
 
-`./build_code l_run_cdf`
-
-## Compiling the source code externally
-
-For external users it should only be necessary to edit the file
-make/Mk_cmd to allow compilation of the code on your system. FORTCOMP
-and LINK can be changed to your local Fortran compiler. To use the netCDF
-routines you must also change INCCDF_PATH and LIBCDF_PATH to point to
-your local netCDF installation.
-
-The following commands can then be run to build the suite and setup
-your path to the executables and man pages:
-
-`./build_code`\
-`. ./set_rad_env`
-
-See previous section for building individual routines.
-
-## Compilation of scripts in sbin
+### Compilation of scripts in sbin
 
 There are a small number of utilities in sbin/ which are written
 in C and require compilation. A Makefile has been provided:
@@ -111,39 +90,39 @@ in C and require compilation. A Makefile has been provided:
 
 ## Running the code
 
-Once you have set your path to the man pages (see section 2/3) you can
-find up-to-date instructions for running the following routines:
+Set up your path to the executables and man pages:
 
-Two-stream and spherical harmonics radiance codes using netCDF or
-text CDL input files:
+```
+source $RAD_DIR/set_rad_env
+```
 
-`man Cl_run_cdf`\
-`man Cl_run_cdl`
+Then find up-to-date instructions for running the following routines:
 
-A Mie scattering code for determining optical properties of aerosol
-and cloud particles:
+1. Two-stream and spherical harmonics radiance codes using netCDF or text CDL input files:
 
-`man Cscatter`
+   `man Cl_run_cdf`\
+   `man Cl_run_cdl`
 
-A correlated-k code for the calculation of gaseous absorption
-coefficients for the spectral files either directly from HITRAN
-.par or .xsc databases or line-by-line absorption coefficients in
-a netCDF input file:
+2. A Mie scattering code for determining optical properties of aerosol and cloud particles:
 
-`man Ccorr_k`
+   `man Cscatter`
 
-Auxillary routines for format conversion, interpolation etc:
+3. A correlated-k code for the calculation of gaseous absorption coefficients for the spectral files either directly from HITRAN .par or .xsc databases or line-by-line absorption coefficients in a netCDF input file:
 
-`man Ccdf2cdl`\
-`man Ccdl2cdf`\
-`man Cinterp`
+   `man Ccorr_k`
+
+4. Auxillary routines for format conversion, interpolation etc:
+
+   `man Ccdf2cdl`\
+   `man Ccdl2cdf`\
+   `man Cinterp`
 
 These scripts are a command line interface to interactive routines in
 the bin/ directory. These routines may be run directly if desired (eg.
 l_run_cdf).
 
-It is very useful to study the examples/ directory for common usage
-of the code.
+It is useful to study the examples/ directory for common usage
+of the code, or follow the python-based [tutorial](https://proteus-framework.org/SOCRATES/Tutorials/first_run.html) on the documentation website.
 
 ## Tested compilers
 
@@ -176,7 +155,5 @@ This has to be done manually and will require editing a lot of files. The easies
 You should also make sure to avoid the 'lazy' way to extend FORTRAN arrays where remaining values are filled in bulk, because the `generate_wrappers.jl` script will not be able to parse the FORTRAN source code.
 
 ## References
-* [1]  https://code.metoffice.gov.uk/trac/socrates
-* [2]  https://doi.org/10.1002/qj.49712253107
-* [3]  https://doi.org/10.1051/0004-6361/201323169
-* [4]  https://doi.org/10.5194/gmd-16-5601-2023
+
+All references can be found in the [bibliography](https://proteus-framework.org/SOCRATES/Reference/publications.html) on the documentation website. 

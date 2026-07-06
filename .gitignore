@@ -53,3 +53,6 @@ bin/
 
 # documentation site
 site/
+
+# tutorial directory
+socrates_tutorial/
