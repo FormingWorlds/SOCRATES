@@ -287,6 +287,12 @@ python plot.py
 The upward flux at the top of atmosphere is the **outgoing longwave radiation (OLR)**, 
 the rate at which the atmosphere thermally emits radiation energy to space.
 
+Alternatively, you can use the `ncdump` command to view the content of netCDF files in the terminal directly. For example, to view header information from the upward flux file, run:
+
+```bash
+ncdump -h out/atm.uflx
+```
+
 ---
 
 ## 7. Next steps
