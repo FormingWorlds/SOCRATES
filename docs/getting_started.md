@@ -61,7 +61,7 @@ navigation bar.
 
 -   :material-code-braces: **Contribute or develop**
 
-    [Go to contributing guide](Community/CONTRIBUTING.md)
+    [Go to contributing guide](https://proteus-framework.org/PROTEUS/Community/CONTRIBUTING.html)
 
 -   :material-bug: **Raise an issue**
 
