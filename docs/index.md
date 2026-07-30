@@ -1,5 +1,7 @@
 ---
 title: SOCRATES
+hide:
+  - navigation
 ---
 
 # SOCRATES
