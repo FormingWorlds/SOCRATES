@@ -169,4 +169,22 @@
    SOCRATES
    ========================================================= */
 
-/* Nothing here yet: this site needs no rules beyond the shared set above. */
+/* Width limits for the pages that read as prose rather than reference: a
+   measure that stays comfortable on a wide screen, and an indent on the
+   getting-started page. */
+@media screen and (min-width: 769px) {
+  .socrates-index {
+    max-width: 70em;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .socrates-proteus-framework {
+    max-width: 50em;
+    margin-right: auto;
+  }
+
+  .socrates-getstarted {
+    margin-left: 1em;
+  }
+}
