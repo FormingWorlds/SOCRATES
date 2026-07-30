@@ -1,6 +1,3 @@
----
----
-
 <div class="socrates-getstarted" markdown = 1> 
 
 # Get started

@@ -7,7 +7,7 @@ copyright: '© 2023-2026 <a href="https://formingworlds.space">Forming Worlds La
 
 nav:
   - Home:
-      - index.md
+      - About: index.md
       - Getting started: getting_started.md
 
   - How-to guides:
@@ -62,7 +62,6 @@ theme:
   custom_dir: docs/overrides
   features:
     - navigation.tabs
-    - navigation.indexes
     - navigation.footer
     - navigation.tabs.sticky
     - navigation.expand
