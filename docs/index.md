@@ -1,9 +1,3 @@
----
-title: SOCRATES
-hide:
-  - navigation
----
-
 # SOCRATES
 
 <p class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>

@@ -1,6 +1,4 @@
 ---
-hide:
-  - navigation
 ---
 
 <div class="socrates-getstarted" markdown = 1> 
