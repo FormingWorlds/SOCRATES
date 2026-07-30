@@ -1,22 +1,16 @@
 ---
 title: SOCRATES
-hide: 
-  - toc
-  - navigation
 ---
 
-<div class="socrates-index" markdown = 1>
+# SOCRATES
 
-<h1 align = "center"> SOCRATES </h1>
+<p class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>
 
-<p align = "center" class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>
+[![Docs](https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml/badge.svg)](https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE)
 
-<p align="center">
-<a href="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml"><img alt="Documentation" src="https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml/badge.svg"></a>
-<a href="https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/License-BSD--3--Clause-blue.svg"></a>
-</p>
+**SOCRATES** is the radiative transfer core of the [PROTEUS](https://proteus-framework.org/PROTEUS) coupled atmosphere-interior evolution framework, called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/). It is a high-performance code for computing fluxes, heating rates, and radiances in planetary atmospheres; its primary development and maintenance is led by the UK Met Office.
 
-SOCRATES is a high-performance radiative transfer code for computing fluxes, heating rates, and radiances in planetary atmospheres. Its primary development and maintenance is lead by the UK Met Office. SOCRATES is applied as the radiative transfer core of the [PROTEUS framework](https://proteus-framework.org/PROTEUS/), called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/).
 
 !!! info "PROTEUS framework"
     This documentation describes SOCRATES as integrated into the PROTEUS framework for exoplanet atmosphere modelling. The original Met Office repository can be found [here](https://github.com/MetOffice/socrates).
@@ -67,4 +61,3 @@ SOCRATES is released under the [BSD 3-Clause Licence](https://github.com/Forming
 !!! info "Licenses across the PROTEUS framework"
     Different components within the PROTEUS framework carry different licenses. Please find information about the use of licenses within the PROTEUS framework on the website's [license page](https://proteus-framework.org/license/).
 
-</div>

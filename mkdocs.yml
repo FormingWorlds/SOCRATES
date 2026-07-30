@@ -135,7 +135,6 @@ extra_css:
   - stylesheets/extra.css
   - stylesheets/layout.css
   - stylesheets/footnotes.css
-  - stylesheets/subtitle.css
 
 plugins:
   - search
