@@ -2,8 +2,8 @@
 
 <p class="subtitle">Suite Of Community RAdiative Transfer codes based on Edwards and Slingo</p>
 
-[![Docs](https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml/badge.svg)](https://github.com/FormingWorlds/SOCRATES/actions/workflows/docs.yaml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE)
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](https://github.com/FormingWorlds/SOCRATES/blob/main/LICENCE)
+[![Docs](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SOCRATES/docs.yaml?branch=main&label=Docs)](https://proteus-framework.org/SOCRATES/)
 
 **SOCRATES** is the radiative transfer core of the [PROTEUS](https://proteus-framework.org/PROTEUS) coupled atmosphere-interior evolution framework, called by the radiative-convective atmosphere model [AGNI](https://www.h-nicholls.space/AGNI/). It is a high-performance code for computing fluxes, heating rates, and radiances in planetary atmospheres; its primary development and maintenance is led by the UK Met Office.
 
