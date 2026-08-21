@@ -17,11 +17,11 @@ import time
 def main():
 
     # ------------ PARAMETERS ------------
-    source = "dace"         # Source database (dace or exocross)
-    vols = ["CO"]   # List of gases
-    alias = "Test"          # Alias for this spectral file
+    source = "exomol"         # Source database 
+    vols = ["H2O"]   # List of gases
+    alias = "Snowline"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 48              # Number of wavenumber bands
+    nband = 32              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 10000.0        # Clip to this maximum wavenumber [cm-1]
@@ -32,19 +32,17 @@ def main():
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
     lim = [None, None]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
 
-    #tgt_p = np.logspace(-3.5, 3, 30)
-    #tgt_t = np.linspace(100.0, 2895.0, 30)
 
-    tgt_p = [1e-3, 1e-2]
-    tgt_t = [100.0, 300.0]
+    # Target pressures [bar] and temperatures [K] for the spectral file
+    tgt_p = np.logspace(-3.5, 4.0, num=22, endpoint=True)
+    tgt_t = np.array([
+        25.0,
+        *np.arange(100, 500, 25.0),
+        *np.arange(500, 1000, 50.0),
+        *np.arange(1000, 4100, 100.0),
+        4500, 5000.0
+    ], dtype=np.float64)
 
-
-    # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
-    # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
-    # tgt_p      = np.concatenate((P_grid_low, P_grid_high), axis=0)
-    # tgt_t = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0, 1200.0, 1400.0, 1600.0, 1800.0, 2000.0, 2250.0, 2500.0, 2750.0, 2900.0]
-
-    # ------------------------------------
     # ------------ EXECUTION -------------
     # Check volatile names
     for i in range(len(vols)):
@@ -81,6 +79,8 @@ def main():
     print("    nvols:  %d"%len(vols))
     print("    nband:  %d"%nband)
     print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
+    print("    tgt_p:  %s"%utils.get_arr_as_str(tgt_p))
+    print("    tgt_t:  %s"%utils.get_arr_as_str(tgt_t))
     print(" ")
 
 
