@@ -79,5 +79,5 @@ The appropriate spectral file depends on the atmospheric composition being model
 - For **benchmarking or comparison with observations**, use a high- or very-high-resolution configuration (256–4096 bands).
 - For **debugging**, use a low resolution spectral file with 16 bands.
 - For **water-dominated atmospheres**, Frostflow or Oak are appropriate depending on the required resolution and data source.
-- For **mixed volatile atmospheres** (H₂O, CO₂, CH₄, H₂, N₂ and more), Honeyside is the most complete option.
-- For **rock-vapour atmospheres** (relevant to magma ocean planets), use the Rocks files which include SiO and SiO₂ opacity.
+- For **mixed volatile atmospheres** (H$_2$O, CO$_2$, CH$_4$, H$_2$, N$_2$ and more), Honeyside is the most complete option.
+- For **rock-vapour atmospheres** (relevant to magma ocean planets), use the Rocks files which include SiO and SiO$_2$ opacity.
