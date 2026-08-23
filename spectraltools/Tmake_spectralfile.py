@@ -33,8 +33,13 @@ def main():
     lim = [None, None]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
 
 
-    # Target pressures [bar] and temperatures [K] for the spectral file
-    tgt_p = np.logspace(-3.5, 4.0, num=22, endpoint=True)
+    # Target pressures [bar]
+    tgt_p = 10 ** np.array([
+        -5, -4, 
+        *np.arange(-3.5, 4.0, 0.5, endpoint=True)
+    ], dtype=np.float64)
+
+    # Target temperatures [K]
     tgt_t = np.array([
         25.0,
         *np.arange(100, 500, 25.0),
