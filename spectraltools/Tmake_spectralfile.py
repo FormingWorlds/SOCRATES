@@ -17,9 +17,9 @@ import time
 def main():
 
     # ------------ PARAMETERS ------------
-    source = "exomol"         # Source database 
-    vols = ["H2O"]   # List of gases
-    alias = "Snowline"          # Alias for this spectral file
+    source = "exocross"         # Source database 
+    vols = ["CO"]   # List of gases
+    alias = "Test"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 32              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
@@ -34,16 +34,17 @@ def main():
 
 
     # Target pressures [bar]
-    tgt_p = 10 ** np.array([
-        -5, -4, 
-        *np.arange(-3.5, 4.0, 0.5, endpoint=True)
-    ], dtype=np.float64)
+    tgt_p = [
+        -5.0, -4.0, 
+        *np.arange(-3.5, 4.5, 0.5)
+    ]
+    tgt_p = np.array([utils.round_float_sigfigs(10**p, 1) for p in tgt_p], dtype=np.float64)
 
     # Target temperatures [K]
     tgt_t = np.array([
         25.0,
-        *np.arange(100, 500, 25.0),
-        *np.arange(500, 1000, 50.0),
+        *np.arange(100, 350, 25.0),
+        *np.arange(350, 1000, 50.0),
         *np.arange(1000, 4100, 100.0),
         4500, 5000.0
     ], dtype=np.float64)
@@ -84,8 +85,11 @@ def main():
     print("    nvols:  %d"%len(vols))
     print("    nband:  %d"%nband)
     print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
-    print("    tgt_p:  %s"%utils.get_arr_as_str(tgt_p))
-    print("    tgt_t:  %s"%utils.get_arr_as_str(tgt_t))
+    print("    drops:  %s"%str(drops))
+    print("    method: %d"%method)
+    print("    n_tp:   %d"%(len(tgt_p)*len(tgt_t)))
+    print("    tgt_p:  %s"%utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
+    print("    tgt_t:  %s"%utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
     print(" ")
 
 

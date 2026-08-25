@@ -52,14 +52,18 @@ def is_unique(arr):
    flat = np.array(arr).flatten()
    return bool( len(np.unique(flat)) == len(flat) )
 
+# Round float to n significant figures
+def round_float_sigfigs(x, n):
+    return np.round(x, -int(np.floor(np.sign(x) * np.log10(abs(x)))) + n)
+
 # Convert all of the values in an array into one long string
-def get_arr_as_str(arr):
-    if type(arr[0]) is float:
-        return " ".join(["%g"%v for v in arr])
+def get_arr_as_str(arr, fmt=r"%g",sep=' '):
+    if type(arr[0]) is float or type(arr[0]) is np.float64:
+        return sep.join([fmt%v for v in arr])
     elif type(arr[0]) is int:
-        return " ".join(["%d"%v for v in arr])
+        return sep.join([fmt%v for v in arr])
     else:
-        return " ".join([str(v) for v in arr])
+        return sep.join([str(v) for v in arr])
 
 # Get item in 'arr' that is numerically closest to 'value'
 def get_closest(value, arr):
