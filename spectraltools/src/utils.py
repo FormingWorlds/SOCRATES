@@ -4,6 +4,9 @@ import os
 import numpy as np
 import hashlib
 
+# Version
+__version__ = "1.0.0"
+
 # Check that SOCRATES is setup
 if "RAD_DIR" not in os.environ.keys() or (os.environ["RAD_DIR"] is None):
     raise Exception("Cannot find SOCRATES! Refer to README.md")
@@ -125,6 +128,15 @@ def checkenv():
         return True
     else:
         raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")
+    
+# Get socrates version from file
+def socratesver():
+    ver_file = os.path.join(dirs["socrates"], "version")
+    if not os.path.exists(ver_file):
+        raise Exception("Cannot find SOCRATES version file '%s'"%ver_file)
+    with open(ver_file, "r") as f:
+        ver = f.read().strip()
+    return ver
 
 gas_list = []
 gas_list_pcf = os.path.join(dirs["socrates"], "src", "radiance_core", "gas_list_pcf.F90")

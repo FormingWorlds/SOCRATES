@@ -21,6 +21,12 @@ BANDS_SHORT_WL_SWITCH = 750.0 # nm
 BANDS_LONG_FRACTION = 0.15
 BANDS_SHORT_FRACTION = 0.07
 
+MT_CKD_VERSION = "mt_ckd4p3"  # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+
+# Pade fit coefficients for water droplet scattering.
+PADE_FIT_MIN = "1.50000E-06"
+PADE_FIT_MAX = "5.00000E-05" 
+PADE_TEMPERATURE = 250.0 # Reference temperature [K]
 
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
@@ -134,9 +140,17 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             bands_out.append(nu_arr[i-1])  # store band edge
             set_band += 1                  # target nu set to next edge
             dist_last = 9e99
+            lw_sw_flag = ""
+            if utils.wn2wl(bands_out[-1]) > BANDS_LONG_WL_SWITCH:
+                lw_sw_flag = "(LW)"
+            elif utils.wn2wl(bands_out[-1]) < BANDS_SHORT_WL_SWITCH:
+                lw_sw_flag = "(SW)"
             if set_band > 1:
-                print("    band %3d : %.3f - %.3f cm-1     %.2f - %.2f nm"
-                      % (set_band-1, bands_out[-2], bands_out[-1], utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]))
+                print("    band %3d : %10.3f - %10.3f cm-1     %10.2f - %10.2f nm    %s"
+                      % (set_band-1, 
+                         bands_out[-2], bands_out[-1], 
+                         utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]),
+                         lw_sw_flag)
                       )
         else:
             dist_last = dist
@@ -297,8 +311,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     t_write = np.round(t_points, 3)
 
     print("    number of p,t points: %d"%len(t_write))
-    print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
-    print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write)))
+    print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write), fmt="%.2e"))
+    print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write), fmt="%.2f"))
 
     # Generate P-T files to be read by Ccorr_k script
     pt_lbl_file = open(pt_lbl, "w+")
@@ -507,6 +521,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
         print("-------------------------------------------")
         print("WARNING: An error may have occurred! Check logfile.")
         print("-------------------------------------------")
+        raise Exception("Ccorr_k reported an error while calculating LBL k-coefficients for '%s' - check logfile '%s'" % (formula, logging_path))
 
     return kcoeff_path
 
@@ -554,8 +569,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s296")
-        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s260")
+        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s296")
+        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s260")
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
@@ -673,10 +688,12 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     # Check logfile
     with open(logging_path,'r') as hdl:
-        if "Execution ends" not in str(hdl.read()):
-            print("-------------------------------------------")
-            print("WARNING: An error may have occurred! Check logfile.")
-            print("-------------------------------------------")
+        logstr = str(hdl.read())
+    if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
+        print("-------------------------------------------")
+        print("WARNING: An error may have occurred! Check logfile.")
+        print("-------------------------------------------")
+        raise Exception("Ccorr_k reported an error while calculating CIA k-coefficients for '%s'-'%s' - check logfile '%s'" % (formula_A, formula_B, logging_path))
 
     return kcoeff_path
 
@@ -698,9 +715,6 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     str
         Path to scattering properties fit
     """
-
-    # Parameters
-    weighting_temperature = 250.0
 
     # Check that input files exist
     skel_path    = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -725,7 +739,7 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     f.write(" -s %s"%skel_path) # Skeleton spectral file
     f.write(" -P 1")            # Moments to be calculated
     f.write(" -t")              # Method for thick averaging
-    f.write(" -p %.2f"%weighting_temperature)               # Planckian weighting, temperature [K]
+    f.write(" -p %.2f"%PADE_TEMPERATURE)               # Planckian weighting, temperature [K]
     f.write(" -f 5 %s %s 1.e3"%(fit_path,monitor_path))     # Fit type (pade=5), output fit file, monitor file, density of material [kg m-3]
     f.write(" %s"%drop_data)    # (Input) Droplet scattering data
     f.write(" \n")
@@ -748,6 +762,13 @@ def calc_waterdroplets(alias:str, dry:bool=False):
 
 def assemble(alias:str, volatile_list:list, dry:bool=False):
     """Assemble final spectral file.
+
+    Takes in skeleton spectral file and k-coefficients. Adds:
+     - line absorption
+     - continuum absorption
+     - water droplet scattering properties
+
+    Does not add thermal emission, Rayleigh scattering, aerosols.
 
     Parameters
     ----------
@@ -804,8 +825,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # EOF
     #
     # </EXAMPLE>
-
-    success = True
 
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -872,7 +891,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
         f.write("10 \n")                        # Block 10
         f.write("5 \n")                         # Droplet type
         f.write("%s \n"%droplet_path)           # Fit data
-        f.write("1.50000E-06 5.00000E-05 \n")   # Pade fits
+        f.write(f"{PADE_FIT_MIN} {PADE_FIT_MAX} \n")   # Pade fits
 
         print("yes")
     else:
@@ -907,21 +926,20 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # Check for NaN values
     with open(spec_path,'r') as hdl:
         if "NaN" in hdl.read():
-            success = False
             print("-------------------------------------------")
             print("WARNING: Spectral file contains NaN values!")
             print("-------------------------------------------")
+            raise Exception("Assembled spectral file '%s' contains NaN values" % spec_path)
 
     # Calculate checksum
-    if success:
-        # spectral file
-        chk_path = os.path.join(utils.dirs["output"], alias+".chk"); utils.rmsafe(chk_path)
-        with open(chk_path,'w') as hdl:
-            hdl.write("%s \n" % utils.checksum(spec_path))
+    # spectral file
+    chk_path = os.path.join(utils.dirs["output"], alias+".chk"); utils.rmsafe(chk_path)
+    with open(chk_path,'w') as hdl:
+        hdl.write("%s \n" % utils.checksum(spec_path))
 
-        # lookup table
-        chk_path = os.path.join(utils.dirs["output"], alias+".chk_k"); utils.rmsafe(chk_path)
-        with open(chk_path,'w') as hdl:
-            hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
+    # lookup table
+    chk_path = os.path.join(utils.dirs["output"], alias+".chk_k"); utils.rmsafe(chk_path)
+    with open(chk_path,'w') as hdl:
+        hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
 
     return spec_path

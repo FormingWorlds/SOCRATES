@@ -496,7 +496,7 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self,  lim:list, yunits=0, show=True, saveout=True):
+    def plot(self,  lim:list, yunits=0, show=True, saveout=True, quiet=False):
         """
         Plot the cross-section data.
 
@@ -573,7 +573,7 @@ class xsec():
             os.remove(path)
 
         if saveout:
-            print("Saving plot to '%s'"%path)
+            quiet or print("Saving plot to '%s'"%path)
             fig.savefig(path, bbox_inches="tight", dpi=300)
 
         if show:

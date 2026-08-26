@@ -8,12 +8,12 @@ import src.hitran as hitran
 import src.utils as utils
 
 
-def list_files(source:str, formula:str):
+def list_files(source:str, formula:str, quiet=True):
     match source:
         case "dace":
             return dace.list_files(formula)
         case "exocross":
-            return exocross.list_files(formula)
+            return exocross.list_files(formula, quiet=quiet)
         case "hitran":
             return hitran.list_files(formula)
         case _:
@@ -24,14 +24,23 @@ def get_formula_path(source:str, formula:str):
     match source:
         case "dace":
             return dace.get_formula_path(formula)
+        case "hitran":
+            return hitran.get_formula_path(formula)
         case "exocross":
             return exocross.get_formula_path(formula)
         case _:
             raise Exception("Invalid source '%s'"% source)
 
+# Get the first available file for a formula, raising a clear error if none exist
+def first_file(source:str, formula:str):
+    files = list_files(source, formula, quiet=True)
+    if len(files) == 0:
+        raise Exception("No cross-section files found for '%s' with '%s' - check data directory" % (formula, source))
+    return files[0]
+
 # List the p,t values across all BIN files (f) in the directory
-def list_all_ptf(source:str, formula:str, allow_itp:bool=True):
-    files = list_files(source, formula)
+def list_all_ptf(source:str, formula:str, allow_itp:bool=True, quiet=True):
+    files = list_files(source, formula, quiet=quiet)
 
     all_p = []
     all_t = []
@@ -133,7 +142,8 @@ def best_pt(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
 
     return use_p, use_t
 
-def find_closest_file(source:str, formula:str, target_p:float, target_t:float):
+def find_closest_file(source:str, formula:str, target_p:float, target_t:float,
+                      quiet=True):
     """
     Find the closest file to the given pressure and temperature points.
 
@@ -157,13 +167,13 @@ def find_closest_file(source:str, formula:str, target_p:float, target_t:float):
     match source:
         case "dace":
             import src.dace as dace
-            close_path = dace.find_bin_close(formula, float(target_p), float(target_t))
+            close_path = dace.find_bin_close(formula, float(target_p), float(target_t), quiet=quiet)
         case "hitran":
             import src.hitran as hitran
-            close_path = hitran.find_xsc_close(formula, float(target_p), float(target_t))
+            close_path = hitran.find_xsc_close(formula, float(target_p), float(target_t), quiet=quiet)
         case "exocross":
             import src.exocross as exocross
-            close_path = exocross.find_xsec_close(formula, float(target_p), float(target_t))
+            close_path = exocross.find_xsec_close(formula, float(target_p), float(target_t), quiet=quiet)
         case _:
             raise Exception(f"Invalid source {source}")
     
@@ -199,7 +209,7 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         file paths which map to these p,t values
     """
 
-    print(f"Mapping p,t points for {formula} in {source}")
+    print(f"Mapping p,t points to cross-section files for '{formula}' from '{source}'")
 
     # get files for this formula
     _, _, all_f = list_all_ptf(source, formula, allow_itp=allow_itp)
@@ -242,7 +252,7 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
     size *= 1.0e-9
 
     # Result
-    print("    %d files mapped, totalling %g GB" % (use_n, size))
+    print("    %d files mapped, totalling %.2f GB" % (use_n, size))
     print("    done\n")
     return use_p, use_t, use_f
 

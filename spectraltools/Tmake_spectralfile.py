@@ -16,6 +16,9 @@ import time
 
 def main():
 
+    print("    SOCRATES directory: %s"%utils.dirs["socrates"])
+    print("    SOCRATES version: %s"%utils.socratesver())
+
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
     vols = ["CO"]   # List of gases
@@ -109,9 +112,9 @@ def main():
         print("    checking %s"%v)
         #     read first file
         formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, ptf.list_files(source, v)[0])
+        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot([None,None], show=False)
+        temp_xc.plot([None,None], show=False, quiet=True)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
@@ -121,7 +124,7 @@ def main():
         print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
 
         #     get tmin, tmax
-        _,at,_ = ptf.list_all_ptf(source, v)
+        _,at,_ = ptf.list_all_ptf(source, v, quiet=False)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
 
@@ -148,7 +151,7 @@ def main():
 
     # ===========
     # Get nu array for required range and resolution (first file from last absorber)
-    nu_file = ptf.list_files(source, vols[-1])[0]
+    nu_file = ptf.first_file(source, vols[-1])
     nu_samp = cross.xsec(vols[-1], # final volatile
                          source, nu_file)
     nu_arr = nu_samp.read().get_nu()
@@ -178,7 +181,7 @@ def main():
 
         # Get numin, numax for this volatile
         formula_path = ptf.get_formula_path(source, v)
-        temp_xc = cross.xsec(v, source, ptf.list_files(source, v)[0])
+        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.parse_name()
         
         # Map files, finding the closest p,t point to each target p,t point
@@ -224,7 +227,7 @@ def main():
 if __name__ == "__main__":
     utils.checkenv()
     start = time.perf_counter()
-    print("Hello\n")
+    print("Spectral Tools Wizard (version %s)"%utils.__version__)
     main()
     end = time.perf_counter()
     elapsed = (end-start)

@@ -22,7 +22,7 @@ def list_files(formula:str) -> list:
         print("WARNING: No xsc files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
 
-def find_xsc_close(formula:str, p_aim:float, t_aim:float) -> str:
+def find_xsc_close(formula:str, p_aim:float, t_aim:float, quiet=True) -> str:
     """Search for HITRAN xsc file.
 
     Finds the HITRAN xsc file in the directory which most closely matches the target p,t values.
@@ -60,6 +60,7 @@ def find_xsc_close(formula:str, p_aim:float, t_aim:float) -> str:
         t_arr.append(temp.t)
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
-    print("Found xsc file with distance = %.3f%%" % d)
+    if not quiet:
+        print("Found xsc file (p=%.2e bar, t=%.2f K) with distance = %.3f%%" % (p, t, d))
 
     return files[i]
