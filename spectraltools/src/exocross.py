@@ -24,7 +24,7 @@ def get_formula_path(formula:str):
 # List ExoCross xsec files in directory
 def list_files(formula:str) -> list:
     directory = get_formula_path(formula)
-    files = glob(directory+"/*.xsec")
+    files = glob(directory+"/*.xsec*")
     if len(files) == 0:
         print("WARNING: No xsec files found in '%s'"%directory)
     return [os.path.abspath(f) for f in files]
@@ -63,7 +63,7 @@ def find_xsec_close(formula:str, p_aim:float, t_aim:float) -> str:
     t_arr = []  # temperature
     for f in files:
         temp = cross.xsec("", "exocross", f)
-        temp.read(UV=False)
+        temp.parse_name()
         p_arr.append(temp.p)
         t_arr.append(temp.t)
 
