@@ -27,7 +27,6 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     dnu : float
         Resolution to downsample to. Value of -1 results in no downsampling
 
-
     Returns
     -------
     float
@@ -52,7 +51,7 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read(UV, numin=numin, numax=numax, dnu=dnu)
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
-    print("    nu_min , nu_max = %.2f , %.2f cm-1" % (x_first.numin,x_first.numax))
+    print("    nu_min , nu_max = %.3f , %.3f cm-1" % (x_first.numin,x_first.numax))
 
     step_dnu = float(nu_arr[1]-nu_arr[0])  # in [m-1]
 

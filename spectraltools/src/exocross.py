@@ -6,15 +6,15 @@ import os
 import src.cross as cross
 import src.utils as utils
 
+linelists = ["ExoMol", "ExoAtom", "HITRAN", "HITEMP"]
 
 def get_formula_path(formula:str):
 
     directory = os.path.join(utils.dirs["exocross"])
 
-    sources = ("ExoMol", "HITRAN", "HITEMP")
-    for s in sources:
+    # exocross derived from various linelists
+    for s in linelists:
         dir = os.path.join(directory, formula, s)
-        print(dir)
         if os.path.exists(dir):
             return dir
 

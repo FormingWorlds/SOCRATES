@@ -84,7 +84,7 @@ def main():
     print("    vols:   %s"%utils.get_arr_as_str(vols))
     print("    nvols:  %d"%len(vols))
     print("    nband:  %d"%nband)
-    print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
+    print("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1"%(numin, numax, dnu))
     print("    drops:  %s"%str(drops))
     print("    method: %d"%method)
     print("    n_tp:   %d"%(len(tgt_p)*len(tgt_t)))
@@ -111,7 +111,7 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, ptf.list_files(source, v)[0])
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot("wavelength", [None,None], show=False)
+        temp_xc.plot([None,None], show=False)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
@@ -147,9 +147,11 @@ def main():
     #     raise Exception("Pressure grid is not unique (contains repeated values)!")
 
     # ===========
-    # Get nu array for required range and resolution (also using last absorber)
-    nu_arr = cross.xsec(vols[-1], source, 
-                            ptf.list_files(source, vols[-1])[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
+    # Get nu array for required range and resolution (first file from last absorber)
+    nu_file = ptf.list_files(source, vols[-1])[0]
+    nu_samp = cross.xsec(vols[-1], # final volatile
+                         source, nu_file)
+    nu_arr = nu_samp.read().get_nu()
 
     # ===========
     # Determine bands

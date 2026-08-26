@@ -10,6 +10,8 @@ import io
 import src.phys as phys
 import src.utils as utils
 
+K_CLIP_MIN = 1.0e-45 # Minimum cross-section value to avoid numerical issues [cm2/g]
+
 # Object for holding cross-sections at a given T,P
 class xsec():
 
@@ -17,7 +19,7 @@ class xsec():
     def __init__(self, formula:str, source:str, fname:str) -> None:
 
         # Constants
-        self.k_clip = 1.0e-45
+        self.k_clip = K_CLIP_MIN
 
         # Meta parameters
         self.dummy  = bool(len(formula) == 0)
@@ -55,6 +57,12 @@ class xsec():
         return self.arr_k
     
     def parse_name(self):
+
+        # fall back
+        self.t = -1.0
+        self.p = -1.0
+
+        # set 
         match self.source:
             case "dace":
                 self.parse_binname()
@@ -62,6 +70,10 @@ class xsec():
                 self.parse_exocrossname()
             case _:
                 self.read()
+
+        # check
+        if (self.t < 0) or (self.p < 0):
+            raise Exception("Could not parse p,t from filename '%s'" % self.fname)
 
     # Read bin filename information and use it to set scalar variables in this object
     def parse_binname(self):
@@ -118,7 +130,7 @@ class xsec():
         self.parse_binname()
 
         # Set nu array
-        res = 0.01    # expected resolution [cm-1]
+        res = 0.01    # expected resolution from DACE [cm-1]
 
         tmp_nu = []
         tmp_k  = []
@@ -198,12 +210,19 @@ class xsec():
                 tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k, res, wavenumber_min)
             except TypeError:
                 None
+        
+        # derive k limit dynamically
+        self.k_clip = max(self.k_clip, np.amin(self.tmp_k[np.argwhere(self.tmp_k > 0.0)]))
 
+        # parse arrays
         self.arr_k = np.clip(np.array(tmp_k, dtype=float), a_min=self.k_clip, a_max=None)
         self.arr_nu = np.array(tmp_nu, dtype=float)
+
+        # derive wn limits
         self.numin = self.arr_nu[0]
         self.numax = self.arr_nu[-1]
         self.nbins = len(self.arr_nu)
+
 
         # Check resolution
         eps = 1.0e-8  # numerical precision
@@ -331,8 +350,11 @@ class xsec():
         # Process filename
         # Loop through prats and identify p, t, numin, numax
         self.parse_exocrossname()
-            
+
+        # Read file. Loadtxt handles bz2-compressed files automatically.
         data = np.loadtxt(self.fname).T
+
+        # Get data
         self.arr_nu = data[0] # wavenumber [cm-1]
         self.arr_k  = data[1] * phys.N_av / (self.mmw * 1000.0) # convert cm2/molecule to cm2/gram
         self.arr_k  = np.clip(self.arr_k, a_min=self.k_clip, a_max=None)
@@ -474,7 +496,16 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self, xaxis:str, lim:list, yunits=0, show=True, saveout=True):
+    def plot(self,  lim:list, yunits=0, show=True, saveout=True):
+        """
+        Plot the cross-section data.
+
+        Args:
+            lim (list): The wavenumber limits for the x-axis [min, max].
+            yunits (int): The units for the y-axis (0: cm2/g, 1: cm2/molecule, 2: m2/kg).
+            show (bool): Whether to display the plot.
+            saveout (bool): Whether to save the plot to a file.
+        """
         import matplotlib.pyplot as plt
 
         if not self.loaded:
@@ -498,68 +529,44 @@ class xsec():
         else:
             raise Exception("Invalid unit choice for plot")
 
-        if xaxis == 'wavelength': # Assumes that user input in wavelength [nm] units
-            # Crop data
-            if (xmin is None):
-                xmin = self.numax # The minimum value in wavelength is the maximum value in wavenumber
-            else:
-                xmin = min(1e7/xmin, self.numax)
-            xmin_idx = np.argmin( abs(self.arr_nu-xmin))
-            if (xmax is None):
-                xmax = self.numin # The maximum value in wavelength is the minimum value in wavenumber
-            else:
-                xmax = max(1e7/xmax, self.numin)
-            xmax_idx = np.argmin( abs(self.arr_nu-xmax))
-            xlim = [xmin, xmax]
-
-            if xmax > xmin:
-                print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
-
-            xarr = self.get_nu()[xmax_idx:xmin_idx]
-            yarr = yarr[xmax_idx:xmin_idx]
-
-            xarr = 1e7/xarr
-            xmax = 1e7/xmax
-            xmin = 1e7/xmin
-
-            ax.set_xlabel("Wavelength [nm]", fontsize=18)
-            ax.set_xlim(xmax*1.1, xmin/1.1)
-            ax.set_xscale('log')
-
-        elif xaxis == 'wavenumber':
-            # Crop data
-            if (xmin is None):
-                xmin = self.numin
-            else:
-                xmin = max(xmin, self.numin)
-            xmin_idx = np.argmin( abs(self.arr_nu-xmin))
-            if (xmax is None):
-                xmax = self.numax
-            else:
-                xmax = min(xmax, self.numax)
-            xmax_idx = np.argmin( abs(self.arr_nu-xmax))
-            xlim = [xmin, xmax]
-
-            if xmin > xmax:
-                print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
-
-            xarr = self.get_nu()[xmin_idx:xmax_idx]
-            yarr = yarr[xmin_idx:xmax_idx]
-
-            ax.set_xlabel("Wavenumber [cm-1]", fontsize=18)
-            ax.set_xlim(xmin, xmax)
-
+        # Plot wavenumber
+        if (xmin is None):
+            xmin = self.numin
         else:
-            raise ValueError(f"Unknown axis parameter: {xaxis}")
+            xmin = max(xmin, self.numin)
+        xmin_idx = np.argmin( abs(self.arr_nu-xmin))
+        if (xmax is None):
+            xmax = self.numax
+        else:
+            xmax = min(xmax, self.numax)
+        xmax_idx = np.argmin( abs(self.arr_nu-xmax))
+        xlim = [xmin, xmax]
+
+        if xmin > xmax:
+            print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
+
+        xarr = self.get_nu()[xmin_idx:xmax_idx]
+        yarr = yarr[xmin_idx:xmax_idx]
+
+        ax.set_xlabel("Wavenumber [cm-1]", fontsize=12)
+        ax.set_xlim(xmin, xmax)
 
         ax.plot(xarr, yarr, lw=lw, color=col)
-        ax.set_yscale('log')
-        ax.set_ylabel(ylbl, fontsize=14)
-        ax.tick_params(axis='x', labelsize=14)
-        ax.tick_params(axis='y', labelsize=14)
+        ax.set_yscale('symlog', linthresh=self.k_clip)
+        ax.set_ylim(bottom=0.0)
+        ax.set_ylabel(ylbl, fontsize=12)
+        ax.tick_params(axis='x', labelsize=12)
+        ax.tick_params(axis='y', labelsize=12)
 
-        title = str(self.form) + " : %.3e bar, %.2f K" % (self.p, self.t)
-        ax.set_title(title, fontsize=20)
+        # Add wavelength axis on top
+        ax2 = ax.twiny()
+        ax2.set_xlabel("Wavelength [nm]", fontsize=12)
+        ax2.set_xlim(utils.wn2wl(xmin), utils.wn2wl(xmax))
+        ax2.set_xscale('log')
+        ax2.tick_params(axis='x', labelsize=12)
+
+        title = str(self.form) + f" from {self.source}:" +  ": %.2e bar, %.2f K" % (self.p, self.t)
+        ax.set_title(title, fontsize=16)
 
         path = os.path.join(utils.dirs["output"],f'plot_{self.form}.pdf')
         if os.path.exists(path):
@@ -567,7 +574,7 @@ class xsec():
 
         if saveout:
             print("Saving plot to '%s'"%path)
-            fig.savefig(path, bbox_inches="tight", dpi=400)
+            fig.savefig(path, bbox_inches="tight", dpi=300)
 
         if show:
             plt.show()

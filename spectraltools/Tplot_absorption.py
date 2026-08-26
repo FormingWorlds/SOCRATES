@@ -10,7 +10,7 @@ import os
 import argparse
 
 # Main function
-def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, xaxis:str, saveout:bool):
+def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveout:bool):
 
     safe = utils.sourcesafe(source)
 
@@ -29,7 +29,7 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, xaxis:
 
     xc = cross.xsec(formula, safe, close_path)
     xc.read(UV=False)
-    xc.plot(xaxis=xaxis, lim=[None, None], yunits=yunits_int, saveout=saveout, show=True)
+    xc.plot(lim=[None, None], yunits=yunits_int, saveout=saveout, show=True)
 
 # Run main function
 if __name__ == "__main__":
@@ -40,7 +40,6 @@ if __name__ == "__main__":
     parser.add_argument('pres',     type=str, help='Target pressure [bar]')
     parser.add_argument('temp',     type=str, help='Target temperature [K]')
     parser.add_argument('--yunits', type=str, default="cm2g-1", help='y-axis units')
-    parser.add_argument('--xaxis', type=str, default="wavenumber", help='x-axis units')
 
     args = parser.parse_args()
 
@@ -51,7 +50,6 @@ if __name__ == "__main__":
          args.pres,       # target pressure [bar]
          args.temp,       # target temperature [K],
          args.yunits,     # y-axis units
-         args.xaxis,      # x-axis quantity
          saveout     # Save plot to file
          )
 

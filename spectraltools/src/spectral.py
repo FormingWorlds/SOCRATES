@@ -16,6 +16,11 @@ CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 CCORRK_CIA_TOLTYPE = 'b'
 CCORRK_LBL_TOLTYPE = 't'
 
+BANDS_LONG_WL_SWITCH  = 20.0 * 1000 # nm
+BANDS_SHORT_WL_SWITCH = 750.0 # nm
+BANDS_LONG_FRACTION = 0.15
+BANDS_SHORT_FRACTION = 0.07
+
 
 def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
     """Choose the best band edges.
@@ -74,11 +79,11 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     if (nband == 2) and (method > 2):
         method = 2
 
-    shrt_cutoff = 1.7e4  # [cm-1] Value where the "short wavelength" region starts.
+    shrt_cutoff = utils.wl2wn(BANDS_SHORT_WL_SWITCH)  # Where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
         method = 3
 
-    long_cutoff = 300.0 # [cm-1] Value where the "long wavelength" region starts.
+    long_cutoff = utils.wl2wn(BANDS_LONG_WL_SWITCH)  # Where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
         method = 1
 
@@ -86,25 +91,32 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     nedges = nband+1
     match method:
         case 0:
+            # linear
             bands = np.linspace(numin, numax, nedges)
         case 1:
+            # logarithmic
             bands = np.logspace(lognumin, lognumax, nedges)
         case 2:
+            # logarithmic, but use a single band to cover the long wavelength region
             bands = np.array([numin, long_cutoff])
             bands = np.append(bands, np.logspace(np.log10(long_cutoff) , lognumax , nedges-1 )[1:])
         case 3:
-            len_lin = int(nedges*0.15)
+            # logarithmic, but use a few linear-spaced bands to cover the long wavelength region
+            len_lin = int(nedges*BANDS_LONG_FRACTION)
             bands = np.linspace(numin, long_cutoff, len_lin+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), lognumax, nedges-len_lin))
         case 4:
-            len1 = int( max(nedges*0.15, 2) )
-            len3 = int( max(nedges*0.07, 2) )
+            # piecewise density (linspace - logspace - logspace)
+            len1 = int( max(nedges*BANDS_LONG_FRACTION, 2) )
+            len3 = int( max(nedges*BANDS_SHORT_FRACTION, 2) )
             len2 = nedges-len1-len3
             bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
             bands = np.append(bands, np.logspace(np.log10(shrt_cutoff), lognumax, len3))
-
         case 9:
+            # legacy spectral file (nband must be set to 318)
+            if nband != 318:
+                raise Exception("When method=9 (legacy), you must set nband=318")
             bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500)))
             bands[0] = 1.0
             numin = bands[0]
@@ -123,7 +135,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             set_band += 1                  # target nu set to next edge
             dist_last = 9e99
             if set_band > 1:
-                print("    band %3d : %.2f - %.2f cm-1     %.2f - %.2f nm"
+                print("    band %3d : %.3f - %.3f cm-1     %.2f - %.2f nm"
                       % (set_band-1, bands_out[-2], bands_out[-1], utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]))
                       )
         else:
