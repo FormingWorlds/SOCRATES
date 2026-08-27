@@ -3,6 +3,7 @@
 import os
 import logging
 import shutil
+from datetime import datetime
 import numpy as np
 import hashlib
 
@@ -31,18 +32,16 @@ if not os.path.exists(dirs["output"]):
     raise Exception("Output folder '%s' not found"%dirs["output"])
 
 # Convert wavenumber [cm-1] to wavelength [nm]
-def wn2wl(wn:float) -> float:
-    if wn == 0:
-        return float("inf")
-    else:
-        return 10000000.0 / wn
+def wn2wl(x) -> float:
+
+    x = np.array(x, float)
+    near_zero = np.isclose(x, 0)
+    x[near_zero] = np.inf
+    x[~near_zero] = 10000000.0 / x[~near_zero]
+    return x
 
 # Convert wavelength [nm] to wavenumber [cm-1]
-def wl2wn(wl:float) -> float:
-    if wl == 0:
-        return float("inf")
-    else:
-        return 10000000.0 / wl
+wl2wn = wn2wl  # Inverse function is the same, just swap input/output
 
 # Check iterable is strictly ascending
 def is_ascending(arr):
@@ -123,7 +122,8 @@ _LOG_FORMATTER = logging.Formatter(
 )
 
 
-def setup_logger(name:str, level=logging.INFO) -> str:
+
+def setup_logger(name:str, date=True, level=logging.INFO) -> str:
     """Configure logging for a spectraltools entry-point script.
 
     Adds a console handler (plain, print-like formatting) and a file
@@ -136,6 +136,8 @@ def setup_logger(name:str, level=logging.INFO) -> str:
     ----------
     name : str
         Name of the running script; used only to name the log file.
+    date: bool
+        If True, include timestamps in the log name.
     level : int
         Logging level for both handlers.
 
@@ -157,6 +159,8 @@ def setup_logger(name:str, level=logging.INFO) -> str:
     console.setFormatter(_LOG_FORMATTER)
     root.addHandler(console)
 
+    if date:
+        name = "%s_%s" % (name, datetime.now().strftime("%Y%m%dT%H%M%S"))
     logfile = os.path.join(os.getcwd(), "%s.log" % name)
     filehandler = logging.FileHandler(logfile, mode="w")
     filehandler.setLevel(level)

@@ -12,15 +12,15 @@ log = logging.getLogger("fwl."+__name__)
 
 CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
 CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
-CCORRK_N_TERMS  = 12        # Use this many k-terms. 
+CCORRK_N_TERMS  = 25        # Use this many k-terms. 
 CCORRK_T_RMSERR = 1.0e-2    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
 CCORRK_B_MAXERR = 1.0e-2    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
-CCORRK_CIA_TOLTYPE = 't'
-CCORRK_LBL_TOLTYPE = 't'
+CCORRK_CIA_TOLTYPE = 'b'
+CCORRK_LBL_TOLTYPE = 'b'
 
-BANDS_LONG_WL_SWITCH  = 20.0 * 1000 # nm
-BANDS_SHORT_WL_SWITCH = 750.0 # nm
+BANDS_LONG_WL_SWITCH  = 10.0 * 1000 # nm
+BANDS_SHORT_WL_SWITCH = 500.0 # nm
 BANDS_LONG_FRACTION = 0.15
 BANDS_SHORT_FRACTION = 0.07
 
@@ -38,7 +38,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     Methods:
         0 = linspace   \n
         1 = logspace   \n
-        2 = logspace, using a single band to cover long WL \n
+        2 = linspace, using a single band to cover long WL \n
         3 = logspace, using a few linear-spaced bands to cover long WL \n
         4 = piecewise density (linspace - logspace - logspace) \n
         9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
@@ -86,14 +86,17 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # Other cases ...
     if (nband == 2) and (method > 2):
+        log.warning("    Warning: requested nband=2, but method=%d. Switching to method=2 (linear)"%method)
         method = 2
 
     shrt_cutoff = utils.wl2wn(BANDS_SHORT_WL_SWITCH)  # Where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
+        log.warning("    Warning: requested nu range is entirely in the short WL region. Switching to method=1 (logarithmic)")
         method = 3
 
     long_cutoff = utils.wl2wn(BANDS_LONG_WL_SWITCH)  # Where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
+        log.warning("    Warning: requested nu range is entirely in the long WL region. Switching to method=0 (linear)")
         method = 1
 
     # Get target bands
@@ -106,9 +109,11 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             # logarithmic
             bands = np.logspace(lognumin, lognumax, nedges)
         case 2:
-            # logarithmic, but use a single band to cover the long wavelength region
+            # linear, but use a single band to cover the long wavelength region
             bands = np.array([numin, long_cutoff])
-            bands = np.append(bands, np.logspace(np.log10(long_cutoff) , lognumax , nedges-1 )[1:])
+            print(bands)
+            bands = np.append(bands, np.linspace(long_cutoff, numax, nedges-1)[1:])
+            print(bands)
         case 3:
             # logarithmic, but use a few linear-spaced bands to cover the long wavelength region
             len_lin = int(nedges*BANDS_LONG_FRACTION)
@@ -510,7 +515,9 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
             log.info("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
@@ -682,7 +689,9 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
             log.info("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
@@ -753,7 +762,9 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
             log.info("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
@@ -913,7 +924,9 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     if not dry:
         with open(logging_path,'w') as hdl:
             log.info("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     log.info("    done writing to '%s'", spec_path)

@@ -29,11 +29,11 @@ def main():
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 32              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
-    method = 3              # Band selection method
+    method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
-    preNC = False           # Use pre-existing netCDF files in output/ if they are found
+    preNC = True           # Use pre-existing netCDF files in output/ if they are found
 
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
     lim = [100.0, numax]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
@@ -74,7 +74,7 @@ def main():
     # ===========
     # Remove content of output folder under this alias (optionally including netCDFs)
     for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
-        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl"]
+        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl", ".pdf", ".png"]
         if not preNC:
             remove.append(".nc")
         for p in remove:
@@ -118,7 +118,7 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot([None,None], show=False, quiet=True)
+        temp_xc.plot([None,None], show=False, quiet=True, alias=alias+"_")
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
@@ -178,17 +178,26 @@ def main():
     dnu_last = 1.000
     for iv,v in enumerate(vols):
         # For this volatile...
+
         # Determine output path
         ncp = os.path.join(utils.dirs["output"] , alias+"_"+v+".nc")
         nc_paths[v] = ncp
-        if os.path.exists(ncp) and preNC:
-            log.warning("Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues.", v)
-            continue
 
         # Get numin, numax for this volatile
         formula_path = ptf.get_formula_path(source, v)
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
-        temp_xc.parse_name()
+        temp_xc.read()
+        temp_xc.plot([numin, numax], show=False, quiet=False, 
+                     band_edges=band_edges,
+                     alias=alias+"_")
+        numin = max(numin, np.amin(temp_xc.get_nu()))
+        numax = min(numax, np.amax(temp_xc.get_nu()))
+
+        # Can skip PTF mapping?
+        if os.path.exists(ncp) and preNC:
+            log.warning("Using pre-existing netCDF file for %s lbl absorption"%v)
+            log.warning("    Configuration mismatch here will lead to issues")
+            continue
         
         # Map files, finding the closest p,t point to each target p,t point
         vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)

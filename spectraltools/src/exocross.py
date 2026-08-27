@@ -27,7 +27,7 @@ def get_formula_path(formula:str, quiet=True):
         raise Exception("Formula '%s' not found in ExoCross directory! Check chem_dict in phys.py" % formula)
 
     if len(found) > 1 and not quiet:
-        log.warning("multiple ExoCross linelists found for '%s'; using '%s'", formula, found[0][0])
+        log.warning("    multiple ExoCross linelists found for '%s'; using '%s'", formula, found[0][0])
 
     return found[0][1]
 
