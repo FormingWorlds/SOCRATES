@@ -6,25 +6,39 @@ import os
 import subprocess
 import time
 import src.utils as utils
+import src.phys as phys
 import src.netcdf as netcdf
 
 log = logging.getLogger("fwl."+__name__)
 
 CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
 CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
-CCORRK_N_TERMS  = 25        # Use this many k-terms. 
-CCORRK_T_RMSERR = 1.0e-2    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
-CCORRK_B_MAXERR = 1.0e-2    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
-CCORRK_CIA_TOLTYPE = 'b'
+
+# Tolerence type for Ccorr_k when calculating k-terms. Options:
+#  n = Use a fixed number of k-terms (CCORRK_N_TERMS)
+#  t = Calculate k-terms needed to keep RMS error in the transmission below this value (CCORRK_T_RMSERR)
+#  b = Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value (CCORRK_B_MAXERR)
+CCORRK_CIA_TOLTYPE = 'b'    
 CCORRK_LBL_TOLTYPE = 'b'
 
-BANDS_LONG_WL_SWITCH  = 10.0 * 1000 # nm
-BANDS_SHORT_WL_SWITCH = 500.0 # nm
-BANDS_LONG_FRACTION = 0.15
-BANDS_SHORT_FRACTION = 0.07
+# Tolerence values for Ccorr_k when calculating k-terms 
+CCORRK_N_TERMS  = 25        # Use this many k-terms. 
+CCORRK_T_RMSERR = 1.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
+CCORRK_B_MAXERR = 1.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 
-MT_CKD_VERSION = "mt_ckd4p3"  # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+# Band determination
+BANDS_LONG_WL_SWITCH  = 30.0 * 1000 # nm
+BANDS_SHORT_WL_SWITCH = 400.0 # nm
+BANDS_LONG_FRACTION   = 0.15
+BANDS_SHORT_FRACTION  = 0.07
+BANDS_TMPS            = [(200.0,0.5), (1800.0,0.3), (6000.0,0.2)]  # (temperature, weight) pairs for method=5
+
+# Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+MT_CKD_VERSION = "mt_ckd4p3"  
+
+# Replace NaN values in the cross-section data with zeros
+REPLACE_NAN = True  
 
 # Pade fit coefficients for water droplet scattering.
 PADE_FIT_MIN = "1.50000E-06"
@@ -41,6 +55,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         2 = linspace, using a single band to cover long WL \n
         3 = logspace, using a few linear-spaced bands to cover long WL \n
         4 = piecewise density (linspace - logspace - logspace) \n
+        5 = selected by density of the planck function at given temperature \n
         9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
 
     Parameters
@@ -86,17 +101,17 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # Other cases ...
     if (nband == 2) and (method > 2):
-        log.warning("    Warning: requested nband=2, but method=%d. Switching to method=2 (linear)"%method)
+        log.warning("    Requested nband=2, but method=%d. Switching to method=2 (linear)"%method)
         method = 2
 
     shrt_cutoff = utils.wl2wn(BANDS_SHORT_WL_SWITCH)  # Where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
-        log.warning("    Warning: requested nu range is entirely in the short WL region. Switching to method=1 (logarithmic)")
+        log.warning("    Requested nu range is entirely in the short WL region. Switching to method=1 (logarithmic)")
         method = 3
 
     long_cutoff = utils.wl2wn(BANDS_LONG_WL_SWITCH)  # Where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
-        log.warning("    Warning: requested nu range is entirely in the long WL region. Switching to method=0 (linear)")
+        log.warning("    Requested nu range is entirely in the long WL region. Switching to method=0 (linear)")
         method = 1
 
     # Get target bands
@@ -111,9 +126,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         case 2:
             # linear, but use a single band to cover the long wavelength region
             bands = np.array([numin, long_cutoff])
-            print(bands)
             bands = np.append(bands, np.linspace(long_cutoff, numax, nedges-1)[1:])
-            print(bands)
         case 3:
             # logarithmic, but use a few linear-spaced bands to cover the long wavelength region
             len_lin = int(nedges*BANDS_LONG_FRACTION)
@@ -127,6 +140,53 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
             bands = np.append(bands, np.logspace(np.log10(shrt_cutoff), lognumax, len3))
+        case 5:
+            # selected by density of the planck function at given temperature
+
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(1,1, figsize=(6,4))
+            ax.set_xlabel('Wavenumber (cm⁻¹)')
+            ax.set_ylabel('Intensity')
+            
+            # sum planck functions
+            wfunc_x = np.linspace(numin, numax, 10000)
+            wfunc_y = np.ones_like(wfunc_x) * 1e-10
+            for t, w in BANDS_TMPS:
+                wfunc_y_this = utils.normalise_01(phys.planck(wfunc_x, t)) * w
+                ax.plot(wfunc_x, wfunc_y_this, color='k', lw=0.5, alpha=0.5)
+                wfunc_y += wfunc_y_this
+            wfunc_y = utils.normalise_01(wfunc_y)
+
+            # cumulative distribution
+            wfunc_cumsum = np.cumsum(wfunc_y)
+            wfunc_cumsum = utils.normalise_01(wfunc_cumsum)
+
+            #    plot the planck function to check that the density is correct
+            ax.plot(wfunc_x, wfunc_y, color='k', ls='dashed', lw=1.5)
+            ax.set_ylabel('Co-added planck functions')
+            axr = ax.twinx()
+            axr.plot(wfunc_x, wfunc_cumsum, color='r', lw=1.5, alpha=0.8)
+            axr.set_ylabel('Cumulative Distribution', color='r')
+            axr.tick_params(axis='y', colors='r')
+            fig.savefig(os.path.join(utils.dirs["output"], "planck_density.pdf"), 
+                        dpi=300, bbox_inches='tight')
+
+            #    ensure min/max bands included
+            bands = np.array([numin, numax])
+
+            # calculate other bands by finding the points where the cumulative sum 
+            # of the planck function is equal to a fraction of the total, so that 
+            # the bands are distributed according to the spectral density
+            for i in range(1, nband):
+                target = i / nband
+                idx = np.argmin(np.abs(wfunc_cumsum - target))
+                bands = np.append(bands, wfunc_x[idx])
+            bands = np.sort(bands)
+
+            # ensure length
+            if len(bands) != nedges:
+                raise Exception("Band edges could not be determined for method=5")
+
         case 9:
             # legacy spectral file (nband must be set to 318)
             if nband != 318:
@@ -495,6 +555,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
         case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
         case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
         case 'b': f.write(f" -b {CCORRK_B_MAXERR:.1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        case _: raise Exception("Invalid CCORRK_LBL_TOLTYPE: '%s'"%CCORRK_LBL_TOLTYPE)
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -634,6 +695,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
             case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
             case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+            case _: raise Exception("Invalid CCORRK_CIA_TOLTYPE: '%s'"%CCORRK_CIA_TOLTYPE)
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
         f.write(" -s %s"%skel_path)
@@ -672,6 +734,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
             case 'n': f.write(f" -n {CCORRK_N_TERMS:d}") # this many k-terms
             case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}") # calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}") # calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+            case _: raise Exception("Invalid CCORRK_CIA_TOLTYPE: '%s'"%CCORRK_CIA_TOLTYPE)
 
         f.write(" -s %s"%skel_path)
         f.write(" +p")
@@ -848,8 +911,8 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     # Write script
     log.info("Assembling final spectral file for '%s'...", alias)
     spec_path = os.path.join(utils.dirs["output"], alias+".sf"); utils.rmsafe(spec_path)
-    logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
-    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
+    logging_path   = os.path.join(utils.dirs["output"],"%s_assemble.log"%    alias); utils.rmsafe(logging_path)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_assemble.sh"%alias); utils.rmsafe(exec_file_name)
     f = open(exec_file_name,'w+')
 
     #    point to input/output spectral files
@@ -932,12 +995,27 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     log.info("    done writing to '%s'", spec_path)
 
     # Check for NaN values
-    with open(spec_path,'r') as hdl:
-        if "NaN" in hdl.read():
-            log.warning("-------------------------------------------")
-            log.warning("Spectral file contains NaN values!")
-            log.warning("-------------------------------------------")
-            raise Exception("Assembled spectral file '%s' contains NaN values" % spec_path)
+    for ext in ("","_k"):
+        check_path = spec_path + ext
+        contains_nan = False
+        with open(check_path,'r') as hdl:
+            if "NaN" in hdl.read():
+                contains_nan = True
+                log.error("-------------------------------------------")
+                log.error("Assembled spectral file '%s' contains NaN values" % check_path)
+                log.error("-------------------------------------------")
+
+        # Replace NaNs if requested
+        if REPLACE_NAN and contains_nan:
+            log.warning("Replacing NaN value in '%s'" % check_path)
+            with open(check_path,'r') as hdl:
+                lines = hdl.readlines()
+            with open(check_path,'w') as hdl:
+                for line in lines:
+                    if "NaN" in line:
+                        line = line.replace("         NaN","0.000000E+00")
+                    hdl.write(line)
+
 
     # Calculate checksum
     # spectral file

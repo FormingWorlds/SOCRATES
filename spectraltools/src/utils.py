@@ -116,6 +116,13 @@ def rmsafe(file:str):
         os.remove(file)
 
 
+# Normalise 0-1
+def normalise_01(arr):
+    arr = np.array(arr, float)
+    arr -= np.min(arr)
+    arr /= np.max(arr)
+    return arr
+
 _LOG_FORMATTER = logging.Formatter(
     fmt="[%(asctime)s %(levelname)7s] %(message)s",
     datefmt="%H:%M:%S",
@@ -170,8 +177,8 @@ def setup_logger(name:str, date=True, level=logging.INFO) -> str:
     return logfile
 
 
-def copy_log_to_output(logfile:str, alias:str=None) -> str:
-    """Copy a log file (as created by setup_logger) into the output/ folder.
+def move_log_to_output(logfile:str, alias:str=None) -> str:
+    """Move a log file (as created by setup_logger) into the output/ folder.
 
     Parameters
     ----------
@@ -194,8 +201,17 @@ def copy_log_to_output(logfile:str, alias:str=None) -> str:
     name = os.path.basename(logfile)
     if alias:
         name = "%s_%s" % (alias, name)
+
+    # copy the log file into the output folder
     dest = os.path.join(dirs["output"], name)
     shutil.copy2(logfile, dest)
+
+    # try to remove old file
+    if os.path.exists(dest):
+        try:
+            os.remove(logfile)
+        except Exception as e:
+            pass
     return dest
 
 # Calculate the checksum of a file using the BLAKE2b algorithm

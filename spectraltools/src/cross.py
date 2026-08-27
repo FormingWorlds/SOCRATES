@@ -573,10 +573,10 @@ class xsec():
                 ax.axvline(x=edge, color='r', lw=0.8, alpha=0.5)
                 if len(band_edges) <= 50:
                     ax.annotate(f"{edge:.1f} cm-1", 
-                            xy=(edge, ax.get_ylim()[1]), xytext=(0, -1), 
+                            xy=(edge, ax.get_ylim()[1]), xytext=(1, -1), 
                             textcoords='offset points', ha='left', 
                             rotation=-90, rotation_mode='anchor',
-                            fontsize=8, color='r')
+                            fontsize=7, color='r')
 
         ax.set_xlabel("Wavenumber [cm-1]", fontsize=12)
         ax.set_xlim(xmax, xmin)

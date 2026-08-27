@@ -227,13 +227,12 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
     else:
         modprint = 1
 
-    progress = []
     use_f = []
     use_t = []
     use_p = []
     for j in range(use_n):
         if (j+1)%modprint == 0:
-            progress.append("%d"%((j+1)/use_n *100.0))
+            log.info("      %: " + "%d"%((j+1)/use_n *100.0))
 
         # find closest p,t point for this formula
         f = find_closest_file(source, formula, p_targets[j], t_targets[j])
@@ -244,8 +243,6 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         x.parse_name()
         use_p.append(x.p)
         use_t.append(x.t)
-
-    log.info("     %%: " + " ".join(progress))
     use_f = np.array(use_f, dtype=str)
 
     # Get total size on disk (to warn user)

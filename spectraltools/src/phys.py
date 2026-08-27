@@ -1,4 +1,5 @@
 # Physical constants
+import numpy as np
 
 # Universal gas constant [J K-1 mol-1]
 R_gas = 8.31446261815324
@@ -20,6 +21,20 @@ m_electron = 9.1093837015e-31
 
 # Rydberg constant (hydrogen) [m-1]
 Ryd_H = Ryd_inf * m_proton / (m_proton + m_electron)
+
+c_light = 2.99792458e8  # Speed of light [cm/s]
+h_planck = 6.62607015e-34  # Planck's constant [J s]
+k_B = 1.380649e-23  # Boltzmann's constant [J/K]
+
+# Calculate planck function for given wavenumber [cm-1] and temperature [K]
+def planck(nu, T):
+    # Convert wavenumber to frequency [Hz]
+    nu_Hz = nu * c_light * 100.0  # [cm-1] to [Hz]
+
+    # Calculate planck function [W m-2 sr-1 Hz-1]
+    B_nu = (2.0 * h_planck * nu_Hz**3) / (c_light**2) / (np.exp(h_planck * nu_Hz / (k_B * T)) - 1)
+
+    return B_nu
 
 # Convert isotopologue to formula
 def iso_to_formula(iso:str):

@@ -24,12 +24,12 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["CO"]   # List of gases
+    vols = ["Na"]   # List of gases
     alias = "Monoxide"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 32              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
-    method = 2              # Band selection method
+    method = 5              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
@@ -252,9 +252,8 @@ if __name__ == "__main__":
     elapsed = (end-start)
     log.info("Time elapsed: %d hours %.2f minutes.", elapsed//3600, (elapsed%3600)//60)
 
-    # Copy this run's log (created in the current working directory) into
-    # the output folder, so it is kept alongside the spectral file it describes.
-    out_logfile = utils.copy_log_to_output(logfile, alias=alias)
+    # Copy this run's log into output folder
+    out_logfile = utils.move_log_to_output(logfile, alias=alias)
     log.info("Copied log file to '%s'", out_logfile)
 
     log.info("Goodbye")
