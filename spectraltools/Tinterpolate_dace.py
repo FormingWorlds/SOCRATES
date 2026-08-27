@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # Interpolate nu,k values for a series of p,t points from the DACE database
 
+import logging
 import src.utils as utils
 import src.dace as dace
 import numpy as np
+
+log = logging.getLogger("fwl."+__name__)
 
 def main():
     # --- PARAMETERS ---
@@ -117,9 +120,8 @@ def main():
     # --- EXECUTION ---
 
     # Print
-    print("Target pressures [K]:      " + str(p_arr))
-    print("Target temperatures [bar]: " + str(t_arr))
-    print(" ")
+    log.info("Target pressures [K]:      " + str(p_arr))
+    log.info("Target temperatures [bar]: " + str(t_arr))
 
     # Check requests against database temperature limits
     t_req = []; t_drp = []
@@ -128,7 +130,7 @@ def main():
             t_req.append(t)  # requested temperatures
         else:
             t_drp.append(t)  # dropped temperatures
-    print("Downloading files from DACE database...")
+    log.info("Downloading files from DACE database...")
     # Download files
     dace.download(isotopologue, linelist, linelist_version, p_arr, t_req, outdir)
 
@@ -139,7 +141,8 @@ def main():
     return
 
 if __name__ == "__main__":
-    print("Hello")
+    utils.setup_logger("Tinterpolate_dace")
+    log.info("Hello")
     main()
-    print("Goodbye")
+    log.info("Goodbye")
     exit(0)

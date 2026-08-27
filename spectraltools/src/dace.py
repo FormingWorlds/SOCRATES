@@ -1,6 +1,7 @@
 # Tools for processing DACE files
 
 # Import system libraries
+import logging
 import numpy as np
 import os
 import glob
@@ -9,6 +10,8 @@ import glob
 import src.cross as cross
 import src.utils as utils
 import src.phys as phys
+
+log = logging.getLogger("fwl."+__name__)
 
 def get_formula_path(formula:str):
     path = os.path.join(utils.dirs["dace"], formula+"/")
@@ -22,7 +25,7 @@ def list_files(formula:str) -> list:
     files = list(glob.glob(directory+"/"+"Out*.bin"))
     files.extend(list(glob.glob(directory+"/"+"Itp*.bin")))
     if len(files) == 0:
-        print("WARNING: No bin files found in '%s'"%directory)
+        log.warning("No bin files found in '%s'", directory)
     return [os.path.abspath(f) for f in files]
 
 def find_bin_close(formula:str, p_aim:float, t_aim:float, quiet=False) -> str:
@@ -66,7 +69,7 @@ def find_bin_close(formula:str, p_aim:float, t_aim:float, quiet=False) -> str:
     # Find bin
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
     if not quiet:
-        print("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K" % (d,p,t))
+        log.info("Found bin file with distance = %.3f%%  :  p=%.2e bar, t=%.2f K", d, p, t)
 
     return files[i]
 
@@ -102,10 +105,9 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
         for f in glob.glob(tmpdir+"*."+e):
             utils.rmsafe(f)
 
-    print("")
-    print("Downloading %s (%s) from DACE"%(formula,isotopologue))
-    print("Linelist: %s (v%.1f)"%(linelist,linelist_version))
-    print("Total requests: %d" % (len(p_arr)*len(t_arr)))
+    log.info("Downloading %s (%s) from DACE", formula, isotopologue)
+    log.info("Linelist: %s (v%.1f)", linelist, linelist_version)
+    log.info("Total requests: %d", len(p_arr)*len(t_arr))
 
     # Output folder
     if not os.path.exists(outdir):
@@ -119,7 +121,7 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
             t_req.append(t)
             p_req.append(p)
         npts = len(t_req)
-        print("\np[%d/%d] : requesting %d points"%(ip+1,len_p,npts))
+        log.info("p[%d/%d] : requesting %d points", ip+1, len_p, npts)
 
         # Download file
         tarnme = formula+".tar"
@@ -132,7 +134,7 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
             raise Exception("File not found at '%s'"%tarpath)
         
         # Untar the file
-        print("Untarring file")
+        log.info("Untarring file")
         oldcwd = os.getcwd()
         os.chdir(tmpdir)
         sp = subprocess.run(["tar","-xvf",tarpath,"--strip-components=1"], stdout=subprocess.DEVNULL)
@@ -162,15 +164,15 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
                     hdl.write(l)
                 hdl.write("\n")
         
-        # Read hdf5 file 
-        print("Converting to bin files")
+        # Read hdf5 file
+        log.info("Converting to bin files")
         hdf5path = glob.glob(tmpdir+"/*.hdf5")[0]
         with h5py.File(hdf5path,'r+') as hf:
             # Get the dataset
             dso = hf["opacity"]
             for i,key in enumerate(list(dso.keys())):
                 j = i+1
-                print("    point %4d of %4d  (%5.1f%%)"%(j, npts, 100.0*j/npts))
+                log.info("    point %4d of %4d  (%5.1f%%)", j, npts, 100.0*j/npts)
                 ds = dso[key]
 
                 # Read k
@@ -204,7 +206,6 @@ def download(isotopologue:str, linelist:str, linelist_version:float, p_arr, t_ar
                     for i in range(0,len(k_arr),4):
                         vals = [k_arr[i],k_arr[i+1],k_arr[i+2],k_arr[i+3]]
                         hdl.write(struct.pack('4f', *vals))  # 4 bytes at a time (Float32)
-        print("\n")
 
     return outdir
 

@@ -1,5 +1,6 @@
 # Tools for handling socrates spectral files
 
+import logging
 import numpy as np
 import os
 import subprocess
@@ -7,13 +8,15 @@ import time
 import src.utils as utils
 import src.netcdf as netcdf
 
-CCORRK_NPROC    = 20        # Number of processes to use for Ccorr_k. 
+log = logging.getLogger("fwl."+__name__)
+
+CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
 CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
-CCORRK_N_TERMS  = 10        # Use this many k-terms. 
-CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
+CCORRK_N_TERMS  = 12        # Use this many k-terms. 
+CCORRK_T_RMSERR = 1.0e-2    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
 CCORRK_B_MAXERR = 1.0e-2    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
-CCORRK_CIA_TOLTYPE = 'b'
+CCORRK_CIA_TOLTYPE = 't'
 CCORRK_LBL_TOLTYPE = 't'
 
 BANDS_LONG_WL_SWITCH  = 20.0 * 1000 # nm
@@ -57,7 +60,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Band edges, ascending [cm-1]
     """
 
-    print("Finding best bands (method=%d)..."%method)
+    log.info("Finding best bands (method=%d)...", method)
 
     # Validate
     if len(nu_arr) < 2:
@@ -146,12 +149,11 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             elif utils.wn2wl(bands_out[-1]) < BANDS_SHORT_WL_SWITCH:
                 lw_sw_flag = "(SW)"
             if set_band > 1:
-                print("    band %3d : %10.3f - %10.3f cm-1     %10.2f - %10.2f nm    %s"
-                      % (set_band-1, 
-                         bands_out[-2], bands_out[-1], 
-                         utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]),
-                         lw_sw_flag)
-                      )
+                log.info("    band %3d : %10.3f - %10.3f cm-1     %10.2f - %10.2f nm    %s",
+                            set_band-1,
+                            bands_out[-2], bands_out[-1],
+                            utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]),
+                            lw_sw_flag)
         else:
             dist_last = dist
         if (method==9) and (set_band == nband+1):
@@ -164,7 +166,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     if not utils.is_ascending(bands_out):
         raise Exception("Best band edges are not ascending! "+suggest)
 
-    print("    done\n")
+    log.info("    done")
     return bands_out
 
 
@@ -271,7 +273,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
         Path to skeleton spectral file
     """
 
-    print("Creating skeleton spectral file '%s'"%alias)
+    log.info("Creating skeleton spectral file '%s'", alias)
     skel_path = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     utils.rmsafe(skel_path)
 
@@ -281,8 +283,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     numin = band_edges[0]
     numax = band_edges[-1]
     nband = len(band_edges)-1
-    print("    number of bands: %d"%nband)
-    print("    numin , numax: %.2f , %.2f cm-1"%(numin, numax))
+    log.info("    number of bands: %d", nband)
+    log.info("    numin , numax: %.2f , %.2f cm-1", numin, numax)
 
     # Sanitise volatiles
     volatile_list_inp = [str(v) for v in volatile_list]
@@ -292,12 +294,12 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
         if v not in list(utils.absorber_id.keys()):
             raise Exception("Volatile %s is not supported by SOCRATES"%v)
         if v in volatile_list:
-            print("    WARNING: duplicate volatile %s"%v)
+            log.warning("    duplicate volatile %s", v)
         else:
             volatile_list.append(v)
     nvols = len(volatile_list)
-    print("    included volatiles (n=%d): "%len(volatile_list) + utils.get_arr_as_str(volatile_list))
-    print("    most significant absorber: %s"%volatile_list[0])
+    log.info("    included volatiles (n=%d): " %len(volatile_list) + utils.get_arr_as_str(volatile_list))
+    log.info("    most significant absorber: %s", volatile_list[0])
 
     # P-T grids for LbL and CIA data
     pt_lbl = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias); utils.rmsafe(pt_lbl)
@@ -310,9 +312,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     p_write = np.round(p_points * 1.0e5, 3)
     t_write = np.round(t_points, 3)
 
-    print("    number of p,t points: %d"%len(t_write))
-    print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write), fmt="%.2e"))
-    print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write), fmt="%.2f"))
+    log.info("    number of p,t points: %d", len(t_write))
+    log.info("    unique p values [Pa]: " + utils.get_arr_as_str(np.unique(p_write), fmt="%.2e"))
+    log.info("    unique t values [K] : " + utils.get_arr_as_str(np.unique(t_write), fmt="%.2f"))
 
     # Generate P-T files to be read by Ccorr_k script
     pt_lbl_file = open(pt_lbl, "w+")
@@ -362,7 +364,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
         if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
             active_pairs.append(i)
     f.write("%d \n"%len(active_pairs))
-    print("    number of continua: %d"%len(active_pairs))
+    log.info("    number of continua: %d", len(active_pairs))
 
     # Set CIA pairs
     for i in active_pairs:
@@ -400,7 +402,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s' \n"%skel_path)
+    log.info("    done writing to '%s'", skel_path)
     return skel_path
 
 def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
@@ -438,7 +440,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     #
     # </EXAMPLE>
 
-    print("Calculating k-coefficients for '%s' line absorption for '%s'..."%(formula, alias))
+    log.info("Calculating k-coefficients for '%s' line absorption for '%s'...", formula, alias)
 
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -473,7 +475,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
             vol_bands.append(i+1)
     iband = [ min(vol_bands) , max(vol_bands)]
     iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]
-    print("    band limits: " + str(iband_revrev))
+    log.info("    band limits: " + str(iband_revrev))
 
     # Open executable file for writing
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
@@ -504,23 +506,23 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     os.chmod(exec_file_name,0o777)
 
     # Run
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
+            log.info("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%kcoeff_path)
+    log.info("    done writing to '%s'", kcoeff_path)
 
     # Check logfile
     with open(logging_path,'r') as hdl:
         logstr = str(hdl.read())
     if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
-        print("-------------------------------------------")
-        print("WARNING: An error may have occurred! Check logfile.")
-        print("-------------------------------------------")
+        log.warning("-------------------------------------------")
+        log.warning("An error may have occurred! Check logfile.")
+        log.warning("-------------------------------------------")
         raise Exception("Ccorr_k reported an error while calculating LBL k-coefficients for '%s' - check logfile '%s'" % (formula, logging_path))
 
     return kcoeff_path
@@ -560,7 +562,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     pair_ids = [utils.absorber_id[p] for p in pair]
     pair_str = "%s-%s"%(pair[0],pair[1])
     both_water = bool( (pair[0]=="H2O") and (pair[1]=="H2O"))
-    print("Calculating k-coefficients for '%s' CIA for '%s'..."%(pair_str, alias))
+    log.info("Calculating k-coefficients for '%s' CIA for '%s'...", pair_str, alias)
 
     # Setup file (read) paths
     pt_cia       = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%alias)
@@ -612,7 +614,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         iband = [ min(ckd_bands) , max(ckd_bands)]
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so it is printed the same as best_bands)
 
-        print("    Using MT_CKD with band limits: " + str(iband_revrev))
+        log.info("    Using MT_CKD with band limits: " + str(iband_revrev))
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
@@ -650,7 +652,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
 
-        print("    Using HITRAN CIA database")
+        log.info("    Using HITRAN CIA database")
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
@@ -676,23 +678,23 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
+            log.info("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%kcoeff_path)
+    log.info("    done writing to '%s'", kcoeff_path)
 
     # Check logfile
     with open(logging_path,'r') as hdl:
         logstr = str(hdl.read())
     if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
-        print("-------------------------------------------")
-        print("WARNING: An error may have occurred! Check logfile.")
-        print("-------------------------------------------")
+        log.warning("-------------------------------------------")
+        log.warning("An error may have occurred! Check logfile.")
+        log.warning("-------------------------------------------")
         raise Exception("Ccorr_k reported an error while calculating CIA k-coefficients for '%s'-'%s' - check logfile '%s'" % (formula_A, formula_B, logging_path))
 
     return kcoeff_path
@@ -724,7 +726,7 @@ def calc_waterdroplets(alias:str, dry:bool=False):
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
 
-    print("Calculating water droplet optical properties for '%s'..."%alias)
+    log.info("Calculating water droplet optical properties for '%s'...", alias)
 
     # Output paths
     fit_path       = os.path.join(utils.dirs["output"],"%s_droplet.sct"%     alias); utils.rmsafe(fit_path)
@@ -747,15 +749,15 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
+            log.info("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%fit_path)
+    log.info("    done writing to '%s'", fit_path)
 
     return fit_path
 
@@ -833,7 +835,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             raise Exception("File not found: '%s'"%f)
 
     # Write script
-    print("Assembling final spectral file for '%s'..."%alias)
+    log.info("Assembling final spectral file for '%s'...", alias)
     spec_path = os.path.join(utils.dirs["output"], alias+".sf"); utils.rmsafe(spec_path)
     logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
@@ -846,22 +848,22 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f.write("%s \n" % spec_path)
 
     #    add line absorption
-    print("    line absorption: ", end='')
     lblcount = 0
+    lbl_included = []
     for i,v in enumerate(volatile_list):
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
         if os.path.exists(lbl_path):
-            print(v+" ", end='')
+            lbl_included.append(v)
             f.write("5 \n")
             if lblcount > 0:
                 f.write("y \n")
             f.write("%s \n"%lbl_path)
             lblcount += 1
-    print("")
+    log.info("    line absorption: " + (" ".join(lbl_included) if lbl_included else "(none)"))
 
     #    add CIA
-    print("    CIA: ", end='')
     cia_count = 0
+    cia_included = []
     for i,p in enumerate(utils.cia_pairs):
         if ((p[0] in volatile_list) and (p[1] in volatile_list)):
 
@@ -870,7 +872,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
             if os.path.exists(cia_path):
 
-                print(pair_str+" ", end='')
+                cia_included.append(pair_str)
 
                 f.write("19 \n")
                 if cia_count > 0:
@@ -878,13 +880,9 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
                 f.write("%s \n"%cia_path)
 
                 cia_count += 1
-    if cia_count == 0:
-        print("(none)")
-    else:
-        print("")
+    log.info("    CIA: " + (" ".join(cia_included) if cia_included else "(none)"))
 
     #    add water droplets
-    print("    water droplets: ", end='')
     droplet_path = os.path.join(utils.dirs["output"],"%s_droplet.sct"%alias)
     if os.path.exists(droplet_path):
 
@@ -893,17 +891,15 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
         f.write("%s \n"%droplet_path)           # Fit data
         f.write(f"{PADE_FIT_MIN} {PADE_FIT_MAX} \n")   # Pade fits
 
-        print("yes")
+        log.info("    water droplets: yes")
     else:
-        print("no")
+        log.info("    water droplets: no")
 
     #    add aerosols
-    print("    aerosols: ", end='')
-    print("(none)")
+    log.info("    aerosols: (none)")
 
     #    add ice
-    print("    ice: ", end='')
-    print("(none)")
+    log.info("    ice: (none)")
 
     #    done
     f.write("-1 \n")
@@ -913,22 +909,21 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     os.chmod(exec_file_name,0o777)
 
     # Execute script
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:
-            print("    please wait...")
+            log.info("    please wait...")
             sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done writing to '%s' \n"%spec_path)
-
+    log.info("    done writing to '%s'", spec_path)
 
     # Check for NaN values
     with open(spec_path,'r') as hdl:
         if "NaN" in hdl.read():
-            print("-------------------------------------------")
-            print("WARNING: Spectral file contains NaN values!")
-            print("-------------------------------------------")
+            log.warning("-------------------------------------------")
+            log.warning("Spectral file contains NaN values!")
+            log.warning("-------------------------------------------")
             raise Exception("Assembled spectral file '%s' contains NaN values" % spec_path)
 
     # Calculate checksum

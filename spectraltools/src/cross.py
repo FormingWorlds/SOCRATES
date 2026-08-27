@@ -1,6 +1,7 @@
 # Manage cross-sections
 
 # Libraries
+import logging
 import numpy as np
 import struct
 import os
@@ -9,6 +10,8 @@ import io
 # Files
 import src.phys as phys
 import src.utils as utils
+
+log = logging.getLogger("fwl."+__name__)
 
 K_CLIP_MIN = 1.0e-45 # Minimum cross-section value to avoid numerical issues [cm2/g]
 
@@ -78,7 +81,7 @@ class xsec():
     # Read bin filename information and use it to set scalar variables in this object
     def parse_binname(self):
         if not (self.source == "dace"):
-            print("WARNING: Cannot execute parse_binname because source (%s) is not DACE" % self.source)
+            logger.warning("Cannot execute parse_binname because source (%s) is not DACE", self.source)
         splt = self.fname.split("/")[-1].split(".")[0].split("_")[1:]
         self.numin = float(splt[0])  # cm-1
         self.numax = float(splt[1])  # cm-1
@@ -97,7 +100,7 @@ class xsec():
     def readbin(self, UV:bool, numin=0.0, numax=np.inf, dnu=0.0):
 
         if not (self.source == "dace"):
-            print("WARNING: Cannot execute readbin because source (%s) is not DACE" % self.source)
+            logger.warning("Cannot execute readbin because source (%s) is not DACE", self.source)
 
         # check conflicts
         if self.loaded:
@@ -236,7 +239,7 @@ class xsec():
     # Read HITRAN xsc file
     def readxsc(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         if not (self.source == "hitran"):
-            print("WARNING: Cannot execute readxsc because source (%s) is not HITRAN" % self.source)
+            logger.warning("Cannot execute readxsc because source (%s) is not HITRAN", self.source)
 
         # check conflicts
         if self.loaded:
@@ -277,7 +280,7 @@ class xsec():
     # Read ExoMol sigma file
     def readsigma(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         if not (self.source == "exomol"):
-            print("WARNING: Cannot execute readsigma because source (%s) is not ExoMol" % self.source)
+            logger.warning("Cannot execute readsigma because source (%s) is not ExoMol", self.source)
 
         # check conflicts
         if self.loaded:
@@ -319,7 +322,7 @@ class xsec():
     
     def parse_exocrossname(self):
         if not (self.source == "exocross"):
-            print("WARNING: Cannot execute parse_exocrossname because source (%s) is not ExoCross" % self.source)
+            logger.warning("Cannot execute parse_exocrossname because source (%s) is not ExoCross", self.source)
 
         # Process filename
         # Loop through prats and identify p, t
@@ -339,7 +342,7 @@ class xsec():
     # Read data from exocross xsec format 
     def readexocross(self, numin:float=0.0, numax:float=np.inf, dnu:float=0.0):
         if not (self.source == "exocross"):
-            print("WARNING: Cannot execute readexocross because source (%s) is not ExoCross" % self.source)
+            logger.warning("Cannot execute readexocross because source (%s) is not ExoCross", self.source)
 
         # check conflicts
         if self.loaded:
@@ -423,12 +426,12 @@ class xsec():
 
     # Return cross-section in units of cm2.molecule-1
     def cross_cm2_per_molec(self):
-        if self.dummy: print("WARNING: Accessing kabs of dummy xsec object!")
+        if self.dummy: logger.warning("Accessing kabs of dummy xsec object!")
         return np.array(self.arr_k[:]) * self.mmw * 1000.0 / phys.N_av
 
     # Return cross-section in units of cm2.g-1
     def cross_cm2_per_gram(self):
-        if self.dummy: print("WARNING: Accessing kabs of dummy xsec object!")
+        if self.dummy: logger.warning("Accessing kabs of dummy xsec object!")
         return np.array(self.arr_k[:])
 
     # Return cross-section in units of cm2.g-1
@@ -543,7 +546,7 @@ class xsec():
         xlim = [xmin, xmax]
 
         if xmin > xmax:
-            print("WARNING: Encountered invalid xlimits: %s. Check the limits." % xlim)
+            logger.warning("Encountered invalid xlimits: %s. Check the limits.", xlim)
 
         xarr = self.get_nu()[xmin_idx:xmax_idx]
         yarr = yarr[xmin_idx:xmax_idx]
@@ -573,7 +576,8 @@ class xsec():
             os.remove(path)
 
         if saveout:
-            quiet or print("Saving plot to '%s'"%path)
+            if not quiet:
+                logger.info("Saving plot to '%s'", path)
             fig.savefig(path, bbox_inches="tight", dpi=300)
 
         if show:

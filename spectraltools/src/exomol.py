@@ -1,16 +1,19 @@
 # Tools for handling exomol 'sigma' files
 
-from glob import glob 
+import logging
+from glob import glob
 import os
 
 import src.cross as cross
 import src.utils as utils
 
+log = logging.getLogger("fwl."+__name__)
+
 # List ExoMol sigma files in directory
 def list_files(directory:str) -> list:
     files = glob(directory+"/*.sigma")
     if len(files) == 0:
-        print("WARNING: No sigma files found in '%s'"%directory)
+        log.warning("No sigma files found in '%s'", directory)
     return [os.path.abspath(f) for f in files]
 
 def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
@@ -41,7 +44,7 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
     if count == 0:
         raise Exception("Could not find any sigma files in '%s'" % directory)
     
-    print("WARNING: ExoMol spectra are calculated at zero pressure, so 'best' value will not be ideal")
+    log.warning("ExoMol spectra are calculated at zero pressure, so 'best' value will not be ideal")
     
     p_arr = []  # pressure
     t_arr = []  # temperature
@@ -52,6 +55,6 @@ def find_sigma_close(directory:str, p_aim:float, t_aim:float) -> str:
         t_arr.append(temp.t)
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
-    print("Found sigma file with distance = %.3f%%" % d)
+    log.info("Found sigma file with distance = %.3f%%", d)
 
     return files[i]

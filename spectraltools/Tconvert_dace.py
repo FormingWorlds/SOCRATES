@@ -1,18 +1,21 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 # Convert DACE bin files to a NetCDF file
 
-# Import local files 
+# Import local files
 import src.dace as dace
 import src.utils as utils
 import src.netcdf as netcdf
 
+import logging
 import sys
 import os
+
+log = logging.getLogger("fwl."+__name__)
 
 # Main function
 def main(formula:str):
 
-    print("Processing DACE bin files for %s"%formula)
+    log.info("Processing DACE bin files for %s", formula)
 
     formula_path = os.path.join(utils.dirs["dace"], formula.strip()+"/")
     if not os.path.exists(formula_path):
@@ -29,9 +32,10 @@ def main(formula:str):
 
 # Run main function
 if __name__ == "__main__":
+    utils.setup_logger("Tconvert_dace")
 
     if not utils.check_output_exists():
-        print("ERROR: Output folder does not exist - refer to README.md for more information")
+        log.error("Output folder does not exist - refer to README.md for more information")
         exit(1)
 
     args = sys.argv

@@ -160,6 +160,15 @@ immediately if `RAD_DIR` is unset or `spectraltools/output/` doesn't exist):
   netCDF grid format SOCRATES expects. `src/spectral.py` is the layer that actually drives the
   compiled SOCRATES binaries (see below). `src/phys.py` holds physical constants and the
   formula/isotopologue naming lookups (`chemsafe`, `iso_to_formula`) shared across sources.
+- Logging: every `T*.py` entry-point script calls `utils.setup_logger("<script name>")` as its
+  first action under `if __name__ == "__main__":`. This configures the root logger with a
+  console handler (plain, print-like formatting; `WARNING`/`ERROR` records get a level prefix)
+  and a file handler that writes a timestamped `<script name>.log` into the current working
+  directory (overwritten on each run). All `src/*.py` modules log via
+  `logging.getLogger(__name__)` and propagate up to these same handlers — do not add handlers
+  inside library modules. `Tmake_spectralfile.py` additionally copies its log file into
+  `output/` (as `<alias>_Tmake_spectralfile.log`, via `utils.copy_log_to_output`) once the run
+  completes, so the log ends up alongside the spectral file it describes.
 
 Typical pipeline, in order (the `T*.py` scripts are meant to be run from inside `spectraltools/`
 with `set_rad_env` sourced; `Tinterpolate_dace.py` and `Tmake_spectralfile.py` are "wizard"

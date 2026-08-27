@@ -6,15 +6,19 @@ import src.cross as cross
 import src.utils as utils
 import src.ptf as ptf
 
+import logging
 import os
 import argparse
+
+log = logging.getLogger("fwl."+__name__)
 
 # Main function
 def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveout:bool):
 
     safe = utils.sourcesafe(source)
 
-    print("Plotting absorption spectrum of %s from %s at %.2e bar and %.2f K" % (formula, source, float(target_p), float(target_t)))
+    log.info("Plotting absorption spectrum of %s from %s at %.2e bar and %.2f K",
+                formula, source, float(target_p), float(target_t))
 
     close_path = ptf.find_closest_file(source, formula, 
                                        float(target_p), float(target_t))
@@ -33,6 +37,7 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveou
 
 # Run main function
 if __name__ == "__main__":
+    utils.setup_logger("Tplot_absorption")
 
     parser = argparse.ArgumentParser(description='Plot absorption spectrum')
     parser.add_argument('absorber', type=str, help='Absorber name')

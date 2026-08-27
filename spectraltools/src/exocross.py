@@ -1,10 +1,13 @@
 # Tools for handling exocross 'xsec' files
 
-from glob import glob 
+import logging
+from glob import glob
 import os
 
 import src.cross as cross
 import src.utils as utils
+
+log = logging.getLogger("fwl."+__name__)
 
 linelists = ["ExoMol", "ExoAtom", "HITRAN", "HITEMP"]
 
@@ -24,7 +27,7 @@ def get_formula_path(formula:str, quiet=True):
         raise Exception("Formula '%s' not found in ExoCross directory! Check chem_dict in phys.py" % formula)
 
     if len(found) > 1 and not quiet:
-        print("    multiple ExoCross linelists found for '%s'; using '%s'" % (formula, found[0][0]))
+        log.warning("multiple ExoCross linelists found for '%s'; using '%s'", formula, found[0][0])
 
     return found[0][1]
 
@@ -34,7 +37,7 @@ def list_files(formula:str, quiet=False) -> list:
     directory = get_formula_path(formula, quiet=quiet)
     files = glob(directory+"/*.xsec*")
     if len(files) == 0:
-        print("WARNING: No xsec files found in '%s'"%directory)
+        log.warning("No xsec files found in '%s'", directory)
     return [os.path.abspath(f) for f in files]
 
 def find_xsec_close(formula:str, p_aim:float, t_aim:float, quiet=True) -> str:
@@ -77,6 +80,6 @@ def find_xsec_close(formula:str, p_aim:float, t_aim:float, quiet=True) -> str:
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
     if not quiet:
-        print("Found xsec file (p=%.2e bar, t=%.2f K) with distance = %.3f%%" % (p, t, d))
+        log.info("Found xsec file (p=%.2e bar, t=%.2f K) with distance = %.3f%%", p, t, d)
 
     return files[i]

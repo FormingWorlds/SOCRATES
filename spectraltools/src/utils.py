@@ -1,11 +1,15 @@
 # General utilities
 
 import os
+import logging
+import shutil
 import numpy as np
 import hashlib
 
 # Version
 __version__ = "1.0.0"
+
+log = logging.getLogger("fwl."+__name__)
 
 # Check that SOCRATES is setup
 if "RAD_DIR" not in os.environ.keys() or (os.environ["RAD_DIR"] is None):
@@ -107,10 +111,88 @@ def sourcesafe(source:str):
 # Safely remove a file
 def rmsafe(file:str):
     if file in ["","."]:
-        print("WARNING: an attempt was made to remove the current working directory!")
+        log.warning("an attempt was made to remove the current working directory!")
         return
     if os.path.exists(file):
         os.remove(file)
+
+
+_LOG_FORMATTER = logging.Formatter(
+    fmt="[%(asctime)s %(levelname)7s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+
+
+def setup_logger(name:str, level=logging.INFO) -> str:
+    """Configure logging for a spectraltools entry-point script.
+
+    Adds a console handler (plain, print-like formatting) and a file
+    handler to the root logger, so that log records from every 'src.*'
+    module (each using logging.getLogger(__name__)) are captured. The file
+    handler writes a timestamped log to '<name>.log' in the current working
+    directory.
+
+    Parameters
+    ----------
+    name : str
+        Name of the running script; used only to name the log file.
+    level : int
+        Logging level for both handlers.
+
+    Returns
+    -------
+    str
+        Path to the log file created in the current working directory.
+    """
+
+    root = logging.getLogger()
+    root.setLevel(level)
+
+    # Drop any handlers from a previous call in this process
+    for h in list(root.handlers):
+        root.removeHandler(h)
+
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    console.setFormatter(_LOG_FORMATTER)
+    root.addHandler(console)
+
+    logfile = os.path.join(os.getcwd(), "%s.log" % name)
+    filehandler = logging.FileHandler(logfile, mode="w")
+    filehandler.setLevel(level)
+    filehandler.setFormatter(_LOG_FORMATTER)
+    root.addHandler(filehandler)
+
+    return logfile
+
+
+def copy_log_to_output(logfile:str, alias:str=None) -> str:
+    """Copy a log file (as created by setup_logger) into the output/ folder.
+
+    Parameters
+    ----------
+    logfile : str
+        Path to the log file, as returned by setup_log.
+    alias : str
+        If given, prefixed onto the destination filename (so the copy is
+        matched, and cleaned up on a subsequent run, by the same
+        '<alias>*' glob used elsewhere in the output folder).
+
+    Returns
+    -------
+    str
+        Path to the copied log file inside output/
+    """
+
+    for h in logging.getLogger().handlers:
+        h.flush()
+
+    name = os.path.basename(logfile)
+    if alias:
+        name = "%s_%s" % (alias, name)
+    dest = os.path.join(dirs["output"], name)
+    shutil.copy2(logfile, dest)
+    return dest
 
 # Calculate the checksum of a file using the BLAKE2b algorithm
 def checksum(filename:str):

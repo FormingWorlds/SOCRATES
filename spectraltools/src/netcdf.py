@@ -1,10 +1,13 @@
 # Tools for writing netcdf files
 
+import logging
 import numpy as np
 from netCDF4 import Dataset
 
 import src.utils as utils
 import src.cross as cross
+
+log = logging.getLogger("fwl."+__name__)
 
 def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points:np.ndarray, t_points:np.ndarray, f_points:list,
                          dnu:float=-1, numin:float=0.0, numax:float=np.inf):
@@ -43,7 +46,7 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     #     raise Exception("Pressure array is not strictly ascending")
 
     # Open file
-    print("Writing netCDF for '%s' from '%s'..."%(formula,source))
+    log.info("Writing netCDF for '%s' from '%s'...", formula, source)
     utils.rmsafe(nc_path)
     ds = Dataset(nc_path, "w", format="NETCDF4")
 
@@ -51,19 +54,19 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read(UV, numin=numin, numax=numax, dnu=dnu)
     nu_arr = x_first.get_nu() * 100.0  # convert cm-1 to m-1
-    print("    nu_min , nu_max = %.3f , %.3f cm-1" % (x_first.numin,x_first.numax))
+    log.info("    nu_min , nu_max = %.3f , %.3f cm-1", x_first.numin, x_first.numax)
 
     step_dnu = float(nu_arr[1]-nu_arr[0])  # in [m-1]
 
     # Create dimensions
-    print("    define dimensions")
+    log.info("    define dimensions")
 
     len_nu = len(nu_arr)
     dim_nu = ds.createDimension("nu",      len_nu)
     dim_pt = ds.createDimension("pt_pair", len_p)
 
     # Create variables
-    print("    define variables")
+    log.info("    define variables")
     var_p = ds.createVariable("p_calc",np.float32,("pt_pair",))
     var_p.title = "pressure"
     var_p.long_name = "pressure"
@@ -92,20 +95,20 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     t_write = np.round(t_points, 3)
 
     # Write p,t,nu
-    print("    write p, t, nu")
+    log.info("    write p, t, nu")
     var_p[:]  = p_write
     var_t[:]  = t_write
     var_nu[:] = nu_arr
 
     # Read and write cross-sections (2D)
-    print("    write cross-section data")
-    print("    point %4d of %4d  (%5.1f%%)" % (0,len_p, 0))
+    log.info("    write cross-section data")
+    log.info("    point %4d of %4d  (%5.1f%%)", 0, len_p, 0)
     counter = 0
     modprint = max(int(len_p*0.05), 1)
     for i in range(len_p):  # for each p,t point
         counter = i+1
         if counter % modprint == 0:
-            print("    point %4d of %4d  (%5.1f%%)" % (counter,len_p, 100.0*(counter/len_p)))
+            log.info("    point %4d of %4d  (%5.1f%%)", counter, len_p, 100.0*(counter/len_p))
 
         # Read file at this p,t
         this_xsec = cross.xsec(formula, source, f_points[i])
@@ -114,7 +117,7 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
         # del this_xsec
 
     # Finish up
-    print("    done writing to '%s' \n" % nc_path)
+    log.info("    done writing to '%s'", nc_path)
     ds.close()
     return step_dnu
 

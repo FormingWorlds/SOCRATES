@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import os
 
@@ -6,6 +7,8 @@ import src.dace as dace
 import src.cross as cross
 import src.hitran as hitran
 import src.utils as utils
+
+log = logging.getLogger("fwl."+__name__)
 
 
 def list_files(source:str, formula:str, quiet=True):
@@ -83,13 +86,13 @@ def best_pt(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
     # Get all points
     all_p, all_t, all_f = list_all_ptf(source, formula, allow_itp=allow_itp)
     all_n = len(all_f)
-    print("    found %d files"%all_n)
-    
+    log.info("    found %d files", all_n)
+
     # Check limits
     want_n = len(p_targets) * len(t_targets)
     if want_n == 0:
         want_n = all_n
-    print("    want %d files"%want_n)
+    log.info("    want %d files", want_n)
     if want_n >= 2000:
         raise Exception("SOCRATES does not support more than 2000 PT points")
 
@@ -101,7 +104,7 @@ def best_pt(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         raise Exception("Files are not unique or the p,t grid is not rectilinear")
 
     # Find best temperatures
-    print("    finding best temperatures")
+    log.info("    finding best temperatures")
     selected_t = []
     if (len(t_targets) >= len(unique_t)) or (len(t_targets) == 0):
         selected_t = unique_t[:]
@@ -114,7 +117,7 @@ def best_pt(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
             search_t.pop(i)
 
     # Find best pressures
-    print("    finding best pressures")
+    log.info("    finding best pressures")
     selected_p = []
     if (len(p_targets) >= len(unique_p)) or (len(p_targets) == 0):
         selected_p = unique_p[:]
@@ -134,8 +137,8 @@ def best_pt(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
             use_t.append(t)
             use_p.append(p)
 
-    print("    %d t points selected"%(len(use_t)))
-    print("    %d p points selected"%(len(use_p)))
+    log.info("    %d t points selected", len(use_t))
+    log.info("    %d p points selected", len(use_p))
 
     use_t = np.array(use_t, dtype=float)
     use_p = np.array(use_p, dtype=float)
@@ -209,12 +212,12 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         file paths which map to these p,t values
     """
 
-    print(f"Mapping p,t points to cross-section files for '{formula}' from '{source}'")
+    log.info("Mapping p,t points to cross-section files for '%s' from '%s'", formula, source)
 
     # get files for this formula
     _, _, all_f = list_all_ptf(source, formula, allow_itp=allow_itp)
     all_n = len(all_f)
-    print("    found %d files"%all_n)
+    log.info("    found %d files", all_n)
 
     # Map to files
     atol = 1.0e-5
@@ -223,14 +226,14 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         modprint = int(use_n * 0.1)
     else:
         modprint = 1
-    
-    print("     %: ", end='')
+
+    progress = []
     use_f = []
     use_t = []
     use_p = []
     for j in range(use_n):
         if (j+1)%modprint == 0:
-            print("%d " %( (j+1)/use_n *100.0), end='', flush=True)
+            progress.append("%d"%((j+1)/use_n *100.0))
 
         # find closest p,t point for this formula
         f = find_closest_file(source, formula, p_targets[j], t_targets[j])
@@ -242,9 +245,9 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
         use_p.append(x.p)
         use_t.append(x.t)
 
-    print(" ")
+    log.info("     %%: " + " ".join(progress))
     use_f = np.array(use_f, dtype=str)
-    
+
     # Get total size on disk (to warn user)
     size = 0.0
     for f in use_f:
@@ -252,8 +255,8 @@ def map_ptf(source:str, formula:str, p_targets:list, t_targets:list, allow_itp:b
     size *= 1.0e-9
 
     # Result
-    print("    %d files mapped, totalling %.2f GB" % (use_n, size))
-    print("    done\n")
+    log.info("    %d files mapped, totalling %.2f GB", use_n, size)
+    log.info("    done")
     return use_p, use_t, use_f
 
 

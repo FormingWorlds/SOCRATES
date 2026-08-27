@@ -1,12 +1,15 @@
 # Tools for processing HITRAN files
 
 # Import system libraries
+import logging
 from glob import glob
 import os
 
 # Import files
 import src.cross as cross
 import src.utils as utils
+
+log = logging.getLogger("fwl."+__name__)
 
 def get_formula_path(formula:str):
     directory = os.path.join(utils.dirs["hitran"], formula)
@@ -19,7 +22,7 @@ def list_files(formula:str) -> list:
     directory = get_formula_path(formula)
     files = glob(directory+"/*.xsc")
     if len(files) == 0:
-        print("WARNING: No xsc files found in '%s'"%directory)
+        log.warning("No xsc files found in '%s'", directory)
     return [os.path.abspath(f) for f in files]
 
 def find_xsc_close(formula:str, p_aim:float, t_aim:float, quiet=True) -> str:
@@ -61,6 +64,6 @@ def find_xsc_close(formula:str, p_aim:float, t_aim:float, quiet=True) -> str:
 
     i,d,p,t = utils.find_pt_close(p_arr, t_arr, p_aim, t_aim)
     if not quiet:
-        print("Found xsc file (p=%.2e bar, t=%.2f K) with distance = %.3f%%" % (p, t, d))
+        log.info("Found xsc file (p=%.2e bar, t=%.2f K) with distance = %.3f%%", p, t, d)
 
     return files[i]

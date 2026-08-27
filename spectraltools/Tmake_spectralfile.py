@@ -8,16 +8,19 @@ import src.cross as cross
 import src.phys as phys
 import src.ptf as ptf
 import src.netcdf as netcdf
+import logging
 import os
 import glob
 import numpy as np
 import time
 
+log = logging.getLogger("fwl."+__name__)
+
 
 def main():
 
-    print("    SOCRATES directory: %s"%utils.dirs["socrates"])
-    print("    SOCRATES version: %s"%utils.socratesver())
+    log.info("    SOCRATES directory: %s", utils.dirs["socrates"])
+    log.info("    SOCRATES version: %s", utils.socratesver())
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
@@ -81,24 +84,25 @@ def main():
 
     # ===========
     # Print params
-    print("Parameters")
-    print("    source: %s"%source)
-    print("    alias:  %s"%alias)
-    print("    vols:   %s"%utils.get_arr_as_str(vols))
-    print("    nvols:  %d"%len(vols))
-    print("    nband:  %d"%nband)
-    print("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1"%(numin, numax, dnu))
-    print("    drops:  %s"%str(drops))
-    print("    method: %d"%method)
-    print("    n_tp:   %d"%(len(tgt_p)*len(tgt_t)))
-    print("    tgt_p:  %s"%utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
-    print("    tgt_t:  %s"%utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
-    print(" ")
+    log.info("")
+    log.info("Parameters")
+    log.info("    source: %s", source)
+    log.info("    alias:  %s", alias)
+    log.info("    vols:   %s", utils.get_arr_as_str(vols))
+    log.info("    nvols:  %d", len(vols))
+    log.info("    nband:  %d", nband)
+    log.info("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1", numin, numax, dnu)
+    log.info("    drops:  %s", str(drops))
+    log.info("    method: %d", method)
+    log.info("    n_tp:   %d", len(tgt_p)*len(tgt_t))
+    log.info("    tgt_p:  %s", utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
+    log.info("    tgt_t:  %s", utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
 
 
     # ===========
     # Test each volatile for its numin, numax, pmin, pmax, tmin, tmax
-    print("Verifying domain of input data")
+    log.info("")
+    log.info("Verifying domain of input data")
     if source == "dace":
         if np.amin(tgt_p) < 1.0e-8:
             raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
@@ -109,7 +113,7 @@ def main():
     dat_numin, dat_numax = np.inf, -np.inf
     dat_tmin, dat_tmax = np.inf, -np.inf
     for v in vols:
-        print("    checking %s"%v)
+        log.info("    checking %s", v)
         #     read first file
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
@@ -121,7 +125,7 @@ def main():
         vol_numax = np.amax(temp_xc.get_nu())
         dat_numin = min(dat_numin, vol_numin)
         dat_numax = max(dat_numax, vol_numax)
-        print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
+        log.info("        numin, numax = %.1f, %.1f cm-1", vol_numin, vol_numax)
 
         #     get tmin, tmax
         _,at,_ = ptf.list_all_ptf(source, v, quiet=False)
@@ -137,7 +141,7 @@ def main():
     #     set new nu range
     numin = max(numin, dat_numin)
     numax = min(numax, dat_numax)
-    print("    numin, numax set to %.1f, %.1f cm-1 \n"%(numin, numax)) # Set the nu limits to encompass all volatile nus (least restrictive)
+    log.info("    numin, numax set to %.1f, %.1f cm-1", numin, numax) # Set the nu limits to encompass all volatile nus (least restrictive)
 
     # ===========
     # Determine flattened p,t grid using last of the absorbers
@@ -158,25 +162,27 @@ def main():
 
     # ===========
     # Determine bands
+    log.info("")
     band_edges = spectral.best_bands(nu_arr, method, nband)
 
     # ===========
     # Write skeleton file and PT grids
+    log.info("")
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
 
 
     # ===========
     # Write netCDFs containing absorption spectra
+    log.info("")
     nc_paths = {}
     dnu_last = 1.000
     for iv,v in enumerate(vols):
         # For this volatile...
-
         # Determine output path
         ncp = os.path.join(utils.dirs["output"] , alias+"_"+v+".nc")
         nc_paths[v] = ncp
         if os.path.exists(ncp) and preNC:
-            print("WARNING: Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues."%v)
+            log.warning("Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues.", v)
             continue
 
         # Get numin, numax for this volatile
@@ -204,6 +210,7 @@ def main():
 
     # ===========
     # Calculate k-coefficients from netCDF
+    log.info("")
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
         for f2 in vols[i:]:
@@ -212,25 +219,34 @@ def main():
 
     # ===========
     # Calculate water droplet properties
+    log.info("")
     if drops and ("H2O" in vols):
         spectral.calc_waterdroplets(alias)
 
 
     # ===========
     # Assemble final spectral file
+    log.info("")
     spectral.assemble(alias, vols)
 
     # ------------------------------------
-    return
+    return alias
 
 
 if __name__ == "__main__":
+    logfile = utils.setup_logger("Tmake_spectralfile")
     utils.checkenv()
     start = time.perf_counter()
-    print("Spectral Tools Wizard (version %s)"%utils.__version__)
-    main()
+    log.info("Spectral Tools Wizard (version %s)", utils.__version__)
+    alias = main()
     end = time.perf_counter()
     elapsed = (end-start)
-    print('Time elapsed: ', elapsed//3600, 'hours', "%.2f"%((elapsed%3600)//60), 'minutes.')
-    print("Goodbye")
+    log.info("Time elapsed: %d hours %.2f minutes.", elapsed//3600, (elapsed%3600)//60)
+
+    # Copy this run's log (created in the current working directory) into
+    # the output folder, so it is kept alongside the spectral file it describes.
+    out_logfile = utils.copy_log_to_output(logfile, alias=alias)
+    log.info("Copied log file to '%s'", out_logfile)
+
+    log.info("Goodbye")
     exit(0)
