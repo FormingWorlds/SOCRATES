@@ -578,7 +578,7 @@ function gen_cfortran_wrapper(
         write(f, "\n")
         write(f, "implicit none\n")
         write(f, "\n")
-        write(f, "private\n")
+        write(f, "public\n")
         write(f, "\n")
         write(f, "contains\n")
         write(f, "\n")

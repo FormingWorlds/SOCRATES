@@ -31,7 +31,7 @@ USE realtype_rd, ONLY: RealK
 
 implicit none
 
-private
+public
 
 
 
