@@ -12,6 +12,7 @@ private
 
 public :: C_strlen, c_to_f_string, copy_f_to_c_string, copy_c_to_f_string
 public :: test_double_val, test_double_ref
+public :: real_kind_bytes
 
 interface
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
