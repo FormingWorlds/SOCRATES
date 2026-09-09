@@ -24,12 +24,12 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["Na"]   # List of gases
-    alias = "Monoxide"          # Alias for this spectral file
+    vols = ["O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 32              # Number of wavenumber bands
-    drops = True            # Include water droplet scattering?
-    method = 5              # Band selection method
+    nband = 128              # Number of wavenumber bands
+    drops = False            # Include water droplet scattering?
+    method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
@@ -37,7 +37,6 @@ def main():
 
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
     lim = [100.0, numax]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
-
 
     # Target pressures [bar]
     tgt_p = [
