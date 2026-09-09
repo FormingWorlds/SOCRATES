@@ -123,6 +123,15 @@ def normalise_01(arr):
     arr /= np.max(arr)
     return arr
 
+# Get the current date and time as a string
+def get_datetime_str():
+    return datetime.now().strftime("%Y%m%dT%H%M%S")
+
+# Get the current user
+def get_user():
+    import getpass
+    return getpass.getuser()
+
 _LOG_FORMATTER = logging.Formatter(
     fmt="[%(asctime)s %(levelname)7s] %(message)s",
     datefmt="%H:%M:%S",
@@ -167,7 +176,7 @@ def setup_logger(name:str, date=True, level=logging.INFO) -> str:
     root.addHandler(console)
 
     if date:
-        name = "%s_%s" % (name, datetime.now().strftime("%Y%m%dT%H%M%S"))
+        name = "%s_%s" % (name, get_datetime_str())
     logfile = os.path.join(os.getcwd(), "%s.log" % name)
     filehandler = logging.FileHandler(logfile, mode="w")
     filehandler.setLevel(level)
@@ -239,6 +248,15 @@ def socratesver():
     with open(ver_file, "r") as f:
         ver = f.read().strip()
     return ver
+
+# Get git hash for this repo
+def git_hash():
+    import subprocess
+    try:
+        hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dirs["tools"]).decode("utf-8").strip()
+    except Exception as e:
+        hash = "unknown"
+    return hash
 
 gas_list = []
 gas_list_pcf = os.path.join(dirs["socrates"], "src", "radiance_core", "gas_list_pcf.F90")

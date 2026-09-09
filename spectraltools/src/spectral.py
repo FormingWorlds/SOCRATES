@@ -28,11 +28,11 @@ CCORRK_T_RMSERR = 1.0e-3    # Calculate k-terms needed to keep RMS error in the 
 CCORRK_B_MAXERR = 1.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 
 # Band determination
-BANDS_LONG_WL_SWITCH  = 30.0 * 1000 # nm
+BANDS_LONG_WL_SWITCH  = 40.0 * 1000 # nm
 BANDS_SHORT_WL_SWITCH = 400.0 # nm
-BANDS_LONG_FRACTION   = 0.15
+BANDS_LONG_FRACTION   = 0.12
 BANDS_SHORT_FRACTION  = 0.07
-BANDS_TMPS            = [(200.0,0.5), (1800.0,0.3), (6000.0,0.2)]  # (temperature, weight) pairs for method=5
+BANDS_TMPS            = [(180.0,0.55), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
 
 # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
 MT_CKD_VERSION = "mt_ckd4p3"  
@@ -45,7 +45,7 @@ PADE_FIT_MIN = "1.50000E-06"
 PADE_FIT_MAX = "5.00000E-05" 
 PADE_TEMPERATURE = 250.0 # Reference temperature [K]
 
-def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
+def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0, alias="") -> np.ndarray:
     """Choose the best band edges.
 
     Given all the available nu values, calculates the 'best' band edges for a given method. \n
@@ -68,6 +68,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Required number of bands
     floor : float
         Restrict nu to be larger than this value
+    alias : str
+        Alias for this spectral file (used for logging and plotting)
 
     Returns
     -------
@@ -164,11 +166,14 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             #    plot the planck function to check that the density is correct
             ax.plot(wfunc_x, wfunc_y, color='k', ls='dashed', lw=1.5)
             ax.set_ylabel('Co-added planck functions')
+            ax.set_xlim(left=numax, right=numin)
+
             axr = ax.twinx()
             axr.plot(wfunc_x, wfunc_cumsum, color='r', lw=1.5, alpha=0.8)
             axr.set_ylabel('Cumulative Distribution', color='r')
             axr.tick_params(axis='y', colors='r')
-            fig.savefig(os.path.join(utils.dirs["output"], "planck_density.pdf"), 
+            axr.set_xlim(left=numax, right=numin)
+            fig.savefig(os.path.join(utils.dirs["output"], f"{alias}plot_planck_density.pdf"), 
                         dpi=300, bbox_inches='tight')
 
             #    ensure min/max bands included

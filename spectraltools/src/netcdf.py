@@ -50,6 +50,11 @@ def write_ncdf_from_grid(UV:bool, nc_path:str, formula:str, source:str, p_points
     utils.rmsafe(nc_path)
     ds = Dataset(nc_path, "w", format="NETCDF4")
 
+    # Write header information into NetCDF file
+    ds.title = "LBL absorption cross-sections for %s from %s"%(formula, source)
+    ds.date = utils.get_datetime_str()
+    ds.user = utils.get_user()
+
     # Read first xsec to get nu array
     x_first = cross.xsec(formula, source, f_points[0])
     x_first.read(UV, numin=numin, numax=numax, dnu=dnu)

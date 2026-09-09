@@ -21,15 +21,16 @@ def main():
 
     log.info("    SOCRATES directory: %s", utils.dirs["socrates"])
     log.info("    SOCRATES version: %s", utils.socratesver())
+    log.info("    SOCRATES git hash: %s", utils.git_hash())
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    vols = ["O2", "SiO",]# "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 128              # Number of wavenumber bands
     drops = False            # Include water droplet scattering?
-    method = 2              # Band selection method
+    method = 5              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
@@ -117,7 +118,9 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot([None,None], show=False, quiet=True, alias=alias+"_")
+        temp_xc.plot([None,None], 
+                     show=False, quiet=True, 
+                     alias=alias+"_", pad_xlim=5e3)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
@@ -162,7 +165,7 @@ def main():
     # ===========
     # Determine bands
     log.info("")
-    band_edges = spectral.best_bands(nu_arr, method, nband)
+    band_edges = spectral.best_bands(nu_arr, method, nband, alias=alias)
 
     # ===========
     # Write skeleton file and PT grids
@@ -188,7 +191,7 @@ def main():
         temp_xc.read()
         temp_xc.plot([numin, numax], show=False, quiet=False, 
                      band_edges=band_edges,
-                     alias=alias+"_")
+                     alias=alias+"_", pad_xlim=5e3)
         numin = max(numin, np.amin(temp_xc.get_nu()))
         numax = min(numax, np.amax(temp_xc.get_nu()))
 

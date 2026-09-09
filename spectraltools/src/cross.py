@@ -510,7 +510,9 @@ class xsec():
     # Plot cross-section versus wavenumber (and optionally save to file)
     # `units` sets the cross-section units (0: cm2/g, 1: cm2/molecule, 2:m2/kg)
 
-    def plot(self,  lim:list, yunits=0, show=True, saveout=True, quiet=False, band_edges=None, alias=""):
+    def plot(self,  lim:list, yunits=0, 
+                show=True, saveout=True, quiet=False, 
+                band_edges=None, alias="", pad_xlim=0.0):
         """
         Plot the cross-section data.
 
@@ -522,6 +524,7 @@ class xsec():
             quiet (bool): If True, suppress logging messages.
             band_edges (list): Optional list of band edges to highlight on the plot [cm-1].
             alias (str): Optional alias to prepend to the saved plot filename.
+            pad_xlim (float): Optional extension of the wavenumber range.
         """
         import matplotlib.pyplot as plt
 
@@ -557,7 +560,7 @@ class xsec():
         else:
             xmax = min(xmax, self.numax)
         xmax_idx = np.argmin( abs(self.arr_nu-xmax))
-        xlim = [xmin, xmax]
+        xlim = [xmin - pad_xlim, xmax + pad_xlim]
 
         if xmin > xmax:
             log.warning("Encountered invalid xlimits: %s. Check the limits.", xlim)
