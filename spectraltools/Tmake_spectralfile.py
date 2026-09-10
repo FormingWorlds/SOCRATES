@@ -25,7 +25,7 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["O2", "SiO",]# "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    vols = ["O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 128              # Number of wavenumber bands
@@ -165,7 +165,7 @@ def main():
     # ===========
     # Determine bands
     log.info("")
-    band_edges = spectral.best_bands(nu_arr, method, nband, alias=alias)
+    band_edges = spectral.best_bands(nu_arr, method, nband, alias=alias+"_")
 
     # ===========
     # Write skeleton file and PT grids

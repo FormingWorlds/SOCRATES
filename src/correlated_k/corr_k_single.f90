@@ -2360,6 +2360,13 @@ CONTAINS
       ALLOCATE(wgt_k(i0:i1))
       wgt_k(i0:i1)=kabs(i0:i1)*wgt(i0:i1)
       k_ave(ik,ib) = nu_inc * SUM(wgt_k(i0:i1))/integ_k
+      ! Ensure that the average k-value is positive finite
+      ! IF (k_ave(ik,ib) < 0.0_RealK .OR. ISNAN(k_ave(ik,ib))) THEN
+      !   write(iu_err, '(A, I6, A, E10.3)') &
+      !     'Negative or non-finite k_ave at index ', ik, ' value ', k_ave(ik,ib)
+      !   k_ave(ik,ib)=0.0_RealK
+      ! ENDIF
+
       DEALLOCATE(wgt_k)
       CALL optimal_k(n_nu_k, &
         nu_inc, kabs(i0:i1), wgt(i0:i1), &
@@ -2431,10 +2438,21 @@ CONTAINS
       map = pmap(gmap)
     END IF
 
+    write(iu_monitor, '(A, I5, A, I5)') &
+      'Fitting k-terms for PT point ', ipt, ' of ', n_pt_pair
     kabs=kabs(map)
     wgt=wgt(map)
     IF (l_fit_cont_data .AND. l_cont_line_abs_weight) &
       kabs_lines=kabs_lines(map)
+
+!   Ensure kabs is positive finite
+    DO i=1,n_nu
+      IF (kabs(i) < 0.0_RealK .OR. ISNAN(kabs(i))) THEN
+        write(iu_err, '(A, I6, A, E10.3)') &
+          'Negative or non-finite kabs at index ', i, ' value ', kabs(i)
+        kabs(i)=0.0_RealK
+      ENDIF
+    ENDDO
 
 !   Integrate the sorted weightings across the band.
     integ_wgt=nu_inc * SUM(wgt(1:n_nu))
@@ -2449,10 +2467,17 @@ CONTAINS
       n_nu_k=i1-i0+1
 !     Calculate the simple mean k-value across this interval.
       integ_k =  nu_inc * SUM(wgt(i0:i1))
+      ! write(iu_monitor, '(A, I4, A, I4, A, I6, A, I9)') &
+      !   'Fitting k-term ', ik, ' of ', n_k(ib), &
+      !   ' over indices ', i0, ' to ', i1
+      ! write(iu_monitor, '(A, E10.3, A, E10.3)') &
+      !   'Weighting integral ', integ_wgt, '; k integral ', integ_k
       ALLOCATE(wgt_k(i0:i1))
       wgt_k(i0:i1)=kabs(i0:i1)*wgt(i0:i1)
       k_ave_tmp(ik) = nu_inc * SUM(wgt_k(i0:i1))/integ_k
       DEALLOCATE(wgt_k)
+
+      ! Obtain optimal k
       CALL optimal_k(n_nu_k, &
         nu_inc, kabs(i0:i1), wgt(i0:i1), &
         integ_k, k_ave_tmp(ik), tol, &

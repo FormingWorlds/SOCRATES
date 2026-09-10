@@ -19,13 +19,13 @@ CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 #  n = Use a fixed number of k-terms (CCORRK_N_TERMS)
 #  t = Calculate k-terms needed to keep RMS error in the transmission below this value (CCORRK_T_RMSERR)
 #  b = Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value (CCORRK_B_MAXERR)
-CCORRK_CIA_TOLTYPE = 'b'    
-CCORRK_LBL_TOLTYPE = 'b'
+CCORRK_CIA_TOLTYPE = 't'    
+CCORRK_LBL_TOLTYPE = 't'
 
 # Tolerence values for Ccorr_k when calculating k-terms 
 CCORRK_N_TERMS  = 25        # Use this many k-terms. 
-CCORRK_T_RMSERR = 1.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
-CCORRK_B_MAXERR = 1.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
+CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
+CCORRK_B_MAXERR = 5.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
 
 # Band determination
 BANDS_LONG_WL_SWITCH  = 40.0 * 1000 # nm
