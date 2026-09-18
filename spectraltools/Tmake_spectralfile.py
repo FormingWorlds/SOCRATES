@@ -25,16 +25,26 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    vols = ["SiO", "O2", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 128              # Number of wavenumber bands
     drops = False            # Include water droplet scattering?
-    method = 5              # Band selection method
+    method = 4              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
     preNC = True           # Use pre-existing netCDF files in output/ if they are found
+
+    # band selection methods (wavenumber space):
+    # 0 = linspace   \n
+    # 1 = logspace   \n
+    # 2 = linspace, using a single band to cover long WL \n
+    # 3 = logspace, using a few linear-spaced bands to cover long WL \n
+    # 4 = piecewise density (linspace - logspace - logspace) \n
+    # 5 = selected by density of the planck function at given temperatures \n
+    # 9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
+
 
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
     lim = [100.0, numax]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]

@@ -22,10 +22,16 @@ CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 CCORRK_CIA_TOLTYPE = 't'    
 CCORRK_LBL_TOLTYPE = 't'
 
-# Tolerence values for Ccorr_k when calculating k-terms 
-CCORRK_N_TERMS  = 25        # Use this many k-terms. 
-CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value. 
-CCORRK_B_MAXERR = 5.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value. 
+# Tolerence values for Ccorr_k when calculating k-terms
+CCORRK_N_TERMS  = 25        # Use this many k-terms.
+CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value.
+CCORRK_B_MAXERR = 5.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value.
+
+# Threshold on the summed absorption below which a band is treated as transparent by Ccorr_k. 0 (or negative) uses the machine epsilon.
+CCORRK_TRANSPARENT_TOL = 1e-40
+
+# Maximum number of sub-bands per band allowed when fitting k-terms
+CCORRK_N_DIV_MAX = 5000
 
 # Band determination
 BANDS_LONG_WL_SWITCH  = 40.0 * 1000 # nm
@@ -555,12 +561,14 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
     f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
     f.write(" -l %s %.3e"%(absid, CCORRK_MAXPATH))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
     match CCORRK_LBL_TOLTYPE:
         case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
         case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
         case 'b': f.write(f" -b {CCORRK_B_MAXERR:.1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
         case _: raise Exception("Invalid CCORRK_LBL_TOLTYPE: '%s'"%CCORRK_LBL_TOLTYPE)
+    f.write(" -ns %d"%CCORRK_N_DIV_MAX)  # Maximum number of sub-bands per band allowed when fitting k-terms
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -695,12 +703,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -c %.3f"%CCORRK_CIA_CUTOFF)
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
+        f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
         match CCORRK_CIA_TOLTYPE:
             case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
             case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
             case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
             case _: raise Exception("Invalid CCORRK_CIA_TOLTYPE: '%s'"%CCORRK_CIA_TOLTYPE)
+        f.write(" -ns %d"%CCORRK_N_DIV_MAX)  # Maximum number of sub-bands per band allowed when fitting k-terms
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
         f.write(" -s %s"%skel_path)

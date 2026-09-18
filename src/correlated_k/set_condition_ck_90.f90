@@ -20,7 +20,8 @@ SUBROUTINE set_condition_ck_90 &
  l_access_cia, include_h2o_foreign_continuum, &
  l_use_h2o_frn_param, l_use_h2o_self_param, l_cont_line_abs_weight, &
  n_selected_band, list_band, &
- i_ck_fit, tol, max_path, max_path_wgt, n_k, nu_inc_0, line_cutoff, &
+ i_ck_fit, tol, max_path, max_path_wgt, &
+ transparent_fit_tol, n_div_max, n_k, nu_inc_0, line_cutoff, &
  l_ckd_cutoff, l_scale_pT, i_type_residual, i_scale_fnc, p_ref, t_ref, &
  l_load_map, l_load_wgt, l_save_map, file_map, &
  i_line_prof_corr, l_self_broadening, n_gas_frac, gas_frac, nd_gas_frac, &
@@ -142,6 +143,11 @@ SUBROUTINE set_condition_ck_90 &
   REAL  (RealK), Intent(OUT) :: max_path_wgt
 !   Maximum pathlength to be considered for the absorber used for weighting
 !   in continuum transmissions
+  REAL  (RealK), Intent(OUT) :: transparent_fit_tol
+!   Threshold on the summed lbl/xsc/hitran absorption below which a band
+!   is treated as transparent. If not positive, EPSILON is used instead.
+  INTEGER, Intent(OUT) :: n_div_max
+!   Maximum number of sub-bands allowed per band when fitting k-terms
   INTEGER, Intent(OUT) :: n_k(nd_band)
 !   Number of terms in the fit
 !
@@ -262,6 +268,25 @@ SUBROUTINE set_condition_ck_90 &
 !
 !
   CALL select_data_type_int
+!
+  WRITE(*, "(/a, /a)") &
+    "Enter the tolerance on the summed absorption below which a band " &
+    //"is treated as transparent.", &
+    "(Enter 0 or a negative number to use the machine epsilon.)"
+  DO
+    READ(*, *, IOSTAT=ios) transparent_fit_tol
+    IF (ios == 0) THEN
+      EXIT
+    ELSE
+      WRITE(iu_err, "(a)") 'Invalid response.'
+      IF (l_interactive) THEN
+        WRITE(*, "(a)") "Please re-enter."
+      ELSE
+        ierr=i_err_fatal
+        RETURN
+      ENDIF
+    ENDIF
+  ENDDO
 !
   IF (l_fit_line_data .OR. l_fit_cont_data) CALL select_gas_int
 !
@@ -1227,6 +1252,9 @@ CONTAINS
 !  
 !  
 !   Selection of the style of fitting.
+!   Default: no additional limit on the number of sub-bands used when
+!   fitting k-terms, beyond the array size checked elsewhere.
+    n_div_max=HUGE(n_div_max)
     WRITE(iu_stdout, '(/a, /a)') &
       'Enter the type of c-k fit required.'
     DO
@@ -1238,6 +1266,24 @@ CONTAINS
           DO
             READ(iu_stdin, *, IOSTAT=ios) tol
             IF (ios == 0) THEN
+              EXIT
+            ELSE
+              WRITE(iu_err, "(a)") 'Invalid response.'
+              IF (l_interactive) THEN
+                WRITE(*, "(a)") "Please re-enter."
+              ELSE
+                ierr=i_err_fatal
+                RETURN
+              ENDIF
+            ENDIF
+          ENDDO
+          WRITE(iu_stdout, '(/a, /a)') &
+            'Enter the maximum number of sub-bands per band for the ' &
+            //'k-term fit (the fit will stop at this limit even if ' &
+            //'the tolerance is not met).'
+          DO
+            READ(iu_stdin, *, IOSTAT=ios) n_div_max
+            IF (ios == 0 .AND. n_div_max >= 1) THEN
               EXIT
             ELSE
               WRITE(iu_err, "(a)") 'Invalid response.'

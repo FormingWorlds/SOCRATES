@@ -23,6 +23,7 @@ SUBROUTINE corr_k_single &
  include_instrument_response, filter, &
  i_line_prof_corr, l_self_broadening, n_gas_frac, gas_frac, &
  i_ck_fit, tol, max_path, max_path_wgt, &
+ transparent_fit_tol, n_div_max, &
  nd_k_term, n_k, w_k, k_ave, k_opt, &
  k_opt_self, k_opt_frn, &
  i_type_residual, i_scale_function, scale_vector, scale_cont, &
@@ -136,6 +137,14 @@ SUBROUTINE corr_k_single &
   REAL  (RealK), Intent(IN) :: max_path_wgt
 !   Maximum pathlength to be considered for the absorber used for weighting
 !   in continuum transmissions
+  REAL  (RealK), Intent(IN) :: transparent_fit_tol
+!   Threshold on the summed lbl/xsc/hitran absorption below which a band
+!   is treated as transparent (a null fit is used). If not positive,
+!   EPSILON of the relevant absorption array is used instead.
+  INTEGER, Intent(IN) :: n_div_max
+!   Maximum number of sub-bands allowed per band when fitting k-terms to
+!   the required tolerance; the fit is truncated at this limit even if
+!   the tolerance has not been reached
   REAL  (RealK), Intent(IN) :: line_cutoff
 !   Cutoff for choosing lines
   LOGICAL, Intent(IN) :: l_ckd_cutoff
@@ -427,6 +436,11 @@ SUBROUTINE corr_k_single &
   LOGICAL :: l_transparent_fit
 !   Logical is true if a transparent fit should be applied
 
+  REAL  (RealK) :: eff_transparent_fit_tol
+!   Threshold actually applied when testing for a transparent band: equal
+!   to transparent_fit_tol if positive, otherwise EPSILON of the summed
+!   absorption array
+
   LOGICAL :: l_calc_cont
 !   Logical is true if calculating continuum data is required
 
@@ -505,13 +519,14 @@ SUBROUTINE corr_k_single &
 !
     SUBROUTINE set_g_point_90(n_nu, nu_inc, kabs, wgt, integ_wgt, &
       i_ck_fit, tol, max_path, l_kabs_wgt, kabs_wgt, &
-      l_wgt_scale_sqrt, u_wgt_scale, nd_k_term, iu_monitor, &
+      l_wgt_scale_sqrt, u_wgt_scale, nd_k_term, n_div_max, iu_monitor, &
       n_k, w_k, k_opt, k_ave, ig, ierr)
 !
       USE realtype_rd
 !
       INTEGER, Intent(IN) :: n_nu
       INTEGER, Intent(IN) :: nd_k_term
+      INTEGER, Intent(IN) :: n_div_max
       INTEGER, Intent(IN) :: iu_monitor
       INTEGER, Intent(IN) :: i_ck_fit
       INTEGER, Intent(INOUT) :: ig(0:nd_k_term)
@@ -888,10 +903,31 @@ SUBROUTINE corr_k_single &
         CALL input_lbl_band_cdf ! Read lbl file for current band
         CALL cpu_time(timer2)
         WRITE(iu_monitor,*) 'CPU time reading LBL file: ',timer2-timer1
+        WRITE(iu_monitor,'(A,I4)') "Read xsc data from netCDF file for band ", ib
         IF (l_self_broadening) THEN
-          l_transparent_fit=SUM(kabs_all_sb) < EPSILON(kabs_all_sb)
+          IF (transparent_fit_tol > 0.0_RealK) THEN
+            eff_transparent_fit_tol=transparent_fit_tol
+          ELSE
+            eff_transparent_fit_tol=EPSILON(kabs_all_sb)
+          END IF
+          WRITE(iu_monitor,'(A,1PE12.4,A,1PE12.4)') &
+            "Summed lbl absorption (self-broadened): ", SUM(kabs_all_sb), &
+            " compared against transparent-fit threshold: ", &
+            eff_transparent_fit_tol
+          l_transparent_fit= l_transparent_fit .OR. &
+            (SUM(kabs_all_sb) < eff_transparent_fit_tol)
         ELSE
-          l_transparent_fit=SUM(kabs_all) < EPSILON(kabs_all)
+          IF (transparent_fit_tol > 0.0_RealK) THEN
+            eff_transparent_fit_tol=transparent_fit_tol
+          ELSE
+            eff_transparent_fit_tol=EPSILON(kabs_all)
+          END IF
+          WRITE(iu_monitor,'(A,1PE12.4,A,1PE12.4)') &
+            "Summed lbl absorption: ", SUM(kabs_all), &
+            " compared against transparent-fit threshold: ", &
+            eff_transparent_fit_tol
+          l_transparent_fit= l_transparent_fit .OR. &
+            (SUM(kabs_all) < eff_transparent_fit_tol)
         END IF
       ELSE IF (l_access_hitran) THEN
         CALL access_hitran_int
@@ -918,8 +954,11 @@ SUBROUTINE corr_k_single &
         END IF
         l_transparent_fit=num_cia_lines_in_band.EQ.0
       ENDIF
+    ENDIF
 
       IF (l_transparent_fit) THEN
+
+        WRITE(iu_monitor,'(A,I4)') "Using transparent fit in band ", ib
 !
 !       A null transparent fit can be used.
         IF (l_fit_line_data .OR. l_fit_cont_data) CALL fit_transparent_int
@@ -1385,7 +1424,7 @@ SUBROUTINE corr_k_single &
                 l_fit_cont_data .AND. l_cont_line_abs_weight, &
                 kabs_lines(pstart(ipb):pend(ipb)), &
                 l_wgt_scale_sqrt, u_wgt_scale, &
-                nd_k_term, iu_monitor, &
+                nd_k_term, n_div_max, iu_monitor, &
                 n_k(ib), w_k(n_k_last+1:nd_k_term,ib), &
                 k_opt(n_k_last+1:nd_k_term,ib), &
                 k_ave(n_k_last+1:nd_k_term,ib), &
@@ -1533,8 +1572,6 @@ SUBROUTINE corr_k_single &
         END IF
 
       ENDIF ! End else block for transparent fit
-!
-    ENDIF
 !
     DEALLOCATE(wgt)
     DEALLOCATE(wgt_sv)
