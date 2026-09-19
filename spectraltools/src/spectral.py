@@ -28,7 +28,7 @@ CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the 
 CCORRK_B_MAXERR = 5.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value.
 
 # Threshold on the summed absorption below which a band is treated as transparent by Ccorr_k. 0 (or negative) uses the machine epsilon.
-CCORRK_TRANSPARENT_TOL = 1e-40
+CCORRK_TRANSPARENT_TOL = 1e-35
 
 # Maximum number of sub-bands per band allowed when fitting k-terms
 CCORRK_N_DIV_MAX = 5000
@@ -38,7 +38,7 @@ BANDS_LONG_WL_SWITCH  = 40.0 * 1000 # nm
 BANDS_SHORT_WL_SWITCH = 400.0 # nm
 BANDS_LONG_FRACTION   = 0.12
 BANDS_SHORT_FRACTION  = 0.07
-BANDS_TMPS            = [(180.0,0.55), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
+BANDS_TMPS            = [(180.0,0.45), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
 
 # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
 MT_CKD_VERSION = "mt_ckd4p3"  

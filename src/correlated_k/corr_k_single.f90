@@ -2475,8 +2475,6 @@ CONTAINS
       map = pmap(gmap)
     END IF
 
-    write(iu_monitor, '(A, I5, A, I5)') &
-      'Fitting k-terms for PT point ', ipt, ' of ', n_pt_pair
     kabs=kabs(map)
     wgt=wgt(map)
     IF (l_fit_cont_data .AND. l_cont_line_abs_weight) &

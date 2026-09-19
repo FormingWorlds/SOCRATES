@@ -25,12 +25,12 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database 
-    vols = ["SiO", "O2", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    vols = ["SiO", "O2"]#, "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     nband = 128              # Number of wavenumber bands
     drops = False            # Include water droplet scattering?
-    method = 4              # Band selection method
+    method = 5              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
@@ -84,7 +84,8 @@ def main():
     # ===========
     # Remove content of output folder under this alias (optionally including netCDFs)
     for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
-        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl", ".pdf", ".png"]
+        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", 
+                  ".sct", "_map", "_lbl", ".pdf", ".png", ".csv", "_map.nc"]
         if not preNC:
             remove.append(".nc")
         for p in remove:
