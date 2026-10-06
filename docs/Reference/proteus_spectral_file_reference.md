@@ -17,7 +17,7 @@ Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitr
  
 | Codename | Bands | Absorbers | Source | Notes |
 |---|---|---|---|---|
-| Legacy | 318 | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He | HITRAN | Legacy file used in Lichtenberg et al. (2021); cannot be selected as a PROTEUS `spectral_group` (file names differ), use Reach instead |
+| Legacy | 318 | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He | HITRAN | Legacy file used in Lichtenberg et al. (2021); not offered as a PROTEUS `spectral_group` (see details) |
 | Oak | 318 | H$_2$O | HITRAN | Water-only file from HITRAN; intended for benchmarking |
 | Idwal | 318 | H$_2$O | HITRAN | Made redundant by Oak |
 | Balmora | 318 | H$_2$O | HITRAN | Made redundant by Oak |
@@ -109,7 +109,7 @@ Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitr
     | Date | 2023-07-19 |
     | Platform | Linux Intel |
     | Creator | Harrison Nicholls |
-    | Notes | Same as Mallard but with more opacities. Script exists to generate this file, but it is not currently available. |
+    | Notes | Same as Mallard but with more opacities and cloud scattering properties. On Zenodo as [10.5281/zenodo.23190144](https://doi.org/10.5281/zenodo.23190144), with the script that adds the cloud scattering; the script that generated the gas opacities is not available. |
  
 ??? info "Mallard"
     | Field | Value |
@@ -169,7 +169,7 @@ Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitr
     | Date | 2021 |
     | Platform | Linux Intel |
     | Creator | Tim Lichtenberg |
-    | Notes | Legacy spectral file used in Lichtenberg et al. (2021). PROTEUS looks for `<group>.sf`, but Legacy contains `sp_b318_HITRAN_a16_no_spectrum` and `sp_b318_HITRAN_a16_no_spectrum_k`, so it cannot be selected as a `spectral_group`; use Reach instead. |
+    | Notes | Legacy spectral file used in Lichtenberg et al. (2021). PROTEUS looks for `<group>.sf`; this deposit holds `sp_b318_HITRAN_a16_no_spectrum` and `sp_b318_HITRAN_a16_no_spectrum_k`, so PROTEUS does not offer it as a group. Reach includes all its absorbers and more, but it is a different spectral file. |
  
 ??? info "Vivec"
     | Field | Value |
