@@ -17,7 +17,7 @@ Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitr
  
 | Codename | Bands | Absorbers | Source | Notes |
 |---|---|---|---|---|
-| Legacy | 318 | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He | HITRAN | Legacy file used in Lichtenberg et al. (2021) |
+| Legacy | 318 | CO$_2$, CH$_4$, O$_2$, N$_2$, H$_2$, He | HITRAN | Legacy file used in Lichtenberg et al. (2021); cannot be selected as a PROTEUS `spectral_group` (file names differ), use Reach instead |
 | Oak | 318 | H$_2$O | HITRAN | Water-only file from HITRAN; intended for benchmarking |
 | Idwal | 318 | H$_2$O | HITRAN | Made redundant by Oak |
 | Balmora | 318 | H$_2$O | HITRAN | Made redundant by Oak |
@@ -169,7 +169,7 @@ Spectroscopic data sources are abbreviated as follows: [**HITRAN**](https://hitr
     | Date | 2021 |
     | Platform | Linux Intel |
     | Creator | Tim Lichtenberg |
-    | Notes | Legacy spectral file used in Lichtenberg et al. (2021) |
+    | Notes | Legacy spectral file used in Lichtenberg et al. (2021). PROTEUS looks for `<group>.sf`, but Legacy contains `sp_b318_HITRAN_a16_no_spectrum` and `sp_b318_HITRAN_a16_no_spectrum_k`, so it cannot be selected as a `spectral_group`; use Reach instead. |
  
 ??? info "Vivec"
     | Field | Value |
