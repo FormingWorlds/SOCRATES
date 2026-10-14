@@ -287,6 +287,7 @@ for i,g in enumerate(gas_list):
 
 # List of valid continuum combinations in SOCRATES/HITRAN
 cia_pairs = [
+    ["H2O", "H2O"],
     ["H2", "CH4"],
     ["H2", "H2"],
     ["H2", "H"],

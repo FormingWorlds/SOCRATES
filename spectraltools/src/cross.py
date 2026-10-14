@@ -226,6 +226,9 @@ class xsec():
                 None
         
         # derive k limit dynamically
+        self.tmp_k = np.array(tmp_k, dtype=float)
+        if len(self.tmp_k) < 2:
+            raise Exception("DACE file contains too few values to derive k_clip")
         self.k_clip = max(self.k_clip, np.amin(self.tmp_k[np.argwhere(self.tmp_k > 0.0)]))
 
         # parse arrays
