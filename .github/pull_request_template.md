@@ -1,89 +1,23 @@
-# PR Summary
+## Description
+A short summary of the changes made in this pull-request.
 
-<!-- One line summary -->
+Tag the [related issue](https://github.com/FormingWorlds/PROTEUS/issues); e.g. closes #xxx
 
-Sci/Tech Reviewer: <!-- SR id, filled by author when ready for review (e.g. @octocat) -->
-Code Reviewer: <!-- CR id, filled by SSD -->
+Include screenshots or log files if appropriate.
 
-<!-- To be completed by the developer -->
+## Validation of changes
+Describe what you did to verify that these changes address the tagged issue.
 
-<!-- Provide a brief description of the changes in this PR, including any notes
-     useful for reviewers -->
+Outline your test configuration; e.g. MacOS with Python 3.12.
 
-<!-- List any linked PRs here
-- linked MetOffice/<REPO-NAME>#<pr-number>
--->
 
-<!-- List any blocking PRs or issues to be closed here
-- is blocked-by #pr-number
-- blocks #pr-number
-- closes #issue-number
-- fixes #issue-number
-- is related to #issue-number
--->
+## Checklist
 
-## Code Quality Checklist
-
-(_Some checks are automatically carried out via the CI pipeline_)
-
-- [ ] I have performed a self-review of my own code
-- [ ] My code follows the project's style guidelines
-- [ ] Comments have been included that aid understanding and enhance the readability of the code
-- [ ] My changes generate no new warnings
-
-## Testing
-
-- [ ] If shared files have been modified, I have run the UM and LFRic Apps rose stem suites
-- [ ] If any tests fail (rose-stem or CI) the reason is understood and acceptable (eg. kgo changes)
-- [ ] I have added tests to cover new functionality as appropriate (eg. system tests, unit tests, etc.)
-
-<!-- Describe other testing performed (if applicable) -->
-
-### trac.log
-
-<!-- Paste your trac.log from testing output here -->
-
-## Security Considerations
-
-- [ ] I have reviewed my changes for potential security issues
-- [ ] Sensitive data is properly handled (if applicable)
-- [ ] Authentication and authorisation are properly implemented (if applicable)
-
-## Performance Impact
-
-- [ ] Performance of the code has been considered and, if applicable, suitable performance measurements have been conducted
-
-## AI Assistance and Attribution
-
-- [ ] Some of the content of this change has been produced with the assistance of _Generative AI tool name_ (e.g., Met Office Github Copilot Enterprise, Github Copilot Personal, ChatGPT GPT-4, etc) and I have followed the [Simulation Systems AI policy](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html) (including attribution labels)
-
-<!-- If AI has been used, please provide more details here -->
-
-## Documentation
-
-- [ ] Where appropriate I have updated documentation related to this change and confirmed that it builds correctly
-
-# Sci/Tech Review
-
-<!-- To be completed by the Sci/Tech Reviewer -->
-<!-- May be skipped for trivial tickets -->
-
-- [ ] I understand this area of code and the changes being added
-- [ ] The proposed changes correspond to the pull request description
-- [ ] Documentation is sufficient (do documentation papers need updating)
-- [ ] Sufficient testing has been completed
-
-_Please alert the code reviewer via a tag when you have approved the SR_
-
-# Code Review
-
-<!-- To be completed by the Code Reviewer -->
-
-- [ ] All dependencies have been resolved
-- [ ] Related Issues have been properly linked and addressed
-- [ ] CLA compliance has been confirmed
-- [ ] Code quality standards have been met
-- [ ] Tests are adequate and have passed
-- [ ] Documentation is complete and accurate
-- [ ] Security considerations have been addressed
-- [ ] Performance impact is acceptable
+- [ ] I have followed the [contributing guidelines](https://proteus-framework.org/PROTEUS/CONTRIBUTING.html#how-do-i-contribute)
+- [ ] My code follows the style guidelines of this project
+- [ ] I have performed a self-review of my code
+- [ ] My changes generate no new warnings or errors
+- [ ] I have checked that the tests still pass on my computer
+- [ ] I have updated the docs, as appropriate
+- [ ] I have added tests for these changes, as appropriate
+- [ ] I have checked that all dependencies have been updated, as required
