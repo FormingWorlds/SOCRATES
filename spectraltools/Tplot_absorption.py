@@ -4,28 +4,25 @@
 # Import local files
 import src.cross as cross
 import src.utils as utils
+import src.ptf as ptf
 
+import logging
 import os
 import argparse
 
+log = logging.getLogger("fwl."+__name__)
+
 # Main function
-def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas:str):
+def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveout:bool):
 
     safe = utils.sourcesafe(source)
-    formula_path =  os.path.join(utils.dirs[safe], formula.strip())
 
-    print("Plotting absorption spectrum of %s from %s at %.2e bar and %.2f K" % (formula, source, float(target_p), float(target_t)))
+    log.info("Plotting absorption spectrum of %s from %s at %.2e bar and %.2f K",
+                formula, source, float(target_p), float(target_t))
 
-    match safe:
-        case "dace":
-            import src.dace as dace
-            close_path = dace.find_bin_close(formula_path, float(target_p), float(target_t))
-        case "hitran":
-            import src.hitran as hitran
-            close_path = hitran.find_xsc_close(formula_path, float(target_p), float(target_t))
-        case _:
-            raise Exception("Unsupported source")
-
+    close_path = ptf.find_closest_file(source, formula, 
+                                       float(target_p), float(target_t))
+                             
     yunits = yunits.strip().lower()
     match yunits:
         case "cm2g-1":          yunits_int=0
@@ -35,11 +32,12 @@ def main(formula:str, source:str, target_p:str, target_t:str, yunits:str, saveas
             raise Exception("Invalid units [%s]"%yunits)
 
     xc = cross.xsec(formula, safe, close_path)
-    xc.read()
-    xc.plot(yunits=yunits_int, saveout=saveas)
+    xc.read(UV=False)
+    xc.plot(lim=[None, None], yunits=yunits_int, saveout=saveout, show=True)
 
 # Run main function
 if __name__ == "__main__":
+    utils.setup_logger("Tplot_absorption")
 
     parser = argparse.ArgumentParser(description='Plot absorption spectrum')
     parser.add_argument('absorber', type=str, help='Absorber name')
@@ -47,17 +45,17 @@ if __name__ == "__main__":
     parser.add_argument('pres',     type=str, help='Target pressure [bar]')
     parser.add_argument('temp',     type=str, help='Target temperature [K]')
     parser.add_argument('--yunits', type=str, default="cm2g-1", help='y-axis units')
-    parser.add_argument('--saveas', type=str, default="", help='Save plot under this name')
 
     args = parser.parse_args()
 
+    saveout = True
 
     main(args.absorber,   # absorber
          args.source,     # database
          args.pres,       # target pressure [bar]
          args.temp,       # target temperature [K],
          args.yunits,     # y-axis units
-         args.saveas      # Save name
+         saveout     # Save plot to file
          )
 
 

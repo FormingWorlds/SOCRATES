@@ -1,22 +1,67 @@
 # Tools for handling socrates spectral files
 
+import logging
 import numpy as np
 import os
 import subprocess
 import time
 import src.utils as utils
+import src.phys as phys
 import src.netcdf as netcdf
 
-def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarray:
+log = logging.getLogger("fwl."+__name__)
+
+CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
+CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
+CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
+
+# Tolerence type for Ccorr_k when calculating k-terms. Options:
+#  n = Use a fixed number of k-terms (CCORRK_N_TERMS)
+#  t = Calculate k-terms needed to keep RMS error in the transmission below this value (CCORRK_T_RMSERR)
+#  b = Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value (CCORRK_B_MAXERR)
+CCORRK_CIA_TOLTYPE = 't'    
+CCORRK_LBL_TOLTYPE = 't'
+
+# Tolerence values for Ccorr_k when calculating k-terms
+CCORRK_N_TERMS  = 25        # Use this many k-terms.
+CCORRK_T_RMSERR = 5.0e-3    # Calculate k-terms needed to keep RMS error in the transmission below this value.
+CCORRK_B_MAXERR = 5.0e-3    # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value.
+
+# Threshold on the summed absorption below which a band is treated as transparent by Ccorr_k. 0 (or negative) uses the machine epsilon.
+CCORRK_TRANSPARENT_TOL = 1e-35
+
+# Maximum number of sub-bands per band allowed when fitting k-terms
+CCORRK_N_DIV_MAX = 5000
+
+# Band determination
+BANDS_LONG_WL_SWITCH  = 40.0 * 1000 # nm
+BANDS_SHORT_WL_SWITCH = 400.0 # nm
+BANDS_LONG_FRACTION   = 0.12
+BANDS_SHORT_FRACTION  = 0.07
+BANDS_TMPS            = [(180.0,0.45), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
+
+# Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+MT_CKD_VERSION = "mt_ckd4p3"  
+
+# Replace NaN values in the cross-section data with zeros
+REPLACE_NAN = True  
+
+# Pade fit coefficients for water droplet scattering.
+PADE_FIT_MIN = "1.50000E-06"
+PADE_FIT_MAX = "5.00000E-05" 
+PADE_TEMPERATURE = 250.0 # Reference temperature [K]
+
+def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0, alias="") -> np.ndarray:
     """Choose the best band edges.
 
     Given all the available nu values, calculates the 'best' band edges for a given method. \n
     Methods:
         0 = linspace   \n
         1 = logspace   \n
-        2 = logspace, using a single band to cover long WL \n
+        2 = linspace, using a single band to cover long WL \n
         3 = logspace, using a few linear-spaced bands to cover long WL \n
         4 = piecewise density (linspace - logspace - logspace) \n
+        5 = selected by density of the planck function at given temperature \n
         9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
 
     Parameters
@@ -29,6 +74,8 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Required number of bands
     floor : float
         Restrict nu to be larger than this value
+    alias : str
+        Alias for this spectral file (used for logging and plotting)
 
     Returns
     -------
@@ -36,7 +83,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
         Band edges, ascending [cm-1]
     """
 
-    print("Finding best bands (method=%d)..."%method)
+    log.info("Finding best bands (method=%d)...", method)
 
     # Validate
     if len(nu_arr) < 2:
@@ -58,43 +105,103 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
 
     # Simple case
     if nband == 1:
-        return [numin, numax]
+        return np.array([numin, numax], dtype=float)
 
     # Other cases ...
     if (nband == 2) and (method > 2):
+        log.warning("    Requested nband=2, but method=%d. Switching to method=2 (linear)"%method)
         method = 2
 
-    shrt_cutoff = 1.7e4  # [cm-1] Value where the "short wavelength" region starts.
+    shrt_cutoff = utils.wl2wn(BANDS_SHORT_WL_SWITCH)  # Where the "short wavelength" region starts.
     if (numax < shrt_cutoff) and (method == 4):
+        log.warning("    Requested nu range is entirely in the short WL region. Switching to method=1 (logarithmic)")
         method = 3
 
-    long_cutoff = 300.0 # [cm-1] Value where the "long wavelength" region starts.
+    long_cutoff = utils.wl2wn(BANDS_LONG_WL_SWITCH)  # Where the "long wavelength" region starts.
     if (numin > long_cutoff) and (method in [2,3]):
+        log.warning("    Requested nu range is entirely in the long WL region. Switching to method=0 (linear)")
         method = 1
 
     # Get target bands
     nedges = nband+1
     match method:
         case 0:
+            # linear
             bands = np.linspace(numin, numax, nedges)
         case 1:
+            # logarithmic
             bands = np.logspace(lognumin, lognumax, nedges)
         case 2:
+            # linear, but use a single band to cover the long wavelength region
             bands = np.array([numin, long_cutoff])
-            bands = np.append(bands, np.logspace(np.log10(long_cutoff) , lognumax , nedges-1 )[1:])
+            bands = np.append(bands, np.linspace(long_cutoff, numax, nedges-1)[1:])
         case 3:
-            len_lin = int(nedges*0.15)
+            # logarithmic, but use a few linear-spaced bands to cover the long wavelength region
+            len_lin = int(nedges*BANDS_LONG_FRACTION)
             bands = np.linspace(numin, long_cutoff, len_lin+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), lognumax, nedges-len_lin))
         case 4:
-            len1 = int( max(nedges*0.15, 2) )
-            len3 = int( max(nedges*0.07, 2) )
+            # piecewise density (linspace - logspace - logspace)
+            len1 = int( max(nedges*BANDS_LONG_FRACTION, 2) )
+            len3 = int( max(nedges*BANDS_SHORT_FRACTION, 2) )
             len2 = nedges-len1-len3
             bands = np.linspace(numin, long_cutoff, len1+1)[:-1]
             bands = np.append(bands, np.logspace(np.log10(long_cutoff), np.log10(shrt_cutoff), len2+1)[:-1])
             bands = np.append(bands, np.logspace(np.log10(shrt_cutoff), lognumax, len3))
+        case 5:
+            # selected by density of the planck function at given temperature
+
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(1,1, figsize=(6,4))
+            ax.set_xlabel('Wavenumber (cm⁻¹)')
+            ax.set_ylabel('Intensity')
+            
+            # sum planck functions
+            wfunc_x = np.linspace(numin, numax, 10000)
+            wfunc_y = np.ones_like(wfunc_x) * 1e-10
+            for t, w in BANDS_TMPS:
+                wfunc_y_this = utils.normalise_01(phys.planck(wfunc_x, t)) * w
+                ax.plot(wfunc_x, wfunc_y_this, color='k', lw=0.5, alpha=0.5)
+                wfunc_y += wfunc_y_this
+            wfunc_y = utils.normalise_01(wfunc_y)
+
+            # cumulative distribution
+            wfunc_cumsum = np.cumsum(wfunc_y)
+            wfunc_cumsum = utils.normalise_01(wfunc_cumsum)
+
+            #    plot the planck function to check that the density is correct
+            ax.plot(wfunc_x, wfunc_y, color='k', ls='dashed', lw=1.5)
+            ax.set_ylabel('Co-added planck functions')
+            ax.set_xlim(left=numax, right=numin)
+
+            axr = ax.twinx()
+            axr.plot(wfunc_x, wfunc_cumsum, color='r', lw=1.5, alpha=0.8)
+            axr.set_ylabel('Cumulative Distribution', color='r')
+            axr.tick_params(axis='y', colors='r')
+            axr.set_xlim(left=numax, right=numin)
+            fig.savefig(os.path.join(utils.dirs["output"], f"{alias}plot_planck_density.pdf"), 
+                        dpi=300, bbox_inches='tight')
+
+            #    ensure min/max bands included
+            bands = np.array([numin, numax])
+
+            # calculate other bands by finding the points where the cumulative sum 
+            # of the planck function is equal to a fraction of the total, so that 
+            # the bands are distributed according to the spectral density
+            for i in range(1, nband):
+                target = i / nband
+                idx = np.argmin(np.abs(wfunc_cumsum - target))
+                bands = np.append(bands, wfunc_x[idx])
+            bands = np.sort(bands)
+
+            # ensure length
+            if len(bands) != nedges:
+                raise Exception("Band edges could not be determined for method=5")
 
         case 9:
+            # legacy spectral file (nband must be set to 318)
+            if nband != 318:
+                raise Exception("When method=9 (legacy), you must set nband=318")
             bands = np.concatenate((np.arange(0.0,3000,25),np.arange(3000,11000,50),np.arange(11000,30500,500)))
             bands[0] = 1.0
             numin = bands[0]
@@ -112,15 +219,22 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
             bands_out.append(nu_arr[i-1])  # store band edge
             set_band += 1                  # target nu set to next edge
             dist_last = 9e99
+            lw_sw_flag = ""
+            if utils.wn2wl(bands_out[-1]) > BANDS_LONG_WL_SWITCH:
+                lw_sw_flag = "(LW)"
+            elif utils.wn2wl(bands_out[-1]) < BANDS_SHORT_WL_SWITCH:
+                lw_sw_flag = "(SW)"
             if set_band > 1:
-                print("    band %3d : %.2f - %.2f cm-1     %.2f - %.2f nm"
-                      % (set_band-1, bands_out[-2], bands_out[-1], utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]))
-                      )
+                log.info("    band %3d : %10.3f - %10.3f cm-1     %10.2f - %10.2f nm    %s",
+                            set_band-1,
+                            bands_out[-2], bands_out[-1],
+                            utils.wn2wl(bands_out[-2]), utils.wn2wl(bands_out[-1]),
+                            lw_sw_flag)
         else:
             dist_last = dist
         if (method==9) and (set_band == nband+1):
             break
-    bands_out = np.array(bands_out)
+    bands_out = np.array(bands_out, dtype=float)
 
     suggest = "Try a different method, choose fewer bands, or increase the source resolution"
     if not utils.is_unique(bands_out):
@@ -128,7 +242,7 @@ def best_bands(nu_arr:np.ndarray, method:int, nband:int, floor=1.0) -> np.ndarra
     if not utils.is_ascending(bands_out):
         raise Exception("Best band edges are not ascending! "+suggest)
 
-    print("    done\n")
+    log.info("    done")
     return bands_out
 
 
@@ -206,7 +320,9 @@ def read_band_edges(sfpath:str) -> list:
     return band_edgesm
 
 
-def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatile_list:list, band_edges:list, dry:bool=False):
+def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, 
+                    volatile_list:list, band_edges:list, 
+                    dry:bool=False):
     """Create skeleton spectral file.
 
     Creates a spectral file with meta-data. Does not calculate k-terms or other physical properties.
@@ -233,7 +349,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         Path to skeleton spectral file
     """
 
-    print("Creating skeleton spectral file '%s'"%alias)
+    log.info("Creating skeleton spectral file '%s'", alias)
     skel_path = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     utils.rmsafe(skel_path)
 
@@ -243,8 +359,8 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     numin = band_edges[0]
     numax = band_edges[-1]
     nband = len(band_edges)-1
-    print("    number of bands: %d"%nband)
-    print("    numin , numax: %.2f , %.2f cm-1"%(numin, numax))
+    log.info("    number of bands: %d", nband)
+    log.info("    numin , numax: %.2f , %.2f cm-1", numin, numax)
 
     # Sanitise volatiles
     volatile_list_inp = [str(v) for v in volatile_list]
@@ -254,12 +370,12 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         if v not in list(utils.absorber_id.keys()):
             raise Exception("Volatile %s is not supported by SOCRATES"%v)
         if v in volatile_list:
-            print("    WARNING: duplicate volatile %s"%v)
+            log.warning("    duplicate volatile %s", v)
         else:
             volatile_list.append(v)
     nvols = len(volatile_list)
-    print("    included volatiles (n=%d): "%len(volatile_list) + utils.get_arr_as_str(volatile_list))
-    print("    most significant absorber: %s"%volatile_list[0])
+    log.info("    included volatiles (n=%d): " %len(volatile_list) + utils.get_arr_as_str(volatile_list))
+    log.info("    most significant absorber: %s", volatile_list[0])
 
     # P-T grids for LbL and CIA data
     pt_lbl = os.path.join(utils.dirs["output"], "%s_pt_lbl.dat"%alias); utils.rmsafe(pt_lbl)
@@ -272,9 +388,9 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
     p_write = np.round(p_points * 1.0e5, 3)
     t_write = np.round(t_points, 3)
 
-    print("    number of p,t points: %d"%len(t_write))
-    print("    unique p values [Pa]: "+ utils.get_arr_as_str(np.unique(p_write)))
-    print("    unique t values [K] : "+ utils.get_arr_as_str(np.unique(t_write)))
+    log.info("    number of p,t points: %d", len(t_write))
+    log.info("    unique p values [Pa]: " + utils.get_arr_as_str(np.unique(p_write), fmt="%.2e"))
+    log.info("    unique t values [K] : " + utils.get_arr_as_str(np.unique(t_write), fmt="%.2f"))
 
     # Generate P-T files to be read by Ccorr_k script
     pt_lbl_file = open(pt_lbl, "w+")
@@ -324,7 +440,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         if ((p[0] in volatile_list) and (p[1] in volatile_list)) or (  (p[1] in volatile_list) and  (p[0] in volatile_list) ):
             active_pairs.append(i)
     f.write("%d \n"%len(active_pairs))
-    print("    number of continua: %d"%len(active_pairs))
+    log.info("    number of continua: %d", len(active_pairs))
 
     # Set CIA pairs
     for i in active_pairs:
@@ -362,7 +478,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, volatil
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s' \n"%skel_path)
+    log.info("    done writing to '%s'", skel_path)
     return skel_path
 
 def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
@@ -400,12 +516,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     #
     # </EXAMPLE>
 
-    print("Calculating k-coefficients for '%s' line absorption for '%s'..."%(formula, alias))
-
-    # Parameters
-    max_path = 1.0e1
-    tol_type = 't'
-    nproc = 20
+    log.info("Calculating k-coefficients for '%s' line absorption for '%s'...", formula, alias)
 
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
@@ -440,7 +551,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
             vol_bands.append(i+1)
     iband = [ min(vol_bands) , max(vol_bands)]
     iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]
-    print("    band limits: " + str(iband_revrev))
+    log.info("    band limits: " + str(iband_revrev))
 
     # Open executable file for writing
     exec_file_name = os.path.join(utils.dirs["output"],"%s_make_%s.sh"%(alias,formula)); utils.rmsafe(exec_file_name)
@@ -449,12 +560,15 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write("Ccorr_k")
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
     f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
-    f.write(" -l %s %.3e"%(absid, max_path))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -l %s %.3e"%(absid, CCORRK_MAXPATH))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
-    match tol_type:
-        case 'n': f.write(" -n 20")         # Use this many k-terms
-        case 't': f.write(" -t 5.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-        case 'b': f.write(" -b 1.0e-2")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+    match CCORRK_LBL_TOLTYPE:
+        case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
+        case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+        case 'b': f.write(f" -b {CCORRK_B_MAXERR:.1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        case _: raise Exception("Invalid CCORRK_LBL_TOLTYPE: '%s'"%CCORRK_LBL_TOLTYPE)
+    f.write(" -ns %d"%CCORRK_N_DIV_MAX)  # Maximum number of sub-bands per band allowed when fitting k-terms
 
     f.write(" -s %s"%skel_path)         # (Input) Path to skeleton spectral file (used to provide the spectral bands - will not be overwritten)
     f.write(" +p")                      # Planckian Weighting
@@ -464,34 +578,38 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write(" -m %s"%monitor_path)      # (Output) Pathname of monitoring file.
     f.write(" -L %s"%nc_xsc_path)       # (Input) Pathname of input netCDF file containing the absorption coefficients for each pressure/temperature pair
     f.write(" -sm %s"%mapping_path)     # (Output) Mapping from wavenumber- to g-space and corresponding k-term weights
-    f.write(" -np %s"%nproc)            # Doesn't seem to work for LbL calculation
+    f.write(" -np %s"%CCORRK_NPROC)            # Doesn't seem to work for LbL calculation
     f.write(" \n ")
 
     f.close()
     os.chmod(exec_file_name,0o777)
 
     # Run
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            log.info("    please wait...")
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%kcoeff_path)
+    log.info("    done writing to '%s'", kcoeff_path)
 
     # Check logfile
     with open(logging_path,'r') as hdl:
         logstr = str(hdl.read())
     if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
-        print("-------------------------------------------")
-        print("WARNING: An error may have occurred! Check logfile.")
-        print("-------------------------------------------")
+        log.warning("-------------------------------------------")
+        log.warning("An error may have occurred! Check logfile.")
+        log.warning("-------------------------------------------")
+        raise Exception("Ccorr_k reported an error while calculating LBL k-coefficients for '%s' - check logfile '%s'" % (formula, logging_path))
 
     return kcoeff_path
 
-def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool=False):
+def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool=False,
+                    ):
     """Calculate k-coefficients for continuum absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at the required p,t,nu ranges.
@@ -516,12 +634,6 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         Path to file containing the new k-coefficients
     """
 
-    # Parameters
-    max_path = 1.0e1
-    tol_type = 'b'
-    nproc = 30          # Number of processes
-    nu_cutoff = 2500.0  # Line cutoff [m-1]
-
     # Re-order pair and check if valid
     p_in = [formula_A.strip(),formula_B.strip()]
     pair = get_cia_pair(p_in[0], p_in[1])
@@ -531,7 +643,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     pair_ids = [utils.absorber_id[p] for p in pair]
     pair_str = "%s-%s"%(pair[0],pair[1])
     both_water = bool( (pair[0]=="H2O") and (pair[1]=="H2O"))
-    print("Calculating k-coefficients for '%s' CIA for '%s'..."%(pair_str, alias))
+    log.info("Calculating k-coefficients for '%s' CIA for '%s'...", pair_str, alias)
 
     # Setup file (read) paths
     pt_cia       = os.path.join(utils.dirs["output"], "%s_pt_cia.dat"%alias)
@@ -540,8 +652,8 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s296")
-        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", "mt_ckd3p2_s260")
+        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s296")
+        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s260")
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
@@ -583,19 +695,22 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         iband = [ min(ckd_bands) , max(ckd_bands)]
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so it is printed the same as best_bands)
 
-        print("    Using MT_CKD with band limits: " + str(iband_revrev))
+        log.info("    Using MT_CKD with band limits: " + str(iband_revrev))
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
         f.write(" -R %d %d"%(iband[0], iband[1]))
-        f.write(" -c %.3f"%nu_cutoff)
+        f.write(" -c %.3f"%CCORRK_CIA_CUTOFF)
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
+        f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
-        match tol_type:
-            case 'n': f.write(" -n 10")         # Use this many k-terms
-            case 't': f.write(" -t 1.0e-3")     # Calculate k-terms needed to keep RMS error in the transmission below this value
-            case 'b': f.write(" -b 1.0e-3")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+        match CCORRK_CIA_TOLTYPE:
+            case 'n': f.write(f" -n {CCORRK_N_TERMS:d}")         # Use this many k-terms
+            case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}")     # Calculate k-terms needed to keep RMS error in the transmission below this value
+            case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}")     # Calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+            case _: raise Exception("Invalid CCORRK_CIA_TOLTYPE: '%s'"%CCORRK_CIA_TOLTYPE)
+        f.write(" -ns %d"%CCORRK_N_DIV_MAX)  # Maximum number of sub-bands per band allowed when fitting k-terms
 
         f.write(" -e %s %s"%(mt_ckd_296, mt_ckd_260))
         f.write(" -s %s"%skel_path)
@@ -605,7 +720,7 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
         f.write(" -lm %s"%lbl_map_path)
-        f.write(" -np %s"%nproc)
+        f.write(" -np %s"%CCORRK_NPROC)
         f.write(" \n ")
 
         #   Ccorr_k -F $CONT_PT_FILE \
@@ -621,19 +736,20 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
 
-        print("    Using HITRAN CIA database")
+        log.info("    Using HITRAN CIA database")
 
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
         f.write(" -CIA %s"%db_cia)
         f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -i %.3f"%dnu)
-        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], max_path))
+        f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
 
-        match tol_type:
-            case 'n': f.write(" -n 4")
-            case 't': f.write(" -t 1.0e-3")
-            case 'b': f.write(" -b 1.0e-3")
+        match CCORRK_CIA_TOLTYPE:
+            case 'n': f.write(f" -n {CCORRK_N_TERMS:d}") # this many k-terms
+            case 't': f.write(f" -t {CCORRK_T_RMSERR:.1e}") # calculate k-terms needed to keep RMS error in the transmission below this value
+            case 'b': f.write(f" -b {CCORRK_B_MAXERR:1e}") # calculate k-terms according to where absorption scaling peaks, keeping the maximum transmission error below this value
+            case _: raise Exception("Invalid CCORRK_CIA_TOLTYPE: '%s'"%CCORRK_CIA_TOLTYPE)
 
         f.write(" -s %s"%skel_path)
         f.write(" +p")
@@ -641,28 +757,32 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
         f.write(" -o %s"%kcoeff_path)
         f.write(" -m %s"%monitor_path)
         f.write(" -L %s"%mapping_path)
-        f.write(" -np %d"%nproc)
+        f.write(" -np %d"%CCORRK_NPROC)
         f.write(" \n ")
 
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            log.info("    please wait...")
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%kcoeff_path)
+    log.info("    done writing to '%s'", kcoeff_path)
 
     # Check logfile
     with open(logging_path,'r') as hdl:
-        if "Execution ends" not in str(hdl.read()):
-            print("-------------------------------------------")
-            print("WARNING: An error may have occurred! Check logfile.")
-            print("-------------------------------------------")
+        logstr = str(hdl.read())
+    if ("Execution ends" not in logstr) or ("Failure to converge in" in logstr):
+        log.warning("-------------------------------------------")
+        log.warning("An error may have occurred! Check logfile.")
+        log.warning("-------------------------------------------")
+        raise Exception("Ccorr_k reported an error while calculating CIA k-coefficients for '%s'-'%s' - check logfile '%s'" % (formula_A, formula_B, logging_path))
 
     return kcoeff_path
 
@@ -685,9 +805,6 @@ def calc_waterdroplets(alias:str, dry:bool=False):
         Path to scattering properties fit
     """
 
-    # Parameters
-    weighting_temperature = 250.0
-
     # Check that input files exist
     skel_path    = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     drop_data    = os.path.join(utils.dirs["socrates"], "data", "cloud", "scatter_drop_type5")
@@ -696,7 +813,7 @@ def calc_waterdroplets(alias:str, dry:bool=False):
         if not os.path.exists(f):
             raise Exception("File not found: '%s'"%f)
 
-    print("Calculating water droplet optical properties for '%s'..."%alias)
+    log.info("Calculating water droplet optical properties for '%s'...", alias)
 
     # Output paths
     fit_path       = os.path.join(utils.dirs["output"],"%s_droplet.sct"%     alias); utils.rmsafe(fit_path)
@@ -711,7 +828,7 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     f.write(" -s %s"%skel_path) # Skeleton spectral file
     f.write(" -P 1")            # Moments to be calculated
     f.write(" -t")              # Method for thick averaging
-    f.write(" -p %.2f"%weighting_temperature)               # Planckian weighting, temperature [K]
+    f.write(" -p %.2f"%PADE_TEMPERATURE)               # Planckian weighting, temperature [K]
     f.write(" -f 5 %s %s 1.e3"%(fit_path,monitor_path))     # Fit type (pade=5), output fit file, monitor file, density of material [kg m-3]
     f.write(" %s"%drop_data)    # (Input) Droplet scattering data
     f.write(" \n")
@@ -719,21 +836,30 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     f.close()
     os.chmod(exec_file_name,0o777)
 
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:  # execute using script so that the exact command is stored for posterity
-            print("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            log.info("    please wait...")
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
     time.sleep(1.0)
-    print("    done writing to '%s'\n"%fit_path)
+    log.info("    done writing to '%s'", fit_path)
 
     return fit_path
 
 
 def assemble(alias:str, volatile_list:list, dry:bool=False):
     """Assemble final spectral file.
+
+    Takes in skeleton spectral file and k-coefficients. Adds:
+     - line absorption
+     - continuum absorption
+     - water droplet scattering properties
+
+    Does not add thermal emission, Rayleigh scattering, aerosols.
 
     Parameters
     ----------
@@ -791,8 +917,6 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     #
     # </EXAMPLE>
 
-    success = True
-
     # Check that files exist
     skel_path   = os.path.join(utils.dirs["output"], alias+"_skel.sf")
     for f in [skel_path]:
@@ -800,10 +924,10 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
             raise Exception("File not found: '%s'"%f)
 
     # Write script
-    print("Assembling final spectral file for '%s'..."%alias)
+    log.info("Assembling final spectral file for '%s'...", alias)
     spec_path = os.path.join(utils.dirs["output"], alias+".sf"); utils.rmsafe(spec_path)
-    logging_path   = os.path.join(utils.dirs["output"],"%s_final.log"%    alias); utils.rmsafe(logging_path)
-    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_final.sh"%alias); utils.rmsafe(exec_file_name)
+    logging_path   = os.path.join(utils.dirs["output"],"%s_assemble.log"%    alias); utils.rmsafe(logging_path)
+    exec_file_name = os.path.join(utils.dirs["output"],"%s_make_assemble.sh"%alias); utils.rmsafe(exec_file_name)
     f = open(exec_file_name,'w+')
 
     #    point to input/output spectral files
@@ -813,22 +937,22 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     f.write("%s \n" % spec_path)
 
     #    add line absorption
-    print("    line absorption: ", end='')
     lblcount = 0
+    lbl_included = []
     for i,v in enumerate(volatile_list):
         lbl_path = os.path.join(utils.dirs["output"], "%s_%s_lbl.sf_k"%(alias, v))
         if os.path.exists(lbl_path):
-            print(v+" ", end='')
+            lbl_included.append(v)
             f.write("5 \n")
             if lblcount > 0:
                 f.write("y \n")
             f.write("%s \n"%lbl_path)
             lblcount += 1
-    print("")
+    log.info("    line absorption: " + (" ".join(lbl_included) if lbl_included else "(none)"))
 
     #    add CIA
-    print("    CIA: ", end='')
     cia_count = 0
+    cia_included = []
     for i,p in enumerate(utils.cia_pairs):
         if ((p[0] in volatile_list) and (p[1] in volatile_list)):
 
@@ -837,7 +961,7 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
 
             if os.path.exists(cia_path):
 
-                print(pair_str+" ", end='')
+                cia_included.append(pair_str)
 
                 f.write("19 \n")
                 if cia_count > 0:
@@ -845,32 +969,26 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
                 f.write("%s \n"%cia_path)
 
                 cia_count += 1
-    if cia_count == 0:
-        print("(none)")
-    else:
-        print("")
+    log.info("    CIA: " + (" ".join(cia_included) if cia_included else "(none)"))
 
     #    add water droplets
-    print("    water droplets: ", end='')
     droplet_path = os.path.join(utils.dirs["output"],"%s_droplet.sct"%alias)
     if os.path.exists(droplet_path):
 
         f.write("10 \n")                        # Block 10
         f.write("5 \n")                         # Droplet type
         f.write("%s \n"%droplet_path)           # Fit data
-        f.write("1.50000E-06 5.00000E-05 \n")   # Pade fits
+        f.write(f"{PADE_FIT_MIN} {PADE_FIT_MAX} \n")   # Pade fits
 
-        print("yes")
+        log.info("    water droplets: yes")
     else:
-        print("no")
+        log.info("    water droplets: no")
 
     #    add aerosols
-    print("    aerosols: ", end='')
-    print("(none)")
+    log.info("    aerosols: (none)")
 
     #    add ice
-    print("    ice: ", end='')
-    print("(none)")
+    log.info("    ice: (none)")
 
     #    done
     f.write("-1 \n")
@@ -880,34 +998,49 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
     os.chmod(exec_file_name,0o777)
 
     # Execute script
-    print("    start")
+    log.info("    start")
     if not dry:
         with open(logging_path,'w') as hdl:
-            print("    please wait...")
-            sp = subprocess.run(["bash",exec_file_name], stdout=hdl, stderr=hdl)
+            log.info("    please wait...")
+            cmd = ["bash",exec_file_name]
+            log.debug("    running: %s", " ".join(cmd))
+            sp = subprocess.run(cmd, stdout=hdl, stderr=hdl)
         sp.check_returncode()
 
-    print("    done writing to '%s' \n"%spec_path)
-
+    log.info("    done writing to '%s'", spec_path)
 
     # Check for NaN values
-    with open(spec_path,'r') as hdl:
-        if "NaN" in hdl.read():
-            success = False
-            print("-------------------------------------------")
-            print("WARNING: Spectral file contains NaN values!")
-            print("-------------------------------------------")
+    for ext in ("","_k"):
+        check_path = spec_path + ext
+        contains_nan = False
+        with open(check_path,'r') as hdl:
+            if "NaN" in hdl.read():
+                contains_nan = True
+                log.error("-------------------------------------------")
+                log.error("Assembled spectral file '%s' contains NaN values" % check_path)
+                log.error("-------------------------------------------")
+
+        # Replace NaNs if requested
+        if REPLACE_NAN and contains_nan:
+            log.warning("Replacing NaN value in '%s'" % check_path)
+            with open(check_path,'r') as hdl:
+                lines = hdl.readlines()
+            with open(check_path,'w') as hdl:
+                for line in lines:
+                    if "NaN" in line:
+                        line = line.replace("         NaN","0.000000E+00")
+                    hdl.write(line)
+
 
     # Calculate checksum
-    if success:
-        # spectral file
-        chk_path = os.path.join(utils.dirs["output"], alias+".chk"); utils.rmsafe(chk_path)
-        with open(chk_path,'w') as hdl:
-            hdl.write("%s \n" % utils.checksum(spec_path))
+    # spectral file
+    chk_path = os.path.join(utils.dirs["output"], alias+".chk"); utils.rmsafe(chk_path)
+    with open(chk_path,'w') as hdl:
+        hdl.write("%s \n" % utils.checksum(spec_path))
 
-        # lookup table
-        chk_path = os.path.join(utils.dirs["output"], alias+".chk_k"); utils.rmsafe(chk_path)
-        with open(chk_path,'w') as hdl:
-            hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
+    # lookup table
+    chk_path = os.path.join(utils.dirs["output"], alias+".chk_k"); utils.rmsafe(chk_path)
+    with open(chk_path,'w') as hdl:
+        hdl.write("%s \n" % utils.checksum(spec_path+"_k"))
 
     return spec_path

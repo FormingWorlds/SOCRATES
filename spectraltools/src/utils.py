@@ -1,8 +1,16 @@
 # General utilities
 
 import os
+import logging
+import shutil
+from datetime import datetime
 import numpy as np
 import hashlib
+
+# Version
+__version__ = "1.0.0"
+
+log = logging.getLogger("fwl."+__name__)
 
 # Check that SOCRATES is setup
 if "RAD_DIR" not in os.environ.keys() or (os.environ["RAD_DIR"] is None):
@@ -16,7 +24,7 @@ dirs["data"]   = os.path.join(dirs["tools"]   , "data/" )
 dirs["dace"]   = os.path.join(dirs["data"]    , "dace/" )
 dirs["hitran"] = os.path.join(dirs["data"]  , "hitran/" )
 dirs["exomol"] = os.path.join(dirs["data"]  , "exomol/" )
-dirs["hdf5"]  = os.path.join(dirs["data"]  , "hdf5/" )
+dirs["exocross"]  = os.path.join(dirs["data"]  , "exocross/" )
 dirs["cia"]    = os.path.join(dirs["data"]     , "cia/" )
 dirs["moleculesUV"]    = os.path.join(dirs["tools"]     , "moleculesUV/" )
 
@@ -24,18 +32,16 @@ if not os.path.exists(dirs["output"]):
     raise Exception("Output folder '%s' not found"%dirs["output"])
 
 # Convert wavenumber [cm-1] to wavelength [nm]
-def wn2wl(wn:float) -> float:
-    if wn == 0:
-        return float("inf")
-    else:
-        return 10000000.0 / wn
+def wn2wl(x) -> float:
+
+    x = np.array(x, float)
+    near_zero = np.isclose(x, 0)
+    x[near_zero] = np.inf
+    x[~near_zero] = 10000000.0 / x[~near_zero]
+    return x
 
 # Convert wavelength [nm] to wavenumber [cm-1]
-def wl2wn(wl:float) -> float:
-    if wl == 0:
-        return float("inf")
-    else:
-        return 10000000.0 / wl
+wl2wn = wn2wl  # Inverse function is the same, just swap input/output
 
 # Check iterable is strictly ascending
 def is_ascending(arr):
@@ -52,14 +58,18 @@ def is_unique(arr):
    flat = np.array(arr).flatten()
    return bool( len(np.unique(flat)) == len(flat) )
 
+# Round float to n significant figures
+def round_float_sigfigs(x, n):
+    return np.round(x, -int(np.floor(np.sign(x) * np.log10(abs(x)))) + n)
+
 # Convert all of the values in an array into one long string
-def get_arr_as_str(arr):
-    if type(arr[0]) is float:
-        return " ".join(["%g"%v for v in arr])
+def get_arr_as_str(arr, fmt=r"%g",sep=' '):
+    if type(arr[0]) is float or type(arr[0]) is np.float64:
+        return sep.join([fmt%v for v in arr])
     elif type(arr[0]) is int:
-        return " ".join(["%d"%v for v in arr])
+        return sep.join([fmt%v for v in arr])
     else:
-        return " ".join([str(v) for v in arr])
+        return sep.join([str(v) for v in arr])
 
 # Get item in 'arr' that is numerically closest to 'value'
 def get_closest(value, arr):
@@ -81,7 +91,10 @@ def find_pt_close(arr_p, arr_t, target_p, target_t):
     iclose = np.argmin(dists)
     dclose = dists[iclose]
 
-    return iclose, dclose, arr_p[iclose], arr_t[iclose]
+    best_p = arr_p[iclose]
+    best_t = arr_t[iclose]
+
+    return iclose, dclose, best_p, best_t
 
 # Check if output folder exists
 def check_output_exists():
@@ -90,17 +103,125 @@ def check_output_exists():
 # Sanitise source string
 def sourcesafe(source:str):
     safe = source.strip().lower()
-    if safe not in ["dace", "hitran", "exomol", "direct", "hdf5"]:
+    if safe not in ["dace", "hitran", "exomol", "direct", "exocross"]:
         raise Exception("Invalid source '%s'"% source)
     return safe
 
 # Safely remove a file
 def rmsafe(file:str):
     if file in ["","."]:
-        print("WARNING: an attempt was made to remove the current working directory!")
+        log.warning("an attempt was made to remove the current working directory!")
         return
     if os.path.exists(file):
         os.remove(file)
+
+
+# Normalise 0-1
+def normalise_01(arr):
+    arr = np.array(arr, float)
+    arr -= np.min(arr)
+    arr /= np.max(arr)
+    return arr
+
+# Get the current date and time as a string
+def get_datetime_str():
+    return datetime.now().strftime("%Y%m%dT%H%M%S")
+
+# Get the current user
+def get_user():
+    import getpass
+    return getpass.getuser()
+
+_LOG_FORMATTER = logging.Formatter(
+    fmt="[%(asctime)s %(levelname)7s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+
+
+
+def setup_logger(name:str, date=True, level=logging.INFO) -> str:
+    """Configure logging for a spectraltools entry-point script.
+
+    Adds a console handler (plain, print-like formatting) and a file
+    handler to the root logger, so that log records from every 'src.*'
+    module (each using logging.getLogger(__name__)) are captured. The file
+    handler writes a timestamped log to '<name>.log' in the current working
+    directory.
+
+    Parameters
+    ----------
+    name : str
+        Name of the running script; used only to name the log file.
+    date: bool
+        If True, include timestamps in the log name.
+    level : int
+        Logging level for both handlers.
+
+    Returns
+    -------
+    str
+        Path to the log file created in the current working directory.
+    """
+
+    root = logging.getLogger()
+    root.setLevel(level)
+
+    # Drop any handlers from a previous call in this process
+    for h in list(root.handlers):
+        root.removeHandler(h)
+
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    console.setFormatter(_LOG_FORMATTER)
+    root.addHandler(console)
+
+    if date:
+        name = "%s_%s" % (name, get_datetime_str())
+    logfile = os.path.join(os.getcwd(), "%s.log" % name)
+    filehandler = logging.FileHandler(logfile, mode="w")
+    filehandler.setLevel(level)
+    filehandler.setFormatter(_LOG_FORMATTER)
+    root.addHandler(filehandler)
+
+    return logfile
+
+
+def move_log_to_output(logfile:str, alias:str=None) -> str:
+    """Move a log file (as created by setup_logger) into the output/ folder.
+
+    Parameters
+    ----------
+    logfile : str
+        Path to the log file, as returned by setup_log.
+    alias : str
+        If given, prefixed onto the destination filename (so the copy is
+        matched, and cleaned up on a subsequent run, by the same
+        '<alias>*' glob used elsewhere in the output folder).
+
+    Returns
+    -------
+    str
+        Path to the copied log file inside output/
+    """
+
+    for h in logging.getLogger().handlers:
+        h.flush()
+
+    name = os.path.basename(logfile)
+    if alias:
+        name = "%s_%s" % (alias, name)
+
+    # copy the log file into the output folder
+    dest = os.path.join(dirs["output"], name)
+    shutil.copy2(logfile, dest)
+
+    # try to remove old file
+    if os.path.exists(dest):
+        try:
+            os.remove(logfile)
+        except Exception as e:
+            pass
+    return dest
 
 # Calculate the checksum of a file using the BLAKE2b algorithm
 def checksum(filename:str):
@@ -118,6 +239,24 @@ def checkenv():
         return True
     else:
         raise EnvironmentError("Cannot find SOCRATES executables. Have you sourced set_rad_env?")
+    
+# Get socrates version from file
+def socratesver():
+    ver_file = os.path.join(dirs["socrates"], "version")
+    if not os.path.exists(ver_file):
+        raise Exception("Cannot find SOCRATES version file '%s'"%ver_file)
+    with open(ver_file, "r") as f:
+        ver = f.read().strip()
+    return ver
+
+# Get git hash for this repo
+def git_hash():
+    import subprocess
+    try:
+        hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dirs["tools"]).decode("utf-8").strip()
+    except Exception as e:
+        hash = "unknown"
+    return hash
 
 gas_list = []
 gas_list_pcf = os.path.join(dirs["socrates"], "src", "radiance_core", "gas_list_pcf.F90")
@@ -148,23 +287,24 @@ for i,g in enumerate(gas_list):
 
 # List of valid continuum combinations in SOCRATES/HITRAN
 cia_pairs = [
-    ["H2O","H2O"],
-    ["H2","CH4"],
-    ["H2","H2"],
-    ["H2","H"],
-    ["H2","He"],
-    ["He","H"],
-    ["N2","H2"],
-    ["N2","He"],
-    ["N2","N2"],
-    ["N2","H2O"],
-    ["O2","CO2"],
-    # ["O2","N2"],      # this one shows some strange behaviour
-    ["O2","O2"],
-    ["CO2","CO2"],
-    ["CO2","H2"],
-    ["CO2","He"],
-    ["CO2","CH4"],
-    ["CO2","Ar"],
-    ["CH4","He"]
+    ["H2", "CH4"],
+    ["H2", "H2"],
+    ["H2", "H"],
+    ["H2", "He"],
+    ["He", "H"],
+    ["N2", "H2"],
+    ["N2", "He"],
+    ["N2", "N2"],
+    ["N2", "H2O"],
+    ["O2", "CO2"],
+    # ["O2", "N2"], # shows strange behaviour
+    ["O2", "O2"],
+    ["CO2", "CO2"],
+    ["CO2", "H2"],
+    ["CO2", "He"],
+    ["CO2", "CH4"],
+    ["CO2", "Ar"],
+    ["CH4", "He"],
+    ["CH4", "Ar" ],
+    ["CH4", "CH4"],
 ]

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # Download CIA databases from HITRAN website
 
+import logging
 import requests
 import os
 
 import src.utils as utils
+
+log = logging.getLogger("fwl."+__name__)
 
 def main():
 
@@ -44,7 +47,7 @@ def main():
     # Download the files
     flag = 0
     for p in file_map.keys():
-        print("Downloading %s database"%p)
+        log.info("Downloading %s database", p)
 
         succ = False
 
@@ -62,11 +65,11 @@ def main():
                 with open(out, 'wb') as file:
                     file.write(response.content)
                 succ = True
-                print(f"    obtained from {src}")
+                log.info("    obtained from %s", src)
                 break
 
         if not succ:
-            print("    failed. Status:", response.status_code)
+            log.warning("    failed. Status: %s", response.status_code)
             flag += 1
 
     return flag
@@ -74,7 +77,8 @@ def main():
 
 
 if __name__ == "__main__":
+    utils.setup_logger("Tdownload_cia")
     flag = main()
-    print("Goodbye")
+    log.info("Goodbye")
     exit(flag)
 

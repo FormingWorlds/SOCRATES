@@ -30,6 +30,8 @@ CTN_ADJUST=n
 FRN_INCLUDE=n
 GAS=0
 FIT_TYPE=$IP_CK_NONE
+TRANSPARENT_TOL=0
+N_DIV_MAX=999999
 #
 while [ $# -gt 0 ]
 do case $1 in
@@ -65,6 +67,8 @@ do case $1 in
       -o) OUT_FILE=$2 ; shift 2 ;;
       -t) FIT_TYPE=$IP_CK_TOL ; TOL=$2 ; shift 2 ;;
       -b) FIT_TYPE=$IP_CK_BIN ; TOL=$2 ; shift 2 ;;
+      -tt) TRANSPARENT_TOL=$2 ; shift 2 ;;
+      -ns) N_DIV_MAX=$2 ; shift 2 ;;
       -r) REF_PT_FILE=$2 ; shift 2 ;;
       -p) SCALE_FNC=$IP_SCALE_POWER_LAW ; shift ;;
       -q) SCALE_FNC=$IP_SCALE_POWER_QUAD ; shift ;;
@@ -155,6 +159,10 @@ if [ -z "$CONT_DATA" ] && [ "$SELF_CF" ]
 else
   echo n >> /tmp/ck.$$
 fi
+#
+# Tolerance below which a band is treated as transparent.
+#
+echo $TRANSPARENT_TOL >> /tmp/ck.$$
 #
 # Actual gas
 #
@@ -263,9 +271,11 @@ fi
 if [ "$LINE_DATA" ] || [ "$CONT_DATA" ]
   then echo $FIT_TYPE >> /tmp/ck.$$
        case $FIT_TYPE in
-         $IP_CK_TOL) echo $TOL >> /tmp/ck.$$ ;;
+         $IP_CK_TOL) echo $TOL >> /tmp/ck.$$
+              echo $N_DIV_MAX >> /tmp/ck.$$ ;;
          $IP_CK_FIXED_N) echo $NUM_K >> /tmp/ck.$$ ;;
-         $IP_CK_BIN) echo $TOL >> /tmp/ck.$$ ;;
+         $IP_CK_BIN) echo $TOL >> /tmp/ck.$$
+              echo $N_DIV_MAX >> /tmp/ck.$$ ;;
        esac
 fi
 if [ $FIT_TYPE -ne $IP_CK_NONE ] ; then

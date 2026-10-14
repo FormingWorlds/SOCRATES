@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 # Interpolate nu,k values for a series of p,t points from the DACE database
 
+import logging
 import src.utils as utils
 import src.dace as dace
 import numpy as np
+
+log = logging.getLogger("fwl."+__name__)
 
 def main():
     # --- PARAMETERS ---
 
     # Intended target pressures [bar]
-    p_arr = np.logspace(-6, 3, 5)
+    # p_arr = np.logspace(-6, 3, 5)
+
+    p_arr = [1e-3, 1e-2]
 
     # Intended target temperatures [K]
-    t_arr = np.linspace(60.0, 2900.0, 5) - 5.0
-    t_arr = np.append(t_arr, [75.0, 100.0])
+    # t_arr = np.linspace(60.0, 2900.0, 5) - 5.0
+    # t_arr = np.append(t_arr, [75.0, 100.0])
+
+    t_arr = [100.0, 300.0]
 
     # Uncomment one of the blocks below or write your own
     #isotopologue = '1H2-16O'
@@ -28,11 +35,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/H2/"
 
-    #isotopologue = '12C-16O'
-    #linelist = 'HITEMP2019'
-    #linelist_version = 1.0
-    #t_lims = (50.0, 8900.0)
-    #outdir = utils.dirs["dace"] + "/CO/"
+    isotopologue = '12C-16O'
+    linelist = 'HITEMP2019'
+    linelist_version = 1.0
+    t_lims = (50.0, 8900.0)
+    outdir = utils.dirs["dace"] + "/CO/"
 
     #isotopologue = '12C-16O2'
     #linelist = 'UCL-4000'
@@ -94,11 +101,11 @@ def main():
     #t_lims = (50.0, 2900.0)
     #outdir = utils.dirs["dace"] + "/HCN/"
 
-    isotopologue = '32S-16O2'
-    linelist = 'ExoAmes'
-    linelist_version = 2.0
-    t_lims = (50.0, 1900.0)
-    outdir = utils.dirs["dace"] + "/SO2/"
+    # isotopologue = '32S-16O2'
+    # linelist = 'ExoAmes'
+    # linelist_version = 2.0
+    # t_lims = (50.0, 1900.0)
+    # outdir = utils.dirs["dace"] + "/SO2/"
 
     # -------------------
     # Na, NaO, Fe, FeO, FeH, K, SiO, SiO2, PH3, provided already by SOCRATES
@@ -113,9 +120,8 @@ def main():
     # --- EXECUTION ---
 
     # Print
-    print("Target pressures [K]:      " + str(p_arr))
-    print("Target temperatures [bar]: " + str(t_arr))
-    print(" ")
+    log.info("Target pressures [K]:      " + str(p_arr))
+    log.info("Target temperatures [bar]: " + str(t_arr))
 
     # Check requests against database temperature limits
     t_req = []; t_drp = []
@@ -124,18 +130,19 @@ def main():
             t_req.append(t)  # requested temperatures
         else:
             t_drp.append(t)  # dropped temperatures
-    print("Downloading files from DACE database...")
+    log.info("Downloading files from DACE database...")
     # Download files
     dace.download(isotopologue, linelist, linelist_version, p_arr, t_req, outdir)
 
     # Extend grid to temperatures outside of database range (if required)
-    dace.extend(outdir, t_drp)
+    # dace.extend(outdir, t_drp)
 
     # -----------------
     return
 
 if __name__ == "__main__":
-    print("Hello")
+    utils.setup_logger("Tinterpolate_dace")
+    log.info("Hello")
     main()
-    print("Goodbye")
+    log.info("Goodbye")
     exit(0)

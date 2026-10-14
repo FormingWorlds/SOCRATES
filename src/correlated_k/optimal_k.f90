@@ -43,7 +43,7 @@ SUBROUTINE optimal_k &
 !   Weightings for monochromatic absorption
   REAL  (RealK), Intent(IN) :: integ_wgt
 !   Integral of the weighting function
-  REAL  (RealK), Intent(IN) :: k_mean
+  REAL  (RealK), Intent(INOUT) :: k_mean
 !   Simple mean absorption coefficient for the band
   REAL  (RealK), Intent(IN) :: tol
 !   Tolerance required of the fit
@@ -150,11 +150,29 @@ SUBROUTINE optimal_k &
     ENDDO
   END IF
   DEALLOCATE(wgt_trans)
+
+
+  ! Ensure k_mean is finite
+  IF  (.NOT. (k_mean .ge. 0.0_RealK ) ) THEN
+    write(iu_err, '(A, E10.3)') &
+      'Negative or non-finite k_mean value ', k_mean
+    k_mean=0.0_RealK
+  ENDIF
 !
 ! Carry out Newton-Raphson iteration to mimimize the squared
-! error in the fit, initializing with the lowest absorption.
-  k_opt=MINVAL(k(1:n_nu))
+! error in the fit
   iter=0
+
+  ! Initializing with the lowest absorption.
+  k_opt=MINVAL(k(1:n_nu))
+  ! write(iu_err, '(A, E10.3)') &
+  !   '    initial k_opt set to minimum k value ', k_opt
+
+  ! Initializing with the mean absorption coefficient.
+  ! k_opt=k_mean
+
+  ! Initializing with the highest absorption.
+  ! k_opt=MAXVAL(k(1:n_nu))
 
 ! Calculate mid-point k value:
 !  CALL map_heap_func(k(1:n_nu), kmap)
@@ -191,8 +209,9 @@ SUBROUTINE optimal_k &
         k_opt = k_mean
         ierr = i_warning
       ELSE
-        WRITE(iu_err, '(/A)') &
-          'Error: Failure to converge in Newton-Raphson iteration.'
+        WRITE(iu_err, '(/A, I4)') &
+          'Error: Failure to converge in Newton-Raphson iteration. Iter=', &
+          iter
         ! If failed to converge again then abort
         ierr = i_abort_calculation
         RETURN
@@ -235,10 +254,16 @@ SUBROUTINE optimal_k &
         k_opt = k_mean
         ierr = i_warning
       ELSE
-        WRITE(iu_err, '(/A,A)') 'Warning: ', &
-          'Ill-conditioned division in Newton-Raphson iteration.'
+        WRITE(*, '(/A,A,A,E10.2,A)') 'Warning: ', &
+          'Ill-conditioned division in Newton-Raphson iteration.', &
+          ' Using k_mean=', k_mean, ' as the optimal value.' 
         ! If failed to converge again then use k_mean
         k_opt = k_mean
+        if (.NOT. (k_opt .ge. 0.0_RealK)) then
+          WRITE(*, '(A, E10.3)') &
+            'Negative or non-finite k_opt value ', k_opt
+          k_opt=0.0_RealK
+        endif
         error=0.0_RealK
         ierr=i_normal
         EXIT

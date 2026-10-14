@@ -11,7 +11,7 @@ SUBROUTINE set_g_point_90 &
 (n_nu, nu_inc, kabs, wgt, integ_wgt, &
  i_ck_fit, tol, max_path, &
  l_kabs_wgt, kabs_wgt, l_wgt_scale_sqrt, u_wgt_scale, &
- nd_k_term, iu_monitor, &
+ nd_k_term, n_div_max, iu_monitor, &
  n_k, w_k, k_opt, k_ave, &
  ig, ierr)
 !
@@ -41,6 +41,11 @@ SUBROUTINE set_g_point_90 &
 !   Unit number for monitoring output
   INTEGER, Intent(IN) :: nd_k_term
 !   Size allocated for k-terms
+  INTEGER, Intent(IN) :: n_div_max
+!   Maximum number of sub-bands (divisions of the band in log(k)) allowed
+!   when fitting k-terms to the required tolerance. The fit will be
+!   truncated at this number of sub-bands even if the tolerance has not
+!   been reached.
   INTEGER, Intent(IN) :: i_ck_fit
 !   Type of correlated-k fit required
   INTEGER, Intent(INOUT) :: ig(0:nd_k_term)
@@ -282,6 +287,14 @@ SUBROUTINE set_g_point_90 &
         WRITE(iu_err, '(/A)') &
           '*** Warning: Too many terms are required for a ' &
           //'fit to the requested accuracy'
+        EXIT
+      ELSE IF (n_div >= n_div_max) THEN
+        WRITE(iu_monitor, "(a,i5,a)") &
+          'Maximum number of sub-bands (', n_div_max, &
+          ') reached before the fit to tolerance was obtained.'
+        WRITE(iu_err, '(/A)') &
+          '*** Warning: Maximum number of sub-bands reached before a ' &
+          //'fit to the requested accuracy was obtained'
         EXIT
       ELSE
         n_div=n_div+1

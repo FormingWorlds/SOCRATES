@@ -151,6 +151,11 @@ PROGRAM corr_k
   REAL  (RealK) :: max_path_wgt
 !   Maximum pathlength to be considered for the absorber used for weighting
 !   in continuum transmissions
+  REAL  (RealK) :: transparent_fit_tol
+!   Threshold on the summed lbl/xsc/hitran absorption below which a band
+!   is treated as transparent. If not positive, EPSILON is used instead.
+  INTEGER :: n_div_max
+!   Maximum number of sub-bands allowed per band when fitting k-terms
 !
 ! Continuum data:
   REAL  (RealK) :: umin_c
@@ -227,6 +232,7 @@ PROGRAM corr_k
        include_instrument_response, filter, &
        i_line_prof_corr, l_self_broadening, n_gas_frac, gas_frac, &
        i_ck_fit, tol, max_path, max_path_wgt, &
+       transparent_fit_tol, n_div_max, &
        nd_k_term, n_k, w_k, k_ave, k_opt, &
        k_opt_self, k_opt_frn, &
        i_type_residual, i_scale_function, scale_vector, &
@@ -262,6 +268,8 @@ PROGRAM corr_k
       REAL  (RealK), Intent(IN) :: tol
       REAL  (RealK), Intent(IN) :: max_path
       REAL  (RealK), Intent(IN) :: max_path_wgt
+      REAL  (RealK), Intent(IN) :: transparent_fit_tol
+      INTEGER, Intent(IN) :: n_div_max
       REAL  (RealK), Intent(IN) :: line_cutoff
       LOGICAL, Intent(IN) :: l_ckd_cutoff
       INTEGER, Intent(IN) :: n_pt_pair
@@ -523,7 +531,8 @@ PROGRAM corr_k
     include_h2o_foreign_continuum, &
     l_use_h2o_frn_param, l_use_h2o_self_param, l_cont_line_abs_weight, &
     n_selected_band, list_band, &
-    i_ck_fit, tol, max_path, max_path_wgt, n_k, nu_inc_0, line_cutoff, &
+    i_ck_fit, tol, max_path, max_path_wgt, &
+    transparent_fit_tol, n_div_max, n_k, nu_inc_0, line_cutoff, &
     l_ckd_cutoff, l_scale_pT, i_type_residual, i_scale_fnc, p_ref, t_ref, &
     l_load_map, l_load_wgt, l_save_map, file_map, &
     i_line_prof_corr, l_self_broadening, n_gas_frac, gas_frac, npd_gas_frac, &
@@ -616,6 +625,7 @@ PROGRAM corr_k
     include_instrument_response, filter, &
     i_line_prof_corr, l_self_broadening, n_gas_frac, gas_frac, &
     i_ck_fit, tol, max_path, max_path_wgt, &
+    transparent_fit_tol, n_div_max, &
     npd_k_term, n_k, w_k, k_ave, k_opt, &
     k_opt_self, k_opt_frn, &
     i_type_residual, i_scale_fnc, scale, scale_cont, &

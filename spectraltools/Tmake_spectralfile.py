@@ -4,44 +4,67 @@
 # Import local files
 import src.utils as utils
 import src.spectral as spectral
-import src.dace as dace
 import src.cross as cross
 import src.phys as phys
+import src.ptf as ptf
 import src.netcdf as netcdf
+import logging
 import os
 import glob
 import numpy as np
 import time
 
+log = logging.getLogger("fwl."+__name__)
+
+
 def main():
 
+    log.info("    SOCRATES directory: %s", utils.dirs["socrates"])
+    log.info("    SOCRATES version: %s", utils.socratesver())
+    log.info("    SOCRATES git hash: %s", utils.git_hash())
+
     # ------------ PARAMETERS ------------
-    source = "hdf5"         # Source database (DO NOT CHANGE)
-    vols = ["CH4", "CO", "CO2", "H2", "H2O", "H2S", "HCN", "N2", "N2O", "NH3", "O3", "SO2"]   # List of gases
-    alias = "Test"          # Alias for this spectral file
+    source = "exocross"         # Source database 
+    vols = ["SiO", "O2"]#, "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 48              # Number of wavenumber bands
-    drops = True            # Include water droplet scattering?
-    method = 3              # Band selection method
-    numax = 100000.0        # Clip to this maximum wavenumber [cm-1]
-    numin = 1.0             # Clip to this minimum wavenumber [cm-1]
-    dnu   = 1.0             # Downsample to this wavenumber resolution [cm-1]
-    preNC = False           # Use pre-existing netCDF files in output/ if they are found
+    nband = 128              # Number of wavenumber bands
+    drops = False            # Include water droplet scattering?
+    method = 5              # Band selection method
+    numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
+    numin = 10.0             # Clip to this minimum wavenumber [cm-1]
+    dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
+    preNC = True           # Use pre-existing netCDF files in output/ if they are found
+
+    # band selection methods (wavenumber space):
+    # 0 = linspace   \n
+    # 1 = logspace   \n
+    # 2 = linspace, using a single band to cover long WL \n
+    # 3 = logspace, using a few linear-spaced bands to cover long WL \n
+    # 4 = piecewise density (linspace - logspace - logspace) \n
+    # 5 = selected by density of the planck function at given temperatures \n
+    # 9 = match legacy spectral file (IN THIS CASE nband MUST BE SET TO 318)
+
+
     xaxis = 'wavenumber'    # Plotting axis: wavelength [nm] or wavenumber [cm-1]
-    lim = [None, None]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
+    lim = [100.0, numax]      # Limits for the x-axis, example: if xaxis = wavenumber: [None, 100000], if xaxis = wavelength: [None, 1000], the whole spectra: [None, None]
 
-    #tgt_p = np.logspace(-3.5, 3, 30)
-    #tgt_t = np.linspace(100.0, 2895.0, 30)
+    # Target pressures [bar]
+    tgt_p = [
+        -5.0, -4.0, 
+        *np.arange(-3.5, 4.5, 0.5)
+    ]
+    tgt_p = np.array([utils.round_float_sigfigs(10**p, 1) for p in tgt_p], dtype=np.float64)
 
-    tgt_p = np.logspace(-3.5, 3, 10)
-    tgt_t = np.linspace(100.0, 2895.0, 10)
+    # Target temperatures [K]
+    tgt_t = np.array([
+        25.0,
+        *np.arange(100, 350, 25.0),
+        *np.arange(350, 1000, 50.0),
+        *np.arange(1000, 4100, 100.0),
+        4500, 5000.0
+    ], dtype=np.float64)
 
-    # P_grid_low  = np.logspace(-6, -2, num=5, endpoint=False)
-    # P_grid_high = np.logspace(-2, 3, num=45, endpoint=True)
-    # tgt_p      = np.concatenate((P_grid_low, P_grid_high), axis=0)
-    # tgt_t = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0, 1200.0, 1400.0, 1600.0, 1800.0, 2000.0, 2250.0, 2500.0, 2750.0, 2900.0]
-
-    # ------------------------------------
     # ------------ EXECUTION -------------
     # Check volatile names
     for i in range(len(vols)):
@@ -61,7 +84,8 @@ def main():
     # ===========
     # Remove content of output folder under this alias (optionally including netCDFs)
     for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
-        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", ".sct", "_map", "_lbl"]
+        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", 
+                  ".sct", "_map", "_lbl", ".pdf", ".png", ".csv", "_map.nc"]
         if not preNC:
             remove.append(".nc")
         for p in remove:
@@ -71,45 +95,53 @@ def main():
 
     # ===========
     # Print params
-    print("Parameters")
-    print("    source: %s"%source)
-    print("    alias:  %s"%alias)
-    print("    vols:   %s"%utils.get_arr_as_str(vols))
-    print("    nvols:  %d"%len(vols))
-    print("    nband:  %d"%nband)
-    print("    numin, numax, dnu : %.1f, %g, %.2f cm-1"%(numin, numax, dnu))
-    print(" ")
+    log.info("")
+    log.info("Parameters")
+    log.info("    source: %s", source)
+    log.info("    alias:  %s", alias)
+    log.info("    vols:   %s", utils.get_arr_as_str(vols))
+    log.info("    nvols:  %d", len(vols))
+    log.info("    nband:  %d", nband)
+    log.info("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1", numin, numax, dnu)
+    log.info("    drops:  %s", str(drops))
+    log.info("    method: %d", method)
+    log.info("    n_tp:   %d", len(tgt_p)*len(tgt_t))
+    log.info("    tgt_p:  %s", utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
+    log.info("    tgt_t:  %s", utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
 
 
     # ===========
     # Test each volatile for its numin, numax, pmin, pmax, tmin, tmax
-    print("Verifying domain of input data")
-    #     pressure grids are always the same
-    if np.amin(tgt_p) < 1.0e-8:
-        raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
-    if np.amax(tgt_p) > 1.0e3:
-        raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
+    log.info("")
+    log.info("Verifying domain of input data")
+    if source == "dace":
+        if np.amin(tgt_p) < 1.0e-8:
+            raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
+        if np.amax(tgt_p) > 1.0e3:
+            raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
 
     #     check files directly
     dat_numin, dat_numax = np.inf, -np.inf
     dat_tmin, dat_tmax = np.inf, -np.inf
     for v in vols:
-        print("    checking %s"%v)
+        log.info("    checking %s", v)
         #     read first file
         formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
-        temp_xc.read(UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot(alias, UV, xaxis, lim, yunits=0)
+        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
+        temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
+        temp_xc.plot([None,None], 
+                     show=False, quiet=True, 
+                     alias=alias+"_", pad_xlim=5e3)
 
         #     get numin, numax
         vol_numin = np.amin(temp_xc.get_nu())
         vol_numax = np.amax(temp_xc.get_nu())
         dat_numin = min(dat_numin, vol_numin)
         dat_numax = max(dat_numax, vol_numax)
-        print("        numin, numax = %.1f, %.1f cm-1"%(vol_numin, vol_numax))
+        log.info("        numin, numax = %.1f, %.1f cm-1", vol_numin, vol_numax)
 
         #     get tmin, tmax
-        _,at,_ = dace.list_all_ptf(formula_path)
+        _,at,_ = ptf.list_all_ptf(source, v, quiet=False)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
 
@@ -122,80 +154,74 @@ def main():
     #     set new nu range
     numin = max(numin, dat_numin)
     numax = min(numax, dat_numax)
-    print("    numin, numax set to %.1f, %.1f cm-1 \n"%(numin, numax)) # Set the nu limits to encompass all volatile nus (least restrictive)
+    log.info("    numin, numax set to %.1f, %.1f cm-1", numin, numax) # Set the nu limits to encompass all volatile nus (least restrictive)
 
     # ===========
-    # Determine p,t grid using last of the absorbers
-    formula_path = os.path.join(utils.dirs[source], vols[-1]+"/")
-    arr_p, arr_t, arr_f = dace.map_ptf(formula_path, tgt_p , tgt_t)
+    # Determine flattened p,t grid using last of the absorbers
+    arr_p, arr_t  = ptf.best_pt(source, vols[-1], tgt_p, tgt_t)
 
+    # Ensure pressure grid is ascending and unique
+    # if not utils.is_ascending(arr_p):
+    #     raise Exception("Pressure grid is not strictly ascending!")
+    # if not utils.is_unique(arr_p):
+    #     raise Exception("Pressure grid is not unique (contains repeated values)!")
 
     # ===========
-    # Get nu array for required range and resolution (also using last absorber)
-    nu_arr = cross.xsec(vols[-1], source, dace.list_files(formula_path)[0]).read(UV, numin=numin, numax=numax, dnu=dnu).get_nu()
+    # Get nu array for required range and resolution (first file from last absorber)
+    nu_file = ptf.first_file(source, vols[-1])
+    nu_samp = cross.xsec(vols[-1], # final volatile
+                         source, nu_file)
+    nu_arr = nu_samp.read().get_nu()
 
     # ===========
     # Determine bands
-    band_edges = spectral.best_bands(nu_arr, method, nband)
-
+    log.info("")
+    band_edges = spectral.best_bands(nu_arr, method, nband, alias=alias+"_")
 
     # ===========
     # Write skeleton file and PT grids
+    log.info("")
     spectral.create_skeleton(alias, arr_p, arr_t, vols, band_edges)
 
 
     # ===========
     # Write netCDFs containing absorption spectra
+    log.info("")
     nc_paths = {}
     dnu_last = 1.000
     for iv,v in enumerate(vols):
         # For this volatile...
 
-        # Output path
+        # Determine output path
         ncp = os.path.join(utils.dirs["output"] , alias+"_"+v+".nc")
         nc_paths[v] = ncp
-        if os.path.exists(ncp) and preNC:
-            print("WARNING: Using pre-existing netCDF file for %s lbl absorption. Any configuration mismatch here will lead to issues."%v)
-            continue
 
         # Get numin, numax for this volatile
-        formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, dace.list_files(formula_path)[0])
-        temp_xc.parse_binname()
-        str_numin = "%05d"%int(temp_xc.numin)
-        str_numax = "%05d"%int(temp_xc.numax)
+        formula_path = ptf.get_formula_path(source, v)
+        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
+        temp_xc.read()
+        temp_xc.plot([numin, numax], show=False, quiet=False, 
+                     band_edges=band_edges,
+                     alias=alias+"_", pad_xlim=5e3)
+        numin = max(numin, np.amin(temp_xc.get_nu()))
+        numax = min(numax, np.amax(temp_xc.get_nu()))
 
-        # Get files for this volatile using the pt->f map from vols[-1]
-        # This is for performance reasons, but is also critical for ensuring that the volatiles all use the same p,t points
-        files = []
-        print("Using pt->f map from %s for %s"%(vols[-1],v))
-        for f in arr_f:
-            # Try simply substituting volatile name and wavenumber range
-            ftry = list(str(f).replace(vols[-1], v))
-            ftry[-26:-21] = str_numin[:]
-            ftry[-20:-15] = str_numax[:]
-            ftry = "".join(ftry)
+        # Can skip PTF mapping?
+        if os.path.exists(ncp) and preNC:
+            log.warning("Using pre-existing netCDF file for %s lbl absorption"%v)
+            log.warning("    Configuration mismatch here will lead to issues")
+            continue
+        
+        # Map files, finding the closest p,t point to each target p,t point
+        vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
 
-            if os.path.exists(ftry):
-                files.append(ftry)
-                continue
+        # Write these p,t,f to csv file for reference
+        ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
 
-            # Try also substituting "out"<->"itp"
-            if "Itp" in ftry:
-                ftry = ftry.replace("Itp", "Out")
-            else:
-                ftry = ftry.replace("Out", "Itp")
-            if os.path.exists(ftry):
-                files.append(ftry)
-                continue
-
-            raise Exception("Could not find bin file for '%s' corresponding to '%s'"%(v,f))
-
-        if (len(files) != len(arr_f)):
-            raise Exception("Could not map '%s' files to '%s' files" % (v, vols[-1]))
-
-        # Write netCDF from BIN files
-        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source, arr_p, arr_t, files, dnu=dnu, numin=numin, numax=numax)
+        # Write netCDF from source files
+        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source, 
+                                               arr_p, arr_t, vol_f, 
+                                               dnu=dnu, numin=numin, numax=numax)
 
         # Check resolution
         if (iv > 0) and (not np.isclose(dnu_last, dnu_this)):
@@ -206,6 +232,7 @@ def main():
 
     # ===========
     # Calculate k-coefficients from netCDF
+    log.info("")
     for i,f1 in enumerate(vols):
         spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
         for f2 in vols[i:]:
@@ -214,25 +241,33 @@ def main():
 
     # ===========
     # Calculate water droplet properties
+    log.info("")
     if drops and ("H2O" in vols):
         spectral.calc_waterdroplets(alias)
 
 
     # ===========
     # Assemble final spectral file
+    log.info("")
     spectral.assemble(alias, vols)
 
     # ------------------------------------
-    return
+    return alias
 
 
 if __name__ == "__main__":
+    logfile = utils.setup_logger("Tmake_spectralfile")
     utils.checkenv()
     start = time.perf_counter()
-    print("Hello\n")
-    main()
+    log.info("Spectral Tools Wizard (version %s)", utils.__version__)
+    alias = main()
     end = time.perf_counter()
     elapsed = (end-start)
-    print('Time elapsed: ', elapsed//3600, 'hours', "%.2f"%((elapsed%3600)//60), 'minutes.')
-    print("Goodbye")
+    log.info("Time elapsed: %d hours %.2f minutes.", elapsed//3600, (elapsed%3600)//60)
+
+    # Copy this run's log into output folder
+    out_logfile = utils.move_log_to_output(logfile, alias=alias)
+    log.info("Copied log file to '%s'", out_logfile)
+
+    log.info("Goodbye")
     exit(0)

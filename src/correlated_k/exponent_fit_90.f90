@@ -90,8 +90,10 @@ SUBROUTINE exponent_fit_90 &
          (ABS(d_sq_error/d2_sq_error) < EPSILON(d_sq_error)) ) THEN
       EXIT
     ELSE IF (iteration > np_kopt_max_iter) THEN
-      WRITE(iu_err, '(/A)') &
-        'Failure to converge in Newton-Raphson iteration.'
+      WRITE(iu_err, '(/A, I4, A)') &
+        'Failure to converge in Newton-Raphson iteration. Iters=', &
+        iteration, &
+        '. Aborting calculation.'
       ierr=i_abort_calculation
       RETURN
     ELSE IF (ABS(d2_sq_error) > EPSILON(d2_sq_error)) THEN
@@ -115,8 +117,9 @@ SUBROUTINE exponent_fit_90 &
         k = k * 0.5_RealK
       ENDIF
     ELSE
-      WRITE(iu_err, '(/A)') &
-        'Ill-conditioned division in Newton-Raphson iteration.'
+      WRITE(iu_err, '(/A, A)') &
+        'Ill-conditioned division in Newton-Raphson iteration.', &
+        ' Aborting calculation.'
       ierr=i_abort_calculation
       RETURN
     ENDIF

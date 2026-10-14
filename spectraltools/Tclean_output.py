@@ -1,19 +1,22 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 # Remove all files in output folder
 
-# Import local files 
+# Import local files
 import src.utils as utils
+import logging
 import os
 import glob
 import argparse
 import time
 
+log = logging.getLogger("fwl."+__name__)
+
 # Main function
 def main(alias:str, rm_netcdf:bool, dryrun:bool):
     # Inform
-    print("Removing files for '%s'"%alias)
+    log.info("Removing files for '%s'", alias)
     if rm_netcdf:
-        print("(Will remove NetCDF files)")
+        log.info("(Will remove NetCDF files)")
 
     # In case user changes mind
     time.sleep(5.0)
@@ -40,22 +43,23 @@ def main(alias:str, rm_netcdf:bool, dryrun:bool):
     for f in all_abs:
         if (f not in net_abs) or rm_netcdf:
             if dryrun:
-                print("    dry run not removing '%s'"%f)
+                log.info("    dry run not removing '%s'", f)
             else:
                 os.remove(f)
 
-    print("Done")
+    log.info("Done")
 
 
 # Run main function
 if __name__ == "__main__":
+    utils.setup_logger("Tclean_output")
 
     parser = argparse.ArgumentParser(description='Remove files in output folder')
     parser.add_argument('alias',    type=str, help='Alias used for spectral file generation')
     parser.add_argument('--netcdf', action='store_true', help='Also remove NetCDF files')
     parser.add_argument('--dry',    action='store_true', help='Dry run (do not remove files)')
     args = parser.parse_args()
-    
+
     main(args.alias, args.netcdf, args.dry)
 
 
