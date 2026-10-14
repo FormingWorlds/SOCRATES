@@ -9,8 +9,11 @@ on:
       - 'docs/**'
       - '.github/workflows/build-docs-pdf.yaml'
   pull_request:
+    branches:
+      - main
     paths:
       - 'docs/**'
+      - 'version'
       - '.github/workflows/build-docs-pdf.yaml'
 
 jobs:
@@ -19,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install LaTeX dependencies
         run: |
@@ -44,7 +47,7 @@ jobs:
         run: bash lx
 
       - name: Upload documentation PDFs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docs-pdf
           if-no-files-found: error
