@@ -24,13 +24,13 @@ def main():
     log.info("    SOCRATES git hash: %s", utils.git_hash())
 
     # ------------ PARAMETERS ------------
-    source = "exocross"         # Source database 
-    vols = ["SiO", "O2"]#, "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    source = "exocross"         # Source database
+    vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 128              # Number of wavenumber bands
+    nband = 32              # Number of wavenumber bands
     drops = False            # Include water droplet scattering?
-    method = 5              # Band selection method
+    method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
@@ -51,7 +51,7 @@ def main():
 
     # Target pressures [bar]
     tgt_p = [
-        -5.0, -4.0, 
+        -5.0, -4.0,
         *np.arange(-3.5, 4.5, 0.5)
     ]
     tgt_p = np.array([utils.round_float_sigfigs(10**p, 1) for p in tgt_p], dtype=np.float64)
@@ -84,7 +84,7 @@ def main():
     # ===========
     # Remove content of output folder under this alias (optionally including netCDFs)
     for f in glob.glob(utils.dirs["output"]+"/%s*"%alias):
-        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k", 
+        remove = [".log", ".sf", ".sf_k", ".sh", ".dat", ".chk", ".chk_k",
                   ".sct", "_map", "_lbl", ".pdf", ".png", ".csv", "_map.nc"]
         if not preNC:
             remove.append(".nc")
@@ -129,8 +129,8 @@ def main():
         formula_path = os.path.join(utils.dirs[source], v+"/")
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
-        temp_xc.plot([None,None], 
-                     show=False, quiet=True, 
+        temp_xc.plot([None,None],
+                     show=False, quiet=True,
                      alias=alias+"_", pad_xlim=5e3)
 
         #     get numin, numax
@@ -200,7 +200,7 @@ def main():
         formula_path = ptf.get_formula_path(source, v)
         temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
         temp_xc.read()
-        temp_xc.plot([numin, numax], show=False, quiet=False, 
+        temp_xc.plot([numin, numax], show=False, quiet=False,
                      band_edges=band_edges,
                      alias=alias+"_", pad_xlim=5e3)
         numin = max(numin, np.amin(temp_xc.get_nu()))
@@ -211,7 +211,7 @@ def main():
             log.warning("Using pre-existing netCDF file for %s lbl absorption"%v)
             log.warning("    Configuration mismatch here will lead to issues")
             continue
-        
+
         # Map files, finding the closest p,t point to each target p,t point
         vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
 
@@ -219,8 +219,8 @@ def main():
         ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
 
         # Write netCDF from source files
-        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source, 
-                                               arr_p, arr_t, vol_f, 
+        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source,
+                                               arr_p, arr_t, vol_f,
                                                dnu=dnu, numin=numin, numax=numax)
 
         # Check resolution
