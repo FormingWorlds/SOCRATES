@@ -28,7 +28,7 @@ def main():
     vols = ["H2O"]   # List of gases
     alias = "Snowline"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 256              # Number of wavenumber bands
+    nband = 4096              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
