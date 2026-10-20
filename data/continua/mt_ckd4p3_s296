@@ -1,8 +1,8 @@
 *BEGIN_DATA 
 
-     Start of table                = -2.000000E+01     cm-1 
-     End of table                  =  1.990000E+04     cm-1 
-     Increment in table            =  1.000000E+01     cm-1 
+     Start of table                = -2.00000E+01     cm-1 
+     End of table                  =  1.99000E+04     cm-1 
+     Increment in table            =  1.00000E+01     cm-1 
      Number of points in table     =  1993 
 
      Continuum coefficients (cm^3.molec-1 * 1.0E-20) 
