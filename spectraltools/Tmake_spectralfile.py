@@ -25,10 +25,10 @@ def main():
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
-    vols = ["H2O"]   # List of gases
-    alias = "Snowline"          # Alias for this spectral file
+    vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 4096              # Number of wavenumber bands
+    nband = 128              # Number of wavenumber bands
     drops = True            # Include water droplet scattering?
     method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
