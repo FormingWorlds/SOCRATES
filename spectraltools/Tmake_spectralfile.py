@@ -28,8 +28,8 @@ def main():
     vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
     alias = "Volenfell"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 32              # Number of wavenumber bands
-    drops = False            # Include water droplet scattering?
+    nband = 128              # Number of wavenumber bands
+    drops = True            # Include water droplet scattering?
     method = 2              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
@@ -188,7 +188,7 @@ def main():
     # Write netCDFs containing absorption spectra
     log.info("")
     nc_paths = {}
-    dnu_last = 1.000
+    dnu_last = None
     for iv,v in enumerate(vols):
         # For this volatile...
 
@@ -210,24 +210,32 @@ def main():
         if os.path.exists(ncp) and preNC:
             log.warning("Using pre-existing netCDF file for %s lbl absorption"%v)
             log.warning("    Configuration mismatch here will lead to issues")
-            continue
 
-        # Map files, finding the closest p,t point to each target p,t point
-        vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
+            # Resolution of the existing file, in [m-1]
+            nu_pre = netcdf.read_netcdf_nu(ncp)
+            dnu_this = float(nu_pre[1]-nu_pre[0]) * 100.0
+            log.info("    Wavenumber resolution of pre-existing file: %g m-1"%dnu_this)
 
-        # Write these p,t,f to csv file for reference
-        ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
+        else:
+            # Map files, finding the closest p,t point to each target p,t point
+            vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
 
-        # Write netCDF from source files
-        dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source,
-                                               arr_p, arr_t, vol_f,
-                                               dnu=dnu, numin=numin, numax=numax)
+            # Write these p,t,f to csv file for reference
+            ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
+
+            # Write netCDF from source files
+            dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source,
+                                                   arr_p, arr_t, vol_f,
+                                                   dnu=dnu, numin=numin, numax=numax)
 
         # Check resolution
-        if (iv > 0) and (not np.isclose(dnu_last, dnu_this)):
+        if (dnu_last is not None) and (not np.isclose(dnu_last, dnu_this)):
             raise Exception("Wavenumber resolutions differ between volatiles (%g != %g)" % (dnu_last, dnu_this))
         else:
             dnu_last = dnu_this
+
+    if dnu_last is None:
+        raise Exception("Could not determine wavenumber resolution of netCDF files")
 
 
     # ===========

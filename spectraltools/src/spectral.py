@@ -41,7 +41,11 @@ BANDS_SHORT_FRACTION  = 0.07
 BANDS_TMPS            = [(180.0,0.45), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
 
 # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
-MT_CKD_VERSION = "mt_ckd4p3"  
+MT_CKD_VERSION = "mt_ckd4p3"
+
+# Minimum CIA temperature when H2O is included [K].
+#    Planck weights exp(-hc*nu/kT) underflow for hc*nu/kT > ~708, i.e. T < ~40 K at 19900 cm-1
+CIA_TMIN_H2O = 50.0
 
 # Replace NaN values in the cross-section data with zeros
 REPLACE_NAN = True  
@@ -319,6 +323,34 @@ def read_band_edges(sfpath:str) -> list:
 
     return band_edgesm
 
+def read_ckd_range(ckdpath:str) -> list:
+    """Read the wavenumber range covered by an MT_CKD continuum table
+
+    Parameters
+    ----------
+    ckdpath : str
+        Path to MT_CKD continuum file
+
+    Returns
+    -------
+    list
+        Start and end of table, in units of [cm-1]
+    """
+
+    nu_start = None
+    nu_end   = None
+    with open(ckdpath,'r') as hdl:
+        for l in hdl.readlines():
+            if "Start of table" in l:
+                nu_start = float(l.split("=")[1].split()[0])
+            if "End of table" in l:
+                nu_end = float(l.split("=")[1].split()[0])
+
+    if (nu_start is None) or (nu_end is None):
+        raise Exception("Table range could not be read from continuum file '%s'"%ckdpath)
+
+    return [nu_start, nu_end]
+
 
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, 
                     volatile_list:list, band_edges:list, 
@@ -406,10 +438,21 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     pt_lbl_file.close()
 
     ref_pres_cia = utils.get_closest(1.0e5, p_write) # set reference pressure to ~1 bar
+    t_write_cia = np.unique(t_write)
+    if "H2O" in volatile_list:
+        # Planck weighting underflows for MT_CKD at low temperatures, giving NaN k-terms.
+        #    All CIA pairs share this grid. SOCRATES clamps colder layers to the lowest value.
+        t_drop = t_write_cia[t_write_cia < CIA_TMIN_H2O]
+        if len(t_drop) > 0:
+            log.warning("    dropping CIA temperatures below %.1f K: " % CIA_TMIN_H2O
+                        + utils.get_arr_as_str(t_drop, fmt="%.2f"))
+        t_write_cia = t_write_cia[t_write_cia >= CIA_TMIN_H2O]
+        if len(t_write_cia) == 0:
+            raise Exception("No CIA temperatures at or above %.1f K" % CIA_TMIN_H2O)
     pt_cia_file = open(pt_cia, "w+")
     pt_cia_file.write('*PTVAL \n')
     line = "%.4f"%ref_pres_cia
-    for t in np.unique(t_write):
+    for t in t_write_cia:
         line +=" %.4f"%t
     pt_cia_file.write(line + " \n")
     pt_cia_file.write('*END \n')
@@ -683,14 +726,27 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
     #    Handle water self-broadening as a special case
     if both_water:
 
-        # Limit band range for MT_CKD case
+        # Limit band range for MT_CKD case.
+        #    Bands outside this range get no H2O-H2O continuum, but are still
+        #    included in the spectral file for line absorption and other gases.
+        range_296 = read_ckd_range(mt_ckd_296)
+        range_260 = read_ckd_range(mt_ckd_260)
+        ckd_nurange = [ max(range_296[0], range_260[0]), min(range_296[1], range_260[1]) ]  # [cm-1]
         ckd_bands = []  # list of allowed bands
-        ckd_wlrange = [ 500.50e-9 , 0.01 ]  # Domain for MT_CKD, in metres
+        ckd_wlrange = [ 1.0/(ckd_nurange[1]*100.0) , 0.01 ]  # Domain for MT_CKD, in metres
         for i in range(0,nband):
             b_lo = band_edgesm[i]      # short WL edge
             b_hi = band_edgesm[i+1]    # long WL edge
-            if (ckd_wlrange[0] < b_lo) and (ckd_wlrange[1] > b_hi):  # if this band is entirely within MT_CKD's domain
+            if (ckd_wlrange[0] <= b_lo) and (ckd_wlrange[1] > b_hi):  # if this band is entirely within MT_CKD's domain
                 ckd_bands.append(i+1)
+
+        if len(ckd_bands) == 0:
+            log.warning("    No bands lie within the MT_CKD domain; skipping H2O-H2O continuum")
+            f.close()
+            utils.rmsafe(exec_file_name)
+            return
+
+        log.info("    MT_CKD table covers %g to %g cm-1"%(ckd_nurange[0], ckd_nurange[1]))
 
         iband = [ min(ckd_bands) , max(ckd_bands)]
         iband_revrev = [ nband-iband[1]+1 , nband-iband[0]+1 ]  # doubly reversed (so it is printed the same as best_bands)
