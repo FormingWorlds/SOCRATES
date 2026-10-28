@@ -12,7 +12,7 @@ import src.netcdf as netcdf
 log = logging.getLogger("fwl."+__name__)
 
 CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
-CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
+CCORRK_MAXPATH  = 1.0e3     # Maximum absorptive pathlength (kg/m2) for the gas.
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 
 # Tolerence type for Ccorr_k when calculating k-terms. Options:
