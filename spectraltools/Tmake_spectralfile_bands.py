@@ -56,8 +56,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Make and zip spectral files with different numbers of bands')
     parser.add_argument('target', type=str, nargs='?', default='.',
                         help='Folder in which to write <alias>/<nband>/<alias>.zip (default: current directory)')
-    parser.add_argument('--nband', type=int, nargs='+', default=[32, 64, 128, 256, 4096],
-                        help='Numbers of bands (default: 32 64 128 256 4096)')
+    parser.add_argument('--nband', type=int, nargs='+', default=[32, 64, 128, 256, 2048],
+                        help='Numbers of bands to make')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing zip files')
     args = parser.parse_args()
 

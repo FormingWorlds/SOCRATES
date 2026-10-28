@@ -6,6 +6,8 @@ __pycache__
 fort.20
 screenlog.0
 *.log
+*.zip
+.nfs*
 
 spectraltools/output
 

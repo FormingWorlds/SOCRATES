@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import os
+import re
 import subprocess
 import time
 import src.utils as utils
@@ -47,8 +48,9 @@ MT_CKD_VERSION = "mt_ckd4p3"
 #    Planck weights exp(-hc*nu/kT) underflow for hc*nu/kT > ~708, i.e. T < ~40 K at 19900 cm-1
 CIA_TMIN_H2O = 50.0
 
-# Replace NaN values in the cross-section data with zeros
-REPLACE_NAN = True  
+# Replace NaN values in the assembled spectral file. NaNs in the k-table are filled from
+#    valid neighbours in temperature (see fill_nan_lookup); any others are set to zero.
+REPLACE_NAN = True
 
 # Pade fit coefficients for water droplet scattering.
 PADE_FIT_MIN = "1.50000E-06"
@@ -907,6 +909,151 @@ def calc_waterdroplets(alias:str, dry:bool=False):
     return fit_path
 
 
+def _fmt_e13(x:float) -> str:
+    """Format a value like Fortran 1PE13.6, as read back by read_spectrum."""
+    s = "%.6E" % x
+    m, e = s.split("E")
+    if len(e) > 3:
+        # Fortran Ew.d drops the 'E' for exponents beyond two digits
+        s = m + e
+    return "%13s" % s
+
+def _parse_fortran_float(tok:str) -> float:
+    """Parse a number written with Fortran E editing, including the form 1.0-120."""
+    try:
+        return float(tok)
+    except ValueError:
+        return float(re.sub(r"(?<=[0-9.])([+-][0-9]+)$", r"E\1", tok))
+
+def _parse_fortran_line(line:str) -> np.ndarray:
+    """Parse all numbers on a line of Fortran E-edited values."""
+    return np.array([_parse_fortran_float(t) for t in line.split()], dtype=float)
+
+def _read_lookup_numbers(lines:list, i:int, n:int):
+    """Read n whitespace-separated numbers starting at line i. Returns (values, next line)."""
+    vals = []
+    while len(vals) < n:
+        vals += list(_parse_fortran_line(lines[i]))
+        i += 1
+    if len(vals) != n:
+        raise Exception("Unexpected number of values in lookup table near line %d" % i)
+    return np.array(vals, dtype=float), i
+
+def _is_numeric_line(line:str) -> bool:
+    """Whether a line is non-empty and holds only numbers (including NaN)."""
+    if len(line.split()) == 0:
+        return False
+    try:
+        _parse_fortran_line(line)
+    except ValueError:
+        return False
+    return True
+
+def fill_nan_lookup(kpath:str) -> tuple:
+    """Fill NaN values in the k-coefficient lookup tables of an assembled spectral file.
+
+    Ccorr_k can give NaN k-terms where its Planck weights underflow at low temperature
+    (exp(-hc*nu/kT) < ~1e-308, e.g. T=25 K for nu > ~12300 cm-1). Each NaN is replaced
+    by linear interpolation in temperature along its row of the table (same band, gas,
+    k-term, pressure), with constant extrapolation beyond the outermost valid values.
+    This matches how SOCRATES interpolates the table, and clamps temperatures to its
+    range, so a layer colder than the lowest valid point sees that point's value.
+    Rows with no valid values at all are set to zero.
+
+    Parameters
+    ----------
+    kpath : str
+        Path to the k-coefficient file (.sf_k) written by prep_spec
+
+    Returns
+    ----------
+    tuple
+        Number of values interpolated, number of values set to zero
+    """
+
+    with open(kpath,'r') as hdl:
+        lines = hdl.readlines()
+
+    block_types = {"k-table":"gas", "continuum k-table":"cont", "temperature k-tables":"tgas"}
+    block  = None   # type of the current lookup block
+    t_grid = None   # temperatures of each row, indexed by pressure [n_pre, n_tmp]
+    t_gas  = {}     # temperatures per gas, for the temperature k-tables
+    n_fill = 0
+    n_zero = 0
+
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+
+        if s.startswith("*BLOCK"):
+            block = block_types.get(s.split(":",1)[1].strip(), None)
+            i += 1
+            continue
+        if (block is None) or (s == ""):
+            i += 1
+            continue
+
+        if s.startswith("Lookup table:") and ("pressures" in s):
+            # pressure-temperature grid: each row is p followed by its temperatures
+            n_pre = int(s.split(":")[1].split()[0])
+            n_tmp = int(s.split(",")[1].split()[0])
+            vals, i = _read_lookup_numbers(lines, i+1, n_pre*(n_tmp+1))
+            t_grid = vals.reshape(n_pre, n_tmp+1)[:,1:]
+            continue
+        if s.startswith("Lookup table:") and s.endswith("temperatures."):
+            # continuum temperature grid
+            n_tmp = int(s.split(":")[1].split()[0])
+            vals, i = _read_lookup_numbers(lines, i+1, n_tmp)
+            t_grid = vals.reshape(1, n_tmp)
+            continue
+        if s.startswith("Lookup table for gas"):
+            igas  = int(s.split("gas")[1].split(":")[0])
+            n_tmp = int(s.split(":")[1].split()[0])
+            t_gas[igas], i = _read_lookup_numbers(lines, i+1, n_tmp)
+            continue
+
+        if s.startswith("Band:"):
+            if block == "tgas":
+                igas   = int(s.split("gas:")[1].split(",")[0])
+                t_grid = t_gas[igas].reshape(1, -1)
+            if t_grid is None:
+                raise Exception("Lookup table data before its grid in '%s'" % kpath)
+            n_pre, n_tmp = t_grid.shape
+
+            # Data lines run until the next blank or header line
+            j = i+1
+            while (j < len(lines)) and _is_numeric_line(lines[j]):
+                j += 1
+
+            # Each row of n_tmp values starts on a new line, six values per line
+            lpr = (n_tmp + 5) // 6
+            if (j-i-1) % lpr != 0:
+                raise Exception("Malformed lookup table at line %d of '%s'" % (i+1, kpath))
+            for r, l0 in enumerate(range(i+1, j, lpr)):
+                if "NaN" not in "".join(lines[l0:l0+lpr]):
+                    continue
+                row = _parse_fortran_line("".join(lines[l0:l0+lpr]))
+                bad = np.isnan(row)
+                if np.all(bad):
+                    row[:] = 0.0
+                    n_zero += n_tmp
+                else:
+                    # rows are ordered with pressure as the fastest-varying index
+                    t = t_grid[r % n_pre]
+                    row[bad] = np.interp(t[bad], t[~bad], row[~bad])
+                    n_fill += np.count_nonzero(bad)
+                for k in range(lpr):
+                    lines[l0+k] = "".join(_fmt_e13(v) for v in row[6*k:6*k+6]) + "\n"
+            i = j
+            continue
+
+        i += 1
+
+    with open(kpath,'w') as hdl:
+        hdl.writelines(lines)
+
+    return n_fill, n_zero
+
 def assemble(alias:str, volatile_list:list, dry:bool=False):
     """Assemble final spectral file.
 
@@ -1076,7 +1223,16 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
                 log.error("Assembled spectral file '%s' contains NaN values" % check_path)
                 log.error("-------------------------------------------")
 
-        # Replace NaNs if requested
+        # Fill NaNs in the lookup tables from valid neighbours in temperature
+        if REPLACE_NAN and contains_nan and (ext == "_k"):
+            n_fill, n_zero = fill_nan_lookup(check_path)
+            log.warning("Filled %d NaN values in '%s' by interpolation in temperature" % (n_fill, check_path))
+            if n_zero > 0:
+                log.warning("Set %d NaN values to zero in '%s' (rows with no valid values)" % (n_zero, check_path))
+            with open(check_path,'r') as hdl:
+                contains_nan = "NaN" in hdl.read()
+
+        # Replace any remaining NaNs with zeros
         if REPLACE_NAN and contains_nan:
             log.warning("Replacing NaN value in '%s'" % check_path)
             with open(check_path,'r') as hdl:
