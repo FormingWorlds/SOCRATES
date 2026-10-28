@@ -83,11 +83,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/N2O/"
 
-    #isotopologue = '14N-1H3'
-    #linelist = 'CoYuTe'
-    #linelist_version = 2.0
-    #t_lims = (50.0, 1900.0)
-    #outdir = utils.dirs["dace"] + "/NH3/"
+    isotopologue = '14N-1H3'
+    linelist = 'CoYuTe'
+    linelist_version = 2.0
+    t_lims = (50.0, 1900.0)
+    outdir = utils.dirs["dace"] + "/NH3/"
 
     #isotopologue = '16O-1H'
     #linelist = 'HITEMP2020'
@@ -119,11 +119,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/VO/"
 
-    isotopologue = '12C-1H4'
-    linelist = 'HITEMP2020'
-    linelist_version = 1.0
-    t_lims = (50.0, 2500.0)
-    outdir = utils.dirs["dace"] + "/CH4/"
+    #isotopologue = '12C-1H4'
+    #linelist = 'HITEMP2020'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 2500.0)
+    #outdir = utils.dirs["dace"] + "/CH4/"
 
     # -------------------
     # Na, NaO, Fe, FeO, FeH, K, SiO, SiO2, PH3, provided already by SOCRATES

@@ -17,7 +17,7 @@ import time
 log = logging.getLogger("fwl."+__name__)
 
 
-def main():
+def main(nband=None):
 
     log.info("    SOCRATES directory: %s", utils.dirs["socrates"])
     log.info("    SOCRATES version: %s", utils.socratesver())
@@ -61,7 +61,8 @@ def main():
     vols = ["H2O" ]   # List of gases
     alias = "Snowline"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 128              # Number of wavenumber bands
+    if nband is None:
+        nband = 128          # Number of wavenumber bands (if not passed as argument)
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
@@ -140,7 +141,7 @@ def main():
     log.info("    source:   %s", source)
     log.info("    gases:    (N=%d)", len(vols))
     for v in vols:
-        log.info("          %6s from %s", v, srcs[v])
+        log.info("           %6s from %s", v, srcs[v])
     log.info("    alias:    %s", alias)
     log.info("    nband:    %d", nband)
     log.info("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1", numin, numax, dnu)
