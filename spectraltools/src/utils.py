@@ -299,7 +299,7 @@ cia_pairs = [
     ["N2", "H2O"],
     ["N2", "CH4"],
     ["O2", "CO2"],
-    # ["O2", "N2"], # shows strange behaviour
+    ["O2", "N2"],
     ["O2", "O2"],
     ["CO2", "CO2"],
     ["CO2", "H2"],
