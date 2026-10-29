@@ -58,18 +58,19 @@ def main(nband=None):
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
     vol_source = {"VO":"dace", "CH4":"dace", "NH3":"dace"}   # Per-gas overrides of source database
-    vols = ["H2O", "CO2", "CO", "O2", "SO2", "OCS", "S2" ]   # List of gases
-    alias = "Breezehome"          # Alias for this spectral file
+    vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "SH", "S2", "H2S", "N2", "NH3", "HCN", "SiO", "TiO", "MgO", "Na", "K", "Fe"]
+    alias = "Sovngarde"
     UV = False               # Includes the UV range wavenumbers and cross-sections
     if nband is None:
-        nband = 16          # Number of wavenumber bands (if not passed as argument)
+        nband = 32          # Number of wavenumber bands (if not passed as argument)
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
     preNC = True           # Use pre-existing netCDF files in output/ if they are found
-    spectral.CCORRK_MAXPATH = 1.0e3  # Maximum mass path for k-coefficients [kg/m2]
+    maxpath = 1.0e3         # Default maximum mass path for k-coefficients [kg/m2]; also used for CIA [kg2/m5]
+    vol_maxpath = {"SiO":1e1, "TiO":1e1, "VO":1e1, "MgO":1e1, "Na":1e1, "K":1e1, "Fe":1e1}   # Per-gas overrides of maximum mass path [kg/m2]
 
     # band selection methods (wavenumber space):
     # 0 = linspace   \n
@@ -112,6 +113,11 @@ def main(nband=None):
     vol_source = {phys.chemsafe(k):utils.sourcesafe(s) for k,s in vol_source.items()}
     srcs = {v:vol_source.get(v, source) for v in vols}
 
+    # Maximum mass path for each volatile
+    spectral.CCORRK_MAXPATH = maxpath
+    vol_maxpath = {phys.chemsafe(k):float(m) for k,m in vol_maxpath.items()}
+    maxpaths = {v:vol_maxpath.get(v, maxpath) for v in vols}
+
     # Reference volatile for p,t grid and band edges: last one using the default source
     vref = ([v for v in vols if srcs[v] == source] or vols)[-1]
 
@@ -142,12 +148,12 @@ def main(nband=None):
     log.info("    source:   %s", source)
     log.info("    gases:    (N=%d)", len(vols))
     for v in vols:
-        log.info("           %6s from %s", v, srcs[v])
+        log.info("           %6s from %-8s maxpath %.2e kg/m2", v, srcs[v], maxpaths[v])
     log.info("    alias:    %s", alias)
     log.info("    nband:    %d", nband)
     log.info("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1", numin, numax, dnu)
     log.info("    method:   %d", method)
-    log.info("    masspath: %.2e kg/m2", spectral.CCORRK_MAXPATH)
+    log.info("    masspath: %.2e kg/m2", maxpath)
     log.info("    UV:       %s", str(UV))
     log.info("    preNC:    %s", str(preNC))
     log.info("    n_tp:     %d", len(tgt_p)*len(tgt_t))
@@ -300,7 +306,7 @@ def main(nband=None):
     # Calculate k-coefficients from netCDF
     log.info("")
     for i,f1 in enumerate(vols):
-        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
+        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1], maxpath=maxpaths[f1])
         for f2 in vols[i:]:
             spectral.calc_kcoeff_cia(alias, f1, f2, dnu_last)
 

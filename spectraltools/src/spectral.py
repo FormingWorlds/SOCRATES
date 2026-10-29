@@ -13,7 +13,7 @@ import src.netcdf as netcdf
 log = logging.getLogger("fwl."+__name__)
 
 CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
-CCORRK_MAXPATH  = 1.0e3     # Maximum absorptive pathlength (kg/m2) for the gas.
+CCORRK_MAXPATH  = 1.0e3     # Default maximum absorptive pathlength (kg/m2) for the gas. Also used for CIA pairs (kg2/m5).
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 
 # Tolerence type for Ccorr_k when calculating k-terms. Options:
@@ -526,7 +526,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     log.info("    done writing to '%s'", skel_path)
     return skel_path
 
-def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
+def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False, maxpath:float=None):
     """Calculate k-coefficients for line absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
@@ -542,6 +542,8 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     dry : bool
         Dry run?
+    maxpath : float
+        Maximum absorptive pathlength [kg/m2] for this gas. Uses CCORRK_MAXPATH if None.
 
     Returns
     ----------
@@ -572,6 +574,9 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     formula = formula.strip()
     absid = utils.absorber_id[formula]
+    if maxpath is None:
+        maxpath = CCORRK_MAXPATH
+    log.info("    maxpath: %.2e kg/m2", maxpath)
 
     kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_lbl.sf_k"%(alias,formula)); utils.rmsafe(kcoeff_path)
     monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias,formula)); utils.rmsafe(monitor_path)
@@ -605,7 +610,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write("Ccorr_k")
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
     f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
-    f.write(" -l %s %.3e"%(absid, CCORRK_MAXPATH))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -l %s %.3e"%(absid, maxpath))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
     f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
     match CCORRK_LBL_TOLTYPE:
