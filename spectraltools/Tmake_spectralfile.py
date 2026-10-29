@@ -36,11 +36,11 @@ def main(nband=None):
     # alias = "Breezehome"          # Alias for this spectral file
 
     # Reduced volatiles
-    # vols = ["H2", "CO", "CH4", "SH", "S2", "H2S", "N2", "NH3" ]   # List of gases
+    # vols = ["H2", "CO", "CH4", "S2", "H2S", "N2", "NH3" ]   # List of gases
     # alias = "Cliffshade"          # Alias for this spectral file
 
     # Combined volatiles
-    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "SH", "S2", "H2S", "N2", "NH3", "HCN"]
+    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS",  "S2", "H2S", "N2", "NH3", "HCN"]
     # alias = "Proudspire"
 
     # Hot jupiters
@@ -52,15 +52,15 @@ def main(nband=None):
     # alias = "Atmora"
 
     # Vapours + volatiles (large)
-    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "SH", "S2", "H2S", "N2", "NH3", "HCN", "SiO", "TiO", "MgO", "Na", "K", "Fe"]
+    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "S2", "H2S", "N2", "NH3", "HCN", "SiO", "TiO", "MgO", "Na", "K", "Fe"]
     # alias = "Sovngarde"
 
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
     vol_source = {"VO":"dace", "CH4":"dace", "NH3":"dace"}   # Per-gas overrides of source database
 
-    vols = ["H2", "CO", "CH4", "SH", "S2", "H2S", "N2", "NH3" ]   # List of gases
-    alias = "Cliffshade"          # Alias for this spectral file
+    vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    alias = "Volenfell"          # Alias for this spectral file
 
     UV = False               # Includes the UV range wavenumbers and cross-sections
     if nband is None:
