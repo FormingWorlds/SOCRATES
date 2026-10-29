@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import time
+from netCDF4 import Dataset
 import src.utils as utils
 import src.phys as phys
 import src.netcdf as netcdf
@@ -42,7 +43,15 @@ BANDS_SHORT_FRACTION  = 0.07
 BANDS_TMPS            = [(180.0,0.45), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
 
 # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+#    mt_ckd3p2 uses text tables at 296 K and 260 K, which Ccorr_k interpolates exponentially in temperature.
+#    mt_ckd4p3 uses the reference netCDF file from MT_CKD for both temperatures, so that Ccorr_k applies
+#    its temperature exponents, (296/T)^texp. Both hold coefficients without the radiation term
+#    nu*tanh(hc*nu/2kT), which Ccorr_k applies itself.
 MT_CKD_VERSION = "mt_ckd4p3"
+MT_CKD_FILES = {
+    "mt_ckd3p2": ("mt_ckd3p2_s296", "mt_ckd3p2_s260"),
+    "mt_ckd4p3": ("absco-ref_wv-mt-ckd4p3.nc", "absco-ref_wv-mt-ckd4p3.nc"),
+}
 
 # Minimum CIA temperature when H2O is included [K].
 #    Planck weights exp(-hc*nu/kT) underflow for hc*nu/kT > ~708, i.e. T < ~40 K at 19900 cm-1
@@ -331,13 +340,18 @@ def read_ckd_range(ckdpath:str) -> list:
     Parameters
     ----------
     ckdpath : str
-        Path to MT_CKD continuum file
+        Path to MT_CKD continuum file: a text table, or the reference netCDF file
 
     Returns
     -------
     list
         Start and end of table, in units of [cm-1]
     """
+
+    if ckdpath.endswith(".nc"):
+        with Dataset(ckdpath, "r") as ds:
+            nu = np.array(ds.variables["wavenumbers"][:], dtype=float)
+        return [float(nu[0]), float(nu[-1])]
 
     nu_start = None
     nu_end   = None
@@ -702,8 +716,10 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s296")
-        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s260")
+        if MT_CKD_VERSION not in MT_CKD_FILES:
+            raise Exception("Invalid MT_CKD_VERSION: '%s'"%MT_CKD_VERSION)
+        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_FILES[MT_CKD_VERSION][0])
+        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_FILES[MT_CKD_VERSION][1])
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
