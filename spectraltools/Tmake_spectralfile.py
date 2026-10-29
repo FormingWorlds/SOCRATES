@@ -58,17 +58,18 @@ def main(nband=None):
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
     vol_source = {"VO":"dace", "CH4":"dace", "NH3":"dace"}   # Per-gas overrides of source database
-    vols = ["H2O" ]   # List of gases
-    alias = "Snowline"          # Alias for this spectral file
+    vols = ["H2O", "CO2", "CO", "O2", "SO2", "OCS", "S2" ]   # List of gases
+    alias = "Breezehome"          # Alias for this spectral file
     UV = False               # Includes the UV range wavenumbers and cross-sections
     if nband is None:
-        nband = 2048          # Number of wavenumber bands (if not passed as argument)
+        nband = 16          # Number of wavenumber bands (if not passed as argument)
     drops = True            # Include water droplet scattering?
     method = 3              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
     preNC = True           # Use pre-existing netCDF files in output/ if they are found
+    spectral.CCORRK_MAXPATH = 1.0e3  # Maximum mass path for k-coefficients [kg/m2]
 
     # band selection methods (wavenumber space):
     # 0 = linspace   \n
