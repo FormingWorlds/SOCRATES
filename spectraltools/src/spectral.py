@@ -368,6 +368,66 @@ def read_ckd_range(ckdpath:str) -> list:
     return [nu_start, nu_end]
 
 
+def write_cia_fixed(path_in:str, path_out:str) -> int:
+    """Rewrite a HITRAN CIA file in the fixed columns that Ccorr_k reads.
+
+    Ccorr_k reads each CIA header as (a20,2f10.4,i7,f7.2,...) and each data line as
+    (f10.4,1x,e10.3). Several HITRAN files do not follow these columns: some write the
+    wavenumber limits and temperature as integers, which an F edit descriptor reads with
+    an implied decimal point (e.g. 296 becomes 2.96 K); some write five-digit mantissas,
+    which lose the last digit of the exponent; and some have left-aligned columns. Here
+    each line is split on whitespace and written back in the expected columns. Fields of
+    the header after the temperature are not used by Ccorr_k and are left blank.
+
+    Parameters
+    ----------
+    path_in : str
+        Path to the HITRAN CIA file
+    path_out : str
+        Path to the rewritten file
+
+    Returns
+    -------
+    int
+        Number of data sets written
+    """
+
+    with open(path_in,'r') as hdl:
+        lines = [l.strip() for l in hdl.readlines()]
+
+    out  = []
+    nset = 0
+    i = 0
+    while i < len(lines):
+        if lines[i] == "":
+            i += 1
+            continue
+
+        # header: name, wavenumber min and max [cm-1], number of points, temperature [K], ...
+        tok  = lines[i].split()
+        npts = int(tok[3])
+        line = "%20s%10.4f%10.4f%7d%7.2f" % (tok[0][:20], float(tok[1]), float(tok[2]), npts, float(tok[4]))
+        if len(line) != 54:
+            raise Exception("CIA header does not fit Ccorr_k's columns in '%s': '%s'"%(path_in, lines[i]))
+        out.append(line)
+
+        # data: wavenumber [cm-1], cross-section [cm5 molecule-2]
+        for l in lines[i+1:i+1+npts]:
+            nu, xs = l.split()[:2]
+            line = "%10.4f %10.3E" % (float(nu), float(xs))
+            if len(line) != 21:
+                raise Exception("CIA value does not fit Ccorr_k's columns in '%s': '%s'"%(path_in, l))
+            out.append(line)
+
+        i += npts + 1
+        nset += 1
+
+    with open(path_out,'w') as hdl:
+        hdl.write("\n".join(out) + "\n")
+
+    return nset
+
+
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, 
                     volatile_list:list, band_edges:list, 
                     dry:bool=False):
@@ -817,9 +877,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
         log.info("    Using HITRAN CIA database")
 
+        # Copy of the database in the columns that Ccorr_k reads
+        db_fixed = os.path.join(utils.dirs["output"],"%s_%s.cia"%(alias,pair_str)); utils.rmsafe(db_fixed)
+        nset = write_cia_fixed(db_cia, db_fixed)
+        log.info("    rewrote %d data sets to '%s'", nset, db_fixed)
+
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
-        f.write(" -CIA %s"%db_cia)
+        f.write(" -CIA %s"%db_fixed)
         f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
