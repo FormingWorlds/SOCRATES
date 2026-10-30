@@ -14,13 +14,19 @@ def main():
     # Intended target pressures [bar]
     # p_arr = np.logspace(-6, 3, 5)
 
-    p_arr = [1e-3, 1e-2]
+    # Matches the ExoCross grid, clipped to DACE limits (p <= 1e3 bar)
+    p_arr = [1.0e-5, 1.0e-4, 3.2e-4, 1.0e-3, 3.2e-3, 1.0e-2, 3.2e-2, 1.0e-1,
+             3.2e-1, 1.0, 3.2, 1.0e1, 3.2e1, 1.0e2, 3.2e2, 1.0e3]
 
     # Intended target temperatures [K]
     # t_arr = np.linspace(60.0, 2900.0, 5) - 5.0
     # t_arr = np.append(t_arr, [75.0, 100.0])
 
-    t_arr = [100.0, 300.0]
+    # Matches the ExoCross grid; points outside t_lims are dropped below
+    t_arr = [25.0, 100.0, 125.0, 150.0, 175.0, 200.0, 225.0, 250.0, 275.0,
+             300.0, 325.0, 350.0, 400.0, 450.0, 500.0, 550.0, 600.0, 650.0,
+             700.0, 750.0, 800.0, 850.0, 900.0, 950.0, 1000.0]
+    t_arr += list(np.arange(1100.0, 4001.0, 100.0)) + [4500.0, 5000.0]
 
     # Uncomment one of the blocks below or write your own
     #isotopologue = '1H2-16O'
@@ -35,11 +41,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/H2/"
 
-    isotopologue = '12C-16O'
-    linelist = 'HITEMP2019'
-    linelist_version = 1.0
-    t_lims = (50.0, 8900.0)
-    outdir = utils.dirs["dace"] + "/CO/"
+    #isotopologue = '12C-16O'
+    #linelist = 'HITEMP2019'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 8900.0)
+    #outdir = utils.dirs["dace"] + "/CO/"
 
     #isotopologue = '12C-16O2'
     #linelist = 'UCL-4000'
@@ -77,11 +83,11 @@ def main():
     #t_lims = (50.0, 4500.0)
     #outdir = utils.dirs["dace"] + "/N2O/"
 
-    #isotopologue = '14N-1H3'
-    #linelist = 'CoYuTe'
-    #linelist_version = 2.0
-    #t_lims = (50.0, 1900.0)
-    #outdir = utils.dirs["dace"] + "/NH3/"
+    isotopologue = '14N-1H3'
+    linelist = 'CoYuTe'
+    linelist_version = 2.0
+    t_lims = (50.0, 1900.0)
+    outdir = utils.dirs["dace"] + "/NH3/"
 
     #isotopologue = '16O-1H'
     #linelist = 'HITEMP2020'
@@ -106,6 +112,18 @@ def main():
     # linelist_version = 2.0
     # t_lims = (50.0, 1900.0)
     # outdir = utils.dirs["dace"] + "/SO2/"
+
+    #isotopologue = '51V-16O'
+    #linelist = 'VOMYT'
+    #linelist_version = 2.0
+    #t_lims = (50.0, 4500.0)
+    #outdir = utils.dirs["dace"] + "/VO/"
+
+    #isotopologue = '12C-1H4'
+    #linelist = 'HITEMP2020'
+    #linelist_version = 1.0
+    #t_lims = (50.0, 2500.0)
+    #outdir = utils.dirs["dace"] + "/CH4/"
 
     # -------------------
     # Na, NaO, Fe, FeO, FeH, K, SiO, SiO2, PH3, provided already by SOCRATES

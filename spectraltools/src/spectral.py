@@ -3,8 +3,10 @@
 import logging
 import numpy as np
 import os
+import re
 import subprocess
 import time
+from netCDF4 import Dataset
 import src.utils as utils
 import src.phys as phys
 import src.netcdf as netcdf
@@ -12,7 +14,7 @@ import src.netcdf as netcdf
 log = logging.getLogger("fwl."+__name__)
 
 CCORRK_NPROC    = 40        # Number of processes to use for Ccorr_k. 
-CCORRK_MAXPATH  = 1.0e1     # Maximum absorptive pathlength (kg/m2) for the gas.
+CCORRK_MAXPATH  = 1.0e3     # Default maximum absorptive pathlength (kg/m2) for the gas. Also used for CIA pairs (kg2/m5).
 CCORRK_CIA_CUTOFF = 2500.0  # Line cutoff [m-1]
 
 # Tolerence type for Ccorr_k when calculating k-terms. Options:
@@ -41,14 +43,23 @@ BANDS_SHORT_FRACTION  = 0.07
 BANDS_TMPS            = [(180.0,0.45), (1800.0,0.3), (6500.0,0.25)]  # (temperature, weight) pairs for method=5
 
 # Version of MT-CKD continua to use. Options: mt_ckd3p2, mt_ckd4p3
+#    mt_ckd3p2 uses text tables at 296 K and 260 K, which Ccorr_k interpolates exponentially in temperature.
+#    mt_ckd4p3 uses the reference netCDF file from MT_CKD for both temperatures, so that Ccorr_k applies
+#    its temperature exponents, (296/T)^texp. Both hold coefficients without the radiation term
+#    nu*tanh(hc*nu/2kT), which Ccorr_k applies itself.
 MT_CKD_VERSION = "mt_ckd4p3"
+MT_CKD_FILES = {
+    "mt_ckd3p2": ("mt_ckd3p2_s296", "mt_ckd3p2_s260"),
+    "mt_ckd4p3": ("absco-ref_wv-mt-ckd4p3.nc", "absco-ref_wv-mt-ckd4p3.nc"),
+}
 
 # Minimum CIA temperature when H2O is included [K].
 #    Planck weights exp(-hc*nu/kT) underflow for hc*nu/kT > ~708, i.e. T < ~40 K at 19900 cm-1
 CIA_TMIN_H2O = 50.0
 
-# Replace NaN values in the cross-section data with zeros
-REPLACE_NAN = True  
+# Replace NaN values in the assembled spectral file. NaNs in the k-table are filled from
+#    valid neighbours in temperature (see fill_nan_lookup); any others are set to zero.
+REPLACE_NAN = True
 
 # Pade fit coefficients for water droplet scattering.
 PADE_FIT_MIN = "1.50000E-06"
@@ -329,13 +340,18 @@ def read_ckd_range(ckdpath:str) -> list:
     Parameters
     ----------
     ckdpath : str
-        Path to MT_CKD continuum file
+        Path to MT_CKD continuum file: a text table, or the reference netCDF file
 
     Returns
     -------
     list
         Start and end of table, in units of [cm-1]
     """
+
+    if ckdpath.endswith(".nc"):
+        with Dataset(ckdpath, "r") as ds:
+            nu = np.array(ds.variables["wavenumbers"][:], dtype=float)
+        return [float(nu[0]), float(nu[-1])]
 
     nu_start = None
     nu_end   = None
@@ -350,6 +366,66 @@ def read_ckd_range(ckdpath:str) -> list:
         raise Exception("Table range could not be read from continuum file '%s'"%ckdpath)
 
     return [nu_start, nu_end]
+
+
+def write_cia_fixed(path_in:str, path_out:str) -> int:
+    """Rewrite a HITRAN CIA file in the fixed columns that Ccorr_k reads.
+
+    Ccorr_k reads each CIA header as (a20,2f10.4,i7,f7.2,...) and each data line as
+    (f10.4,1x,e10.3). Several HITRAN files do not follow these columns: some write the
+    wavenumber limits and temperature as integers, which an F edit descriptor reads with
+    an implied decimal point (e.g. 296 becomes 2.96 K); some write five-digit mantissas,
+    which lose the last digit of the exponent; and some have left-aligned columns. Here
+    each line is split on whitespace and written back in the expected columns. Fields of
+    the header after the temperature are not used by Ccorr_k and are left blank.
+
+    Parameters
+    ----------
+    path_in : str
+        Path to the HITRAN CIA file
+    path_out : str
+        Path to the rewritten file
+
+    Returns
+    -------
+    int
+        Number of data sets written
+    """
+
+    with open(path_in,'r') as hdl:
+        lines = [l.strip() for l in hdl.readlines()]
+
+    out  = []
+    nset = 0
+    i = 0
+    while i < len(lines):
+        if lines[i] == "":
+            i += 1
+            continue
+
+        # header: name, wavenumber min and max [cm-1], number of points, temperature [K], ...
+        tok  = lines[i].split()
+        npts = int(tok[3])
+        line = "%20s%10.4f%10.4f%7d%7.2f" % (tok[0][:20], float(tok[1]), float(tok[2]), npts, float(tok[4]))
+        if len(line) != 54:
+            raise Exception("CIA header does not fit Ccorr_k's columns in '%s': '%s'"%(path_in, lines[i]))
+        out.append(line)
+
+        # data: wavenumber [cm-1], cross-section [cm5 molecule-2]
+        for l in lines[i+1:i+1+npts]:
+            nu, xs = l.split()[:2]
+            line = "%10.4f %10.3E" % (float(nu), float(xs))
+            if len(line) != 21:
+                raise Exception("CIA value does not fit Ccorr_k's columns in '%s': '%s'"%(path_in, l))
+            out.append(line)
+
+        i += npts + 1
+        nset += 1
+
+    with open(path_out,'w') as hdl:
+        hdl.write("\n".join(out) + "\n")
+
+    return nset
 
 
 def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray, 
@@ -524,7 +600,7 @@ def create_skeleton(alias:str, p_points:np.ndarray, t_points:np.ndarray,
     log.info("    done writing to '%s'", skel_path)
     return skel_path
 
-def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
+def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False, maxpath:float=None):
     """Calculate k-coefficients for line absorption
 
     Takes netCDF file containing cross-sections as input. Outputs k-terms at given p,t points and bands specified in the skeleton file
@@ -540,6 +616,8 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     dry : bool
         Dry run?
+    maxpath : float
+        Maximum absorptive pathlength [kg/m2] for this gas. Uses CCORRK_MAXPATH if None.
 
     Returns
     ----------
@@ -570,6 +648,9 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
 
     formula = formula.strip()
     absid = utils.absorber_id[formula]
+    if maxpath is None:
+        maxpath = CCORRK_MAXPATH
+    log.info("    maxpath: %.2e kg/m2", maxpath)
 
     kcoeff_path  = os.path.join(utils.dirs["output"],"%s_%s_lbl.sf_k"%(alias,formula)); utils.rmsafe(kcoeff_path)
     monitor_path = os.path.join(utils.dirs["output"],"%s_%s_mon.log"%(alias,formula)); utils.rmsafe(monitor_path)
@@ -603,7 +684,7 @@ def calc_kcoeff_lbl(alias:str, formula:str, nc_xsc_path:str, dry:bool=False):
     f.write("Ccorr_k")
     f.write(" -F %s"%pt_lbl)                  # (Input) Pathname of file containing pressures and temperatures at which to calculate coefficients.
     f.write(" -R %d %d"%(iband[0],iband[1]))  # The range of spectral bands to be used
-    f.write(" -l %s %.3e"%(absid, CCORRK_MAXPATH))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
+    f.write(" -l %s %.3e"%(absid, maxpath))  # Generate line absorption data. gas is the type number (identifier) of the gas to be considered. max−path is the maximum absorptive pathlength (kg/m2) for the gas
     f.write(" -tt %.3e"%CCORRK_TRANSPARENT_TOL)  # Threshold below which a band is treated as transparent
 
     match CCORRK_LBL_TOLTYPE:
@@ -695,8 +776,10 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
     if both_water:
         lbl_map_path  = os.path.join(utils.dirs["output"],"%s_H2O_map.nc"% alias)
-        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s296")
-        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_VERSION+"_s260")
+        if MT_CKD_VERSION not in MT_CKD_FILES:
+            raise Exception("Invalid MT_CKD_VERSION: '%s'"%MT_CKD_VERSION)
+        mt_ckd_296    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_FILES[MT_CKD_VERSION][0])
+        mt_ckd_260    = os.path.join( utils.dirs["socrates"], "data", "continua", MT_CKD_FILES[MT_CKD_VERSION][1])
         check_files.extend([lbl_map_path, mt_ckd_260, mt_ckd_296])
     else:
         db_cia = os.path.join(utils.dirs["cia"], pair_str+".cia")
@@ -794,9 +877,14 @@ def calc_kcoeff_cia(alias:str, formula_A:str, formula_B:str, dnu:float, dry:bool
 
         log.info("    Using HITRAN CIA database")
 
+        # Copy of the database in the columns that Ccorr_k reads
+        db_fixed = os.path.join(utils.dirs["output"],"%s_%s.cia"%(alias,pair_str)); utils.rmsafe(db_fixed)
+        nset = write_cia_fixed(db_cia, db_fixed)
+        log.info("    rewrote %d data sets to '%s'", nset, db_fixed)
+
         f.write("Ccorr_k")
         f.write(" -F %s"%pt_cia)
-        f.write(" -CIA %s"%db_cia)
+        f.write(" -CIA %s"%db_fixed)
         f.write(" -R %d %d"%(iband[0], iband[1]))
         f.write(" -i %.3f"%dnu)
         f.write(" -ct %s %s %.3e"%(pair_ids[0], pair_ids[1], CCORRK_MAXPATH))
@@ -906,6 +994,151 @@ def calc_waterdroplets(alias:str, dry:bool=False):
 
     return fit_path
 
+
+def _fmt_e13(x:float) -> str:
+    """Format a value like Fortran 1PE13.6, as read back by read_spectrum."""
+    s = "%.6E" % x
+    m, e = s.split("E")
+    if len(e) > 3:
+        # Fortran Ew.d drops the 'E' for exponents beyond two digits
+        s = m + e
+    return "%13s" % s
+
+def _parse_fortran_float(tok:str) -> float:
+    """Parse a number written with Fortran E editing, including the form 1.0-120."""
+    try:
+        return float(tok)
+    except ValueError:
+        return float(re.sub(r"(?<=[0-9.])([+-][0-9]+)$", r"E\1", tok))
+
+def _parse_fortran_line(line:str) -> np.ndarray:
+    """Parse all numbers on a line of Fortran E-edited values."""
+    return np.array([_parse_fortran_float(t) for t in line.split()], dtype=float)
+
+def _read_lookup_numbers(lines:list, i:int, n:int):
+    """Read n whitespace-separated numbers starting at line i. Returns (values, next line)."""
+    vals = []
+    while len(vals) < n:
+        vals += list(_parse_fortran_line(lines[i]))
+        i += 1
+    if len(vals) != n:
+        raise Exception("Unexpected number of values in lookup table near line %d" % i)
+    return np.array(vals, dtype=float), i
+
+def _is_numeric_line(line:str) -> bool:
+    """Whether a line is non-empty and holds only numbers (including NaN)."""
+    if len(line.split()) == 0:
+        return False
+    try:
+        _parse_fortran_line(line)
+    except ValueError:
+        return False
+    return True
+
+def fill_nan_lookup(kpath:str) -> tuple:
+    """Fill NaN values in the k-coefficient lookup tables of an assembled spectral file.
+
+    Ccorr_k can give NaN k-terms where its Planck weights underflow at low temperature
+    (exp(-hc*nu/kT) < ~1e-308, e.g. T=25 K for nu > ~12300 cm-1). Each NaN is replaced
+    by linear interpolation in temperature along its row of the table (same band, gas,
+    k-term, pressure), with constant extrapolation beyond the outermost valid values.
+    This matches how SOCRATES interpolates the table, and clamps temperatures to its
+    range, so a layer colder than the lowest valid point sees that point's value.
+    Rows with no valid values at all are set to zero.
+
+    Parameters
+    ----------
+    kpath : str
+        Path to the k-coefficient file (.sf_k) written by prep_spec
+
+    Returns
+    ----------
+    tuple
+        Number of values interpolated, number of values set to zero
+    """
+
+    with open(kpath,'r') as hdl:
+        lines = hdl.readlines()
+
+    block_types = {"k-table":"gas", "continuum k-table":"cont", "temperature k-tables":"tgas"}
+    block  = None   # type of the current lookup block
+    t_grid = None   # temperatures of each row, indexed by pressure [n_pre, n_tmp]
+    t_gas  = {}     # temperatures per gas, for the temperature k-tables
+    n_fill = 0
+    n_zero = 0
+
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+
+        if s.startswith("*BLOCK"):
+            block = block_types.get(s.split(":",1)[1].strip(), None)
+            i += 1
+            continue
+        if (block is None) or (s == ""):
+            i += 1
+            continue
+
+        if s.startswith("Lookup table:") and ("pressures" in s):
+            # pressure-temperature grid: each row is p followed by its temperatures
+            n_pre = int(s.split(":")[1].split()[0])
+            n_tmp = int(s.split(",")[1].split()[0])
+            vals, i = _read_lookup_numbers(lines, i+1, n_pre*(n_tmp+1))
+            t_grid = vals.reshape(n_pre, n_tmp+1)[:,1:]
+            continue
+        if s.startswith("Lookup table:") and s.endswith("temperatures."):
+            # continuum temperature grid
+            n_tmp = int(s.split(":")[1].split()[0])
+            vals, i = _read_lookup_numbers(lines, i+1, n_tmp)
+            t_grid = vals.reshape(1, n_tmp)
+            continue
+        if s.startswith("Lookup table for gas"):
+            igas  = int(s.split("gas")[1].split(":")[0])
+            n_tmp = int(s.split(":")[1].split()[0])
+            t_gas[igas], i = _read_lookup_numbers(lines, i+1, n_tmp)
+            continue
+
+        if s.startswith("Band:"):
+            if block == "tgas":
+                igas   = int(s.split("gas:")[1].split(",")[0])
+                t_grid = t_gas[igas].reshape(1, -1)
+            if t_grid is None:
+                raise Exception("Lookup table data before its grid in '%s'" % kpath)
+            n_pre, n_tmp = t_grid.shape
+
+            # Data lines run until the next blank or header line
+            j = i+1
+            while (j < len(lines)) and _is_numeric_line(lines[j]):
+                j += 1
+
+            # Each row of n_tmp values starts on a new line, six values per line
+            lpr = (n_tmp + 5) // 6
+            if (j-i-1) % lpr != 0:
+                raise Exception("Malformed lookup table at line %d of '%s'" % (i+1, kpath))
+            for r, l0 in enumerate(range(i+1, j, lpr)):
+                if "NaN" not in "".join(lines[l0:l0+lpr]):
+                    continue
+                row = _parse_fortran_line("".join(lines[l0:l0+lpr]))
+                bad = np.isnan(row)
+                if np.all(bad):
+                    row[:] = 0.0
+                    n_zero += n_tmp
+                else:
+                    # rows are ordered with pressure as the fastest-varying index
+                    t = t_grid[r % n_pre]
+                    row[bad] = np.interp(t[bad], t[~bad], row[~bad])
+                    n_fill += np.count_nonzero(bad)
+                for k in range(lpr):
+                    lines[l0+k] = "".join(_fmt_e13(v) for v in row[6*k:6*k+6]) + "\n"
+            i = j
+            continue
+
+        i += 1
+
+    with open(kpath,'w') as hdl:
+        hdl.writelines(lines)
+
+    return n_fill, n_zero
 
 def assemble(alias:str, volatile_list:list, dry:bool=False):
     """Assemble final spectral file.
@@ -1076,7 +1309,16 @@ def assemble(alias:str, volatile_list:list, dry:bool=False):
                 log.error("Assembled spectral file '%s' contains NaN values" % check_path)
                 log.error("-------------------------------------------")
 
-        # Replace NaNs if requested
+        # Fill NaNs in the lookup tables from valid neighbours in temperature
+        if REPLACE_NAN and contains_nan and (ext == "_k"):
+            n_fill, n_zero = fill_nan_lookup(check_path)
+            log.warning("Filled %d NaN values in '%s' by interpolation in temperature" % (n_fill, check_path))
+            if n_zero > 0:
+                log.warning("Set %d NaN values to zero in '%s' (rows with no valid values)" % (n_zero, check_path))
+            with open(check_path,'r') as hdl:
+                contains_nan = "NaN" in hdl.read()
+
+        # Replace any remaining NaNs with zeros
         if REPLACE_NAN and contains_nan:
             log.warning("Replacing NaN value in '%s'" % check_path)
             with open(check_path,'r') as hdl:

@@ -8,7 +8,7 @@ import numpy as np
 import hashlib
 
 # Version
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 log = logging.getLogger("fwl."+__name__)
 
@@ -297,14 +297,16 @@ cia_pairs = [
     ["N2", "He"],
     ["N2", "N2"],
     ["N2", "H2O"],
+    ["N2", "CH4"],
     ["O2", "CO2"],
-    # ["O2", "N2"], # shows strange behaviour
+    ["O2", "N2"],
     ["O2", "O2"],
     ["CO2", "CO2"],
     ["CO2", "H2"],
     ["CO2", "He"],
     ["CO2", "CH4"],
     ["CO2", "Ar"],
+    ["CO2", "H2O"], # HITRAN data at 296 K only (used at all temperatures), 5700-6300 cm-1
     ["CH4", "He"],
     ["CH4", "Ar" ],
     ["CH4", "CH4"],
