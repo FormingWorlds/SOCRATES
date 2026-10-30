@@ -30,6 +30,7 @@ nav:
       - Spectral files: 
         - Overview: Reference/spectral_files.md
         - PROTEUS spectral files: Reference/proteus_spectral_file_reference.md
+        - Validation: Reference/spectral_file_validation.md
         - Met Office spectral files: Reference/spectral_file_reference.md
       - Documentation PDFs: Reference/documentation_pdfs.md
     
