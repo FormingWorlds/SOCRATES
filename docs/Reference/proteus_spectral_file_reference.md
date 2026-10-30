@@ -32,7 +32,6 @@ A quick reference, with one row per codename. Click a codename for its details a
 | [Frostflow](#frostflow) | Water-dominated atmospheres (DACE) | [4096](https://zenodo.org/records/15799776 "Frostflow 4096 on Zenodo"), [256](https://zenodo.org/records/15799754 "Frostflow 256 on Zenodo"), [48](https://zenodo.org/records/15696415 "Frostflow 48 on Zenodo"), [16](https://zenodo.org/records/15799743 "Frostflow 16 on Zenodo") | H<sub>2</sub>O |
 | [Dayspring](#dayspring) | Mixed volatiles, smaller set than Honeyside (DACE) | [4096](https://zenodo.org/records/15799495 "Dayspring 4096 on Zenodo"), [256](https://zenodo.org/records/15799474 "Dayspring 256 on Zenodo"), [48](https://zenodo.org/records/15721749 "Dayspring 48 on Zenodo"), [16](https://zenodo.org/records/15799318 "Dayspring 16 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, CH<sub>4</sub>, N<sub>2</sub> |
 | [Honeyside](#honeyside) | Mixed volatiles; suggested for magma-ocean planets (DACE) | [4096](https://zenodo.org/records/15696457 "Honeyside 4096 on Zenodo"), [256](https://zenodo.org/records/15799731 "Honeyside 256 on Zenodo"), [48](https://zenodo.org/records/15799652 "Honeyside 48 on Zenodo"), [16](https://zenodo.org/records/15799607 "Honeyside 16 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, CH<sub>4</sub>, N<sub>2</sub>, NH<sub>3</sub>, SO<sub>2</sub>, N<sub>2</sub>O, O<sub>3</sub>, HCN, H<sub>2</sub>S |
-| [Rocks](#rocks) | Rock-vapour atmospheres, for comparison with JWST observations | [256](https://zenodo.org/records/15806423 "Rocks 256 on Zenodo"), [128](https://zenodo.org/records/15806401 "Rocks 128 on Zenodo"), [64](https://zenodo.org/records/15806381 "Rocks 64 on Zenodo") | H<sub>2</sub>, H<sub>2</sub>O, O<sub>2</sub>, SiO, SiO<sub>2</sub> (the 256-band file has only O<sub>2</sub>, SiO and SiO<sub>2</sub>) |
 | [Winterfell](#winterfell) | As Honeyside, with UV cross-sections | [4096](https://zenodo.org/records/18402082 "Winterfell 4096 on Zenodo"), [256](https://zenodo.org/records/18402159 "Winterfell 256 on Zenodo"), [48](https://zenodo.org/records/18402184 "Winterfell 48 on Zenodo"), [16](https://zenodo.org/records/18402217 "Winterfell 16 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, CH<sub>4</sub>, N<sub>2</sub>, NH<sub>3</sub>, SO<sub>2</sub>, N<sub>2</sub>O, O<sub>3</sub>, HCN, H<sub>2</sub>S, O<sub>2</sub> |
 | [Dragonstone](#dragonstone) | As Winterfell, without O<sub>2</sub> | [4096](https://zenodo.org/records/18922546 "Dragonstone 4096 on Zenodo"), [256](https://zenodo.org/records/18910878 "Dragonstone 256 on Zenodo"), [48](https://zenodo.org/records/18922528 "Dragonstone 48 on Zenodo"), [16](https://zenodo.org/records/18922335 "Dragonstone 16 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, CH<sub>4</sub>, N<sub>2</sub>, NH<sub>3</sub>, SO<sub>2</sub>, N<sub>2</sub>O, O<sub>3</sub>, HCN, H<sub>2</sub>S |
 | [Sunspear](#sunspear) | Reproducing Ranjan & Sasselov (2016): UV for CO<sub>2</sub>, SO<sub>2</sub> and H<sub>2</sub>S only | 4096, 256, 48, 16 | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, CH<sub>4</sub>, N<sub>2</sub>, NH<sub>3</sub>, SO<sub>2</sub>, N<sub>2</sub>O, O<sub>3</sub>, HCN, H<sub>2</sub>S, O<sub>2</sub> |
@@ -60,7 +59,6 @@ The appropriate spectral file depends on the atmospheric composition being model
 - For **debugging**, use a low resolution spectral file with 16 bands.
 - For **water-dominated atmospheres**, Frostflow or Oak are appropriate depending on the required resolution and data source.
 - For **mixed volatile atmospheres** (H<sub>2</sub>O, CO<sub>2</sub>, CH<sub>4</sub>, H<sub>2</sub>, N<sub>2</sub> and more), Honeyside is the most complete option.
-- For **rock-vapour atmospheres** (relevant to magma ocean planets), use the Rocks files which include SiO and SiO<sub>2</sub> opacity.
 - The Generation III files are organised by composition: **Snowline** for water, **Breezehome** for oxidised volatiles, **Cliffshade** for reduced volatiles, **Volenfell** for rock vapours, **Proudspire** for combined volatiles, **Skyborn** for hot Jupiters, and **Atmora** and **Sovngarde** for rock vapours with volatiles (a smaller and a larger set of gases). Each has 32, 64, 128, 256 and 2048 bands.
 
 ---
@@ -258,23 +256,6 @@ One subsection per codename. **k-term tolerance** is the maximum RMS error in tr
 - **Platform**: Linux Intel
 - **Creator**: Harrison Nicholls
 
-### Rocks
-
-- **Bands**:
-    - 256: High resolution file used for comparison with JWST observations of rock-vapour atmospheres.
-    - 128: Rock vapours and key volatiles.
-    - 64: Rock vapours and key volatiles (low resolution).
-- **Zenodo records**: [256](https://zenodo.org/records/15806423 "Rocks 256 on Zenodo"), [128](https://zenodo.org/records/15806401 "Rocks 128 on Zenodo"), [64](https://zenodo.org/records/15806381 "Rocks 64 on Zenodo")
-- **Absorbers**: 256 bands: O<sub>2</sub>, SiO, SiO<sub>2</sub>; 128 and 64 bands: H<sub>2</sub>, H<sub>2</sub>O, O<sub>2</sub>, SiO, SiO<sub>2</sub>
-- **Continua**: 256 bands: O<sub>2</sub>-O<sub>2</sub>; 128 and 64 bands: H<sub>2</sub>O-H<sub>2</sub>O, H<sub>2</sub>-H<sub>2</sub>, O<sub>2</sub>-O<sub>2</sub>
-- **UV cross-sections**: No
-- **Sources**: DACE
-- **k-term tolerance**: ?
-- **SOCRATES version**: 2407.2
-- **Date**: 2025-05-15
-- **Platform**: Linux Intel
-- **Creator**: Alex McGinty
-
 ### Winterfell
 
 - **Bands**:
@@ -439,8 +420,6 @@ Rock vapours and volatiles (smaller set). Made with `spectraltools`; see [Buildi
 
 - **Bands**: 2048, 256, 128, 64, 32
 - **Gases (line list)**: H<sub>2</sub>O (POKAZATEL), H<sub>2</sub> (RACPPK), CO<sub>2</sub> (Dozen), CO (4thplus), O<sub>2</sub> (SWYT), CH<sub>4</sub> (HITEMP2020), SO<sub>2</sub> (ExoAmes), S<sub>2</sub> (Gomez), H<sub>2</sub>S (AYT2), NH<sub>3</sub> (CoYuTe), SiO (SiOUVenIR), TiO (Toto), Na (NIST), K (NIST)
-
-The gas list for Atmora is taken from the planning sheet; the build script `spectraltools/Tmake_spectralfile.py` currently lists Atmora without S<sub>2</sub> and H<sub>2</sub>S.
 
 ### Sovngarde
 
