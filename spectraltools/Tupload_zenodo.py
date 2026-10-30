@@ -8,7 +8,9 @@ Each pair of codename and band count becomes one Zenodo record, titled
     <Codename>.chk, <Codename>.chk_k       BLAKE2b checksums of the two files above
     <Codename>_Tmake_spectralfile_<timestamp>.log   generator log
     <Codename>_*.log                       logs of prep_spec, Ccorr_k and Cscatter_average,
-                                           with their monitor logs (empty logs are skipped)
+                                           with their monitor logs, except the Cscatter_average
+                                           monitor log <Codename>_droplet_mon.log (1.7 GB with
+                                           2048 bands); empty logs are skipped
     <Codename>_Tmake_spectralfile.py       generator script (settings backup), only if
                                            its settings agree with the generator log
 
@@ -670,11 +672,14 @@ def build_item(codename: str, nband: int, folder: Path, formulae: list, names: l
     item.log = info = parse_log(logs[0])
     names_up = required + [logs[0].name]
 
-    # Every other log of the build (prep_spec, Ccorr_k and Cscatter_average, with their monitor logs)
+    # Every other log of the build (prep_spec, Ccorr_k and Cscatter_average, with their monitor logs), except
+    # the Cscatter_average monitor log, which is far larger than the spectral file itself
     for path in sorted(folder.glob("*.log")):
         if path.name in names_up:
             continue
-        if path.stat().st_size == 0:
+        if path.name == f"{codename}_droplet_mon.log":
+            item.excluded.append((path.name, f"Cscatter_average monitor log, {human_size(path.stat().st_size)}"))
+        elif path.stat().st_size == 0:
             item.excluded.append((path.name, "empty file"))
         else:
             names_up.append(path.name)
@@ -813,9 +818,11 @@ def describe_html(item: Item, creator_name: str) -> str:
                  f"{e(sfk.name.replace('.sf_k', '.chk_k'))}): "
                  f"{e(sf.name)} <code>{sf.blake2b}</code>; {e(sfk.name)} <code>{sfk.blake2b}</code>.")
     has_script = any(lf.name.endswith("_Tmake_spectralfile.py") for lf in item.files)
+    programs = ["prep_spec", "Ccorr_k"] + (["Cscatter_average"] if any(
+        lf.name.endswith("_droplet.log") for lf in item.files) else [])
     paras.append(f"Files: {e(sf.name)} and {e(sfk.name)} (spectral file and k-coefficients), "
                  "their checksums, the generator log, the logs of the SOCRATES programs run during the build "
-                 "(prep_spec, Ccorr_k and Cscatter_average)"
+                 f"({', '.join(programs[:-1])} and {programs[-1]})"
                  + (", and the generator script." if has_script else "."))
     paras.append(f'Documentation: <a href="{DOCS_URL}">PROTEUS spectral files reference</a> '
                  "in the SOCRATES documentation.")
