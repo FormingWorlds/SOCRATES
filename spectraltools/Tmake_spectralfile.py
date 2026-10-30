@@ -48,8 +48,8 @@ def main(nband=None):
     # alias  = "Skyborn"
 
     # Vapours + volatiles (small)
-    # vols = ["H2O", "H2", "CO2", "CO", "O2", "CH4", "SO2", "NH3", "SiO",	"TiO", "Na", "K"]
-    # alias = "Atmora"
+    vols = ["H2O", "H2", "CO2", "CO", "O2", "CH4", "SO2", "S2","H2S", "NH3", "SiO", 	"TiO", "Na", "K"]
+    alias = "Atmora"
 
     # Vapours + volatiles (large)
     # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "S2", "H2S", "N2", "NH3", "HCN", "SiO", "TiO", "MgO", "Na", "K", "Fe"]
@@ -58,9 +58,6 @@ def main(nband=None):
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
     vol_source = {"VO":"dace", "CH4":"dace", "NH3":"dace"}   # Per-gas overrides of source database
-
-    vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
-    alias = "Volenfell"          # Alias for this spectral file
 
     UV = False               # Includes the UV range wavenumbers and cross-sections
     if nband is None:
