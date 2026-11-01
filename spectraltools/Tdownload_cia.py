@@ -23,6 +23,7 @@ def main():
         "N2-He": 	"N2-He_2018.cia",
         "N2-N2": 	"N2-N2_2021.cia",
         "N2-H2O":	"N2-H2O_2018.cia",
+        "N2-CH4":	"N2-CH4_2024.cia",
 
         "O2-CO2":	"O2-CO2_2024.cia",
         "O2-N2":	"O2-N2_2024.cia",
@@ -33,6 +34,7 @@ def main():
         "CO2-He":	"CO2-He_2018.cia",
         "CO2-CH4":  "CO2-CH4_2024.cia",
         "CO2-Ar":	"CO2-Ar_2021.cia",
+        "CO2-H2O":	"CO2-H2O_2024.cia",
 
         "CH4-He":	"CH4-He_2018.cia",
         "CH4-Ar":   "CH4-Ar_2011.cia",

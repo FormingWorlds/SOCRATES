@@ -17,24 +17,59 @@ import time
 log = logging.getLogger("fwl."+__name__)
 
 
-def main():
+def main(nband=None):
 
     log.info("    SOCRATES directory: %s", utils.dirs["socrates"])
     log.info("    SOCRATES version: %s", utils.socratesver())
     log.info("    SOCRATES git hash: %s", utils.git_hash())
 
+    # Water
+    # vols = ["H2O" ]   # List of gases
+    # alias = "Snowline"          # Alias for this spectral file
+
+    # Rock vapours
+    # vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
+    # alias = "Volenfell"          # Alias for this spectral file
+
+    # Oxidised volatiles
+    # vols = ["H2O", "CO2", "CO", "O2", "SO2", "OCS", "S2" ]   # List of gases
+    # alias = "Breezehome"          # Alias for this spectral file
+
+    # Reduced volatiles
+    # vols = ["H2", "CO", "CH4", "S2", "H2S", "N2", "NH3" ]   # List of gases
+    # alias = "Cliffshade"          # Alias for this spectral file
+
+    # Combined volatiles
+    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS",  "S2", "H2S", "N2", "NH3", "HCN"]
+    # alias = "Proudspire"
+
+    # Hot jupiters
+    # vols = ["H2O", "H2", "CO2", "CO", "SiO", "TiO", "VO", "MgO", "Na", "K", "Fe"]
+    # alias  = "Skyborn"
+
+    # Vapours + volatiles (small)
+    vols = ["H2O", "H2", "CO2", "CO", "O2", "CH4", "SO2", "S2","H2S", "NH3", "SiO", 	"TiO", "Na", "K"]
+    alias = "Atmora"
+
+    # Vapours + volatiles (large)
+    # vols = ["H2O", "H2", "CO2", "CO", "O2", "O3", "CH4", "SO2", "OCS", "S2", "H2S", "N2", "NH3", "HCN", "SiO", "TiO", "MgO", "Na", "K", "Fe"]
+    # alias = "Sovngarde"
+
     # ------------ PARAMETERS ------------
     source = "exocross"         # Source database
-    vols = ["CO", "O2", "SiO", "TiO", "MgO", "Na", "K", "Fe"]   # List of gases
-    alias = "Volenfell"          # Alias for this spectral file
+    vol_source = {"VO":"dace", "CH4":"dace", "NH3":"dace"}   # Per-gas overrides of source database
+
     UV = False               # Includes the UV range wavenumbers and cross-sections
-    nband = 128              # Number of wavenumber bands
+    if nband is None:
+        nband = 32          # Number of wavenumber bands (if not passed as argument)
     drops = True            # Include water droplet scattering?
-    method = 2              # Band selection method
+    method = 3              # Band selection method
     numax = 50000.0        # Clip to this maximum wavenumber [cm-1]
     numin = 10.0             # Clip to this minimum wavenumber [cm-1]
     dnu   = 0.025             # Downsample to this wavenumber resolution [cm-1]
     preNC = True           # Use pre-existing netCDF files in output/ if they are found
+    maxpath = 1.0e3         # Default maximum mass path for k-coefficients [kg/m2]; also used for CIA [kg2/m5]
+    vol_maxpath = {"SiO":1e1, "TiO":1e1, "VO":1e1, "MgO":1e1, "Na":1e1, "K":1e1, "Fe":1e1}   # Per-gas overrides of maximum mass path [kg/m2]
 
     # band selection methods (wavenumber space):
     # 0 = linspace   \n
@@ -73,10 +108,22 @@ def main():
             raise Exception("Invalid gas '%s'"%vols[i])
         vols[i] = safe
 
+    # Source database for each volatile
+    vol_source = {phys.chemsafe(k):utils.sourcesafe(s) for k,s in vol_source.items()}
+    srcs = {v:vol_source.get(v, source) for v in vols}
+
+    # Maximum mass path for each volatile
+    spectral.CCORRK_MAXPATH = maxpath
+    vol_maxpath = {phys.chemsafe(k):float(m) for k,m in vol_maxpath.items()}
+    maxpaths = {v:vol_maxpath.get(v, maxpath) for v in vols}
+
+    # Reference volatile for p,t grid and band edges: last one using the default source
+    vref = ([v for v in vols if srcs[v] == source] or vols)[-1]
+
     # ===========
     # Check paths
     for v in vols:
-        formula_path = os.path.join(utils.dirs[source], v.strip()+"/")
+        formula_path = os.path.join(utils.dirs[srcs[v]], v.strip()+"/")
         if not os.path.exists(formula_path):
             raise Exception("Could not find folder '%s'" % formula_path)
 
@@ -97,37 +144,36 @@ def main():
     # Print params
     log.info("")
     log.info("Parameters")
-    log.info("    source: %s", source)
-    log.info("    alias:  %s", alias)
-    log.info("    vols:   %s", utils.get_arr_as_str(vols))
-    log.info("    nvols:  %d", len(vols))
-    log.info("    nband:  %d", nband)
+    log.info("    source:   %s", source)
+    log.info("    gases:    (N=%d)", len(vols))
+    for v in vols:
+        log.info("           %6s from %-8s maxpath %.2e kg/m2", v, srcs[v], maxpaths[v])
+    log.info("    alias:    %s", alias)
+    log.info("    nband:    %d", nband)
     log.info("    numin, numax, dnu : %.3f, %.3f, %.3f cm-1", numin, numax, dnu)
-    log.info("    drops:  %s", str(drops))
-    log.info("    method: %d", method)
-    log.info("    n_tp:   %d", len(tgt_p)*len(tgt_t))
-    log.info("    tgt_p:  %s", utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
-    log.info("    tgt_t:  %s", utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
+    log.info("    method:   %d", method)
+    log.info("    masspath: %.2e kg/m2", maxpath)
+    log.info("    UV:       %s", str(UV))
+    log.info("    preNC:    %s", str(preNC))
+    log.info("    n_tp:     %d", len(tgt_p)*len(tgt_t))
+    log.info("    tgt_p:    %s", utils.get_arr_as_str(tgt_p, fmt=r"%.2e", sep=','))
+    log.info("    tgt_t:    %s", utils.get_arr_as_str(tgt_t, fmt=r"%.2f", sep=','))
+    log.info("    drops:    %s", str(drops))
 
 
     # ===========
     # Test each volatile for its numin, numax, pmin, pmax, tmin, tmax
     log.info("")
     log.info("Verifying domain of input data")
-    if source == "dace":
-        if np.amin(tgt_p) < 1.0e-8:
-            raise Exception("Requested pressures exceed DACE domain (p < 1.0e-8 bar)")
-        if np.amax(tgt_p) > 1.0e3:
-            raise Exception("Requested pressures exceed DACE domain (p > 1.0e3 bar)")
-
     #     check files directly
     dat_numin, dat_numax = np.inf, -np.inf
     dat_tmin, dat_tmax = np.inf, -np.inf
+    dat_pmin, dat_pmax = np.inf, -np.inf
     for v in vols:
         log.info("    checking %s", v)
         #     read first file
-        formula_path = os.path.join(utils.dirs[source], v+"/")
-        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
+        formula_path = os.path.join(utils.dirs[srcs[v]], v+"/")
+        temp_xc = cross.xsec(v, srcs[v], ptf.first_file(srcs[v], v))
         temp_xc.read(UV=UV, numin=numin, numax=numax, dnu=dnu)
         temp_xc.plot([None,None],
                      show=False, quiet=True,
@@ -140,16 +186,33 @@ def main():
         dat_numax = max(dat_numax, vol_numax)
         log.info("        numin, numax = %.1f, %.1f cm-1", vol_numin, vol_numax)
 
-        #     get tmin, tmax
-        _,at,_ = ptf.list_all_ptf(source, v, quiet=False)
+        #     get pmin, pmax, tmin, tmax
+        ap,at,_ = ptf.list_all_ptf(srcs[v], v, quiet=False)
         dat_tmin = min(dat_tmin, np.amin(at))
         dat_tmax = max(dat_tmax, np.amax(at))
+        dat_pmin = min(dat_pmin, np.amin(ap))
+        dat_pmax = max(dat_pmax, np.amax(ap))
 
-    #     check temperature range
+        #     warn if this volatile will be clamped to its nearest p,t point
+        rtol = 1.0e-2
+        p_out = tgt_p[(tgt_p < np.amin(ap)*(1-rtol)) | (tgt_p > np.amax(ap)*(1+rtol))]
+        t_out = tgt_t[(tgt_t < np.amin(at)*(1-rtol)) | (tgt_t > np.amax(at)*(1+rtol))]
+        if len(p_out) > 0:
+            log.warning("    %s data spans p = [%.2e, %.2e] bar; using nearest for p = %s bar",
+                        v, np.amin(ap), np.amax(ap), utils.get_arr_as_str(p_out, fmt=r"%.2e", sep=','))
+        if len(t_out) > 0:
+            log.warning("    %s data spans t = [%.2f, %.2f] K; using nearest for t = %s K",
+                        v, np.amin(at), np.amax(at), utils.get_arr_as_str(t_out, fmt=r"%.2f", sep=','))
+
+    #     check temperature and pressure range
     if np.amin(tgt_t) < dat_tmin:
-        raise Exception("Requested temperatures exceed data domain (t < %g K)"%dat_tmin)
+        raise Exception("Requested temperatures exceed data domain (t < %.2f K)"%dat_tmin)
     if np.amax(tgt_t) > dat_tmax:
-        raise Exception("Requested temperatures exceed data domain (t > %g K)"%dat_tmax)
+        raise Exception("Requested temperatures exceed data domain (t > %.2f K)"%dat_tmax)
+    if np.amin(tgt_p) < dat_pmin*(1-rtol):
+        raise Exception("Requested pressures exceed data domain (p < %.2e bar)"%dat_pmin)
+    if np.amax(tgt_p) > dat_pmax*(1+rtol):
+        raise Exception("Requested pressures exceed data domain (p > %.2e bar)"%dat_pmax)
 
     #     set new nu range
     numin = max(numin, dat_numin)
@@ -157,8 +220,9 @@ def main():
     log.info("    numin, numax set to %.1f, %.1f cm-1", numin, numax) # Set the nu limits to encompass all volatile nus (least restrictive)
 
     # ===========
-    # Determine flattened p,t grid using last of the absorbers
-    arr_p, arr_t  = ptf.best_pt(source, vols[-1], tgt_p, tgt_t)
+    # Determine flattened p,t grid using reference absorber
+    log.info("Using %s as reference for p,t grid and band edges", vref)
+    arr_p, arr_t  = ptf.best_pt(srcs[vref], vref, tgt_p, tgt_t)
 
     # Ensure pressure grid is ascending and unique
     # if not utils.is_ascending(arr_p):
@@ -167,10 +231,9 @@ def main():
     #     raise Exception("Pressure grid is not unique (contains repeated values)!")
 
     # ===========
-    # Get nu array for required range and resolution (first file from last absorber)
-    nu_file = ptf.first_file(source, vols[-1])
-    nu_samp = cross.xsec(vols[-1], # final volatile
-                         source, nu_file)
+    # Get nu array for required range and resolution (first file from reference absorber)
+    nu_file = ptf.first_file(srcs[vref], vref)
+    nu_samp = cross.xsec(vref, srcs[vref], nu_file)
     nu_arr = nu_samp.read().get_nu()
 
     # ===========
@@ -197,14 +260,14 @@ def main():
         nc_paths[v] = ncp
 
         # Get numin, numax for this volatile
-        formula_path = ptf.get_formula_path(source, v)
-        temp_xc = cross.xsec(v, source, ptf.first_file(source, v))
+        formula_path = ptf.get_formula_path(srcs[v], v)
+        temp_xc = cross.xsec(v, srcs[v], ptf.first_file(srcs[v], v))
         temp_xc.read()
         temp_xc.plot([numin, numax], show=False, quiet=False,
                      band_edges=band_edges,
                      alias=alias+"_", pad_xlim=5e3)
-        numin = max(numin, np.amin(temp_xc.get_nu()))
-        numax = min(numax, np.amax(temp_xc.get_nu()))
+        numin_v = max(numin, np.amin(temp_xc.get_nu()))
+        numax_v = min(numax, np.amax(temp_xc.get_nu()))
 
         # Can skip PTF mapping?
         if os.path.exists(ncp) and preNC:
@@ -218,15 +281,15 @@ def main():
 
         else:
             # Map files, finding the closest p,t point to each target p,t point
-            vol_p, vol_t, vol_f = ptf.map_ptf(source, v, arr_p, arr_t)
+            vol_p, vol_t, vol_f = ptf.map_ptf(srcs[v], v, arr_p, arr_t)
 
             # Write these p,t,f to csv file for reference
             ptf.write_csv(alias, v, vol_p, vol_t, vol_f)
 
             # Write netCDF from source files
-            dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, source,
+            dnu_this = netcdf.write_ncdf_from_grid(UV, ncp, v, srcs[v],
                                                    arr_p, arr_t, vol_f,
-                                                   dnu=dnu, numin=numin, numax=numax)
+                                                   dnu=dnu, numin=numin_v, numax=numax_v)
 
         # Check resolution
         if (dnu_last is not None) and (not np.isclose(dnu_last, dnu_this)):
@@ -242,7 +305,7 @@ def main():
     # Calculate k-coefficients from netCDF
     log.info("")
     for i,f1 in enumerate(vols):
-        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1])
+        spectral.calc_kcoeff_lbl(alias, f1, nc_paths[f1], maxpath=maxpaths[f1])
         for f2 in vols[i:]:
             spectral.calc_kcoeff_cia(alias, f1, f2, dnu_last)
 

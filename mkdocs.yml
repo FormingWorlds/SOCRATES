@@ -22,13 +22,16 @@ nav:
       - Two-stream radiation code: Explanations/two_stream.md
       - Spherical harmonic code: Explanations/spherical_harmonic.md
     - Spectral files: Explanations/spectral_files.md
+    - Building spectral files: Explanations/spectraltools_pipeline.md
     - Interface to the calling model: Explanations/interface.md
 
   - Reference:
       - Publications: Reference/publications.md
       - Spectral files: 
-        - Met Office spectral files: Reference/spectral_file_reference.md
+        - Overview: Reference/spectral_files.md
         - PROTEUS spectral files: Reference/proteus_spectral_file_reference.md
+        - Validation: Reference/spectral_file_validation.md
+        - Met Office spectral files: Reference/spectral_file_reference.md
       - Documentation PDFs: Reference/documentation_pdfs.md
     
 
@@ -99,7 +102,12 @@ markdown_extensions:
   - attr_list
   - markdown_include.include:
       base_path: docs
-  - pymdownx.extra
+  - pymdownx.extra:
+      pymdownx.superfences:
+        custom_fences:
+          - name: mermaid
+            class: mermaid
+            format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.tabbed:

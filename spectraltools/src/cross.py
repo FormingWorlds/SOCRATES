@@ -3,9 +3,7 @@
 # Libraries
 import logging
 import numpy as np
-import struct
 import os
-import io
 
 # Files
 import src.phys as phys
@@ -119,41 +117,30 @@ class xsec():
         if not os.access(self.fname, os.R_OK):
             raise Exception("Cannot read file '%s'" % self.fname)
 
-        # get number of bins
-        nbins = 0
-        with open(self.fname, "rb") as hdl:
-            hdl.seek(0, io.SEEK_END)
-            nbins = int(hdl.tell()/4)
+        # Read filename info
+        self.parse_binname()
+        res = 0.01    # expected resolution from DACE [cm-1]
+
+        # Get cross-sections for each bin (native-endian Float32, as written by dace.download)
+        k_read = np.fromfile(self.fname, dtype=np.float32)
+        nbins = len(k_read)
 
         # check value is reasonable
         if (nbins < 100) or (nbins > 1e12):
             raise Exception("Error reading DACE file; too many/few bins.")
+
+        # check file is complete, given the wavenumber range in its name
+        nbins_expect = int(round((self.numax - self.numin) / res))
+        if nbins != nbins_expect:
+            raise Exception("DACE file '%s' has %d bins but its name implies %d; incomplete download?"
+                            % (self.fname, nbins, nbins_expect))
         self.nbins = nbins
 
-        # Get cross-sections for each bin
-        k_read = []
-        with open(self.fname, "rb") as hdl:
-            for _ in range(nbins):
-                k_read.append(struct.unpack('f', hdl.read(4))[0])  # 4 bytes at a time (Float32)
-
-        # Check lengths
-        if len(k_read) != self.nbins:
-            raise Exception("Invalid array length when reading DACE bin file")
-
-        # Read filename info
-        self.parse_binname()
-
-        # Set nu array
-        res = 0.01    # expected resolution from DACE [cm-1]
-
-        tmp_nu = []
-        tmp_k  = []
-        nulast = -999999999.0
-        for i, nu in enumerate(np.arange(self.numin, self.numax, res)):
-            if (numin <= nu <= numax) and (nu + dnu > nulast):
-                tmp_nu.append(nu)
-                tmp_k.append(k_read[i])
-                nulast= nu
+        # Set nu array, and clip to range
+        nu_read = self.numin + res * np.arange(nbins)
+        mask = (numin <= nu_read) & (nu_read <= numax)
+        tmp_nu = nu_read[mask].tolist()
+        tmp_k  = k_read[mask].astype(float).tolist()
 
         ### UV ADD-ON ###
         # Reads the UV files from the moleculesUV folder
@@ -224,7 +211,22 @@ class xsec():
                 tmp_nu, tmp_k = readUV(self.form, tmp_nu, tmp_k, res, wavenumber_min)
             except TypeError:
                 None
-        
+
+        # Resample onto a grid of multiples of dnu, if coarser than native resolution.
+        # This matches the ExoCross grid (e.g. 10.000, 10.025, ...) so that sources can be mixed.
+        # Nearest-neighbour is used rather than linear interpolation: lines narrower than the
+        # native grid would otherwise be smeared onto midpoints, which biases the k-distribution.
+        if dnu > res * (1.0 + 1.0e-6):
+            nu_src = np.array(tmp_nu, dtype=float)
+            jmin = int(np.ceil(nu_src[0] / dnu - 1.0e-6))
+            jmax = int(np.floor(nu_src[-1] / dnu + 1.0e-6))
+            nu_new = dnu * np.arange(jmin, jmax + 1)
+            i = np.clip(np.searchsorted(nu_src, nu_new), 1, len(nu_src) - 1)
+            i = np.where(nu_new - nu_src[i-1] < nu_src[i] - nu_new - 1.0e-9, i - 1, i)
+            tmp_k  = np.array(tmp_k, dtype=float)[i].tolist()
+            tmp_nu = nu_new.tolist()
+            res = dnu
+
         # derive k limit dynamically
         self.tmp_k = np.array(tmp_k, dtype=float)
         if len(self.tmp_k) < 2:
@@ -319,7 +321,7 @@ class xsec():
         tmp_k  = []
         nulast = -999999999.0
         for i,nu in enumerate(self.arr_nu):
-            if (numin <= nu <= numax) and (nu + dnu > nulast):
+            if (numin <= nu <= numax) and (nu - nulast > dnu * (1.0 - 1.0e-6)):
                 tmp_nu.append(nu)
                 tmp_k.append(self.arr_k[i])
                 nulast= nu
@@ -381,7 +383,7 @@ class xsec():
         tmp_k  = []
         nulast = -999999999.0
         for i,nu in enumerate(self.arr_nu):
-            if (numin <= nu <= numax) and (nu + dnu > nulast):
+            if (numin <= nu <= numax) and (nu - nulast > dnu * (1.0 - 1.0e-6)):
                 tmp_nu.append(nu)
                 tmp_k.append(self.arr_k[i])
                 nulast= nu
@@ -409,7 +411,7 @@ class xsec():
         tmp_k  = []
         nulast = -999999999.0
         for i,nu in enumerate(nu_arr):
-            if (numin <= nu <= numax) and (nu + dnu > nulast):
+            if (numin <= nu <= numax) and (nu - nulast > dnu * (1.0 - 1.0e-6)):
                 tmp_nu.append(nu)
                 tmp_k.append(k_arr[i])
                 nulast= nu

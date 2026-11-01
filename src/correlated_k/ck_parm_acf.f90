@@ -23,7 +23,7 @@ MODULE ck_parm_acf
 
   INTEGER, PARAMETER :: n_path_kopt_default = 20
 !   Default number of absorptive paths
-  INTEGER, PARAMETER :: np_kopt_max_iter = 100
+  INTEGER, PARAMETER :: np_kopt_max_iter = 200
 !   Maximum number of iterations of the Newton-Raphson algorithm
 !   to find the optimal value of k 
   REAL (RealK), PARAMETER :: umin_kopt_default = 1.0E-09_RealK
