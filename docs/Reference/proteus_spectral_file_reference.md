@@ -15,14 +15,14 @@ A quick reference, with one row per codename. Click a codename for its details a
 
 | Codename | Purpose | Bands | Gases |
 |----------|---------|-------|-------|
-| [Snowline](#snowline) | Water | 2048, 256, 128, 64, 32 | H<sub>2</sub>O |
-| [Breezehome](#breezehome) | Oxidised volatiles | 2048, 256, 128, 64, 32 | H<sub>2</sub>O, CO<sub>2</sub>, CO, O<sub>2</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub> |
+| [Snowline](#snowline) | Water | [2048](https://zenodo.org/records/23806236 "Snowline 2048 on Zenodo"), [256](https://zenodo.org/records/23806212 "Snowline 256 on Zenodo"), [128](https://zenodo.org/records/23806166 "Snowline 128 on Zenodo"), [64](https://zenodo.org/records/23806186 "Snowline 64 on Zenodo"), [32](https://zenodo.org/records/23806138 "Snowline 32 on Zenodo") | H<sub>2</sub>O |
+| [Breezehome](#breezehome) | Oxidised volatiles | [2048](https://zenodo.org/records/23808117 "Breezehome 2048 on Zenodo"), [256](https://zenodo.org/records/23808153 "Breezehome 256 on Zenodo"), [128](https://zenodo.org/records/23808184 "Breezehome 128 on Zenodo"), [64](https://zenodo.org/records/23808200 "Breezehome 64 on Zenodo"), [32](https://zenodo.org/records/23808218 "Breezehome 32 on Zenodo") | H<sub>2</sub>O, CO<sub>2</sub>, CO, O<sub>2</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub> |
 | [Cliffshade](#cliffshade) | Reduced volatiles | 2048, 256, 128, 64, 32 | H<sub>2</sub>, CO, CH<sub>4</sub>, S<sub>2</sub>, H<sub>2</sub>S, N<sub>2</sub>, NH<sub>3</sub> |
-| [Volenfell](#volenfell) | Rock vapours | 2048, 256, 128, 64, 32 | CO, O<sub>2</sub>, SiO, TiO, MgO, Na, K, Fe |
-| [Proudspire](#proudspire) | Combined volatiles | 2048, 256, 128, 64, 32 | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, O<sub>3</sub>, CH<sub>4</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub>, H<sub>2</sub>S, N<sub>2</sub>, NH<sub>3</sub>, HCN |
-| [Skyborn](#skyborn) | Hot Jupiters | 2048, 256, 128, 64, 32 | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, SiO, TiO, VO, MgO, Na, K, Fe |
-| [Atmora](#atmora) | Rock vapours and volatiles (smaller set) | 2048, 256, 128, 64, 32 | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, CH<sub>4</sub>, SO<sub>2</sub>, S<sub>2</sub>, H<sub>2</sub>S, NH<sub>3</sub>, SiO, TiO, Na, K |
-| [Sovngarde](#sovngarde) | Rock vapours and volatiles (larger set) | 2048, 256, 128, 64, 32 | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, O<sub>3</sub>, CH<sub>4</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub>, H<sub>2</sub>S, N<sub>2</sub>, NH<sub>3</sub>, HCN, SiO, TiO, MgO, Na, K, Fe |
+| [Volenfell](#volenfell) | Rock vapours | [2048](https://zenodo.org/records/23808275 "Volenfell 2048 on Zenodo"), [256](https://zenodo.org/records/23808259 "Volenfell 256 on Zenodo"), [128](https://zenodo.org/records/23808253 "Volenfell 128 on Zenodo"), [64](https://zenodo.org/records/23808244 "Volenfell 64 on Zenodo"), [32](https://zenodo.org/records/23808230 "Volenfell 32 on Zenodo") | CO, O<sub>2</sub>, SiO, TiO, MgO, Na, K, Fe |
+| [Proudspire](#proudspire) | Combined volatiles | [2048](https://zenodo.org/records/23838267 "Proudspire 2048 on Zenodo"), [256](https://zenodo.org/records/23838213 "Proudspire 256 on Zenodo"), [128](https://zenodo.org/records/23838187 "Proudspire 128 on Zenodo"), [64](https://zenodo.org/records/23838157 "Proudspire 64 on Zenodo"), [32](https://zenodo.org/records/23837929 "Proudspire 32 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, O<sub>3</sub>, CH<sub>4</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub>, H<sub>2</sub>S, N<sub>2</sub>, NH<sub>3</sub>, HCN |
+| [Skyborn](#skyborn) | Hot Jupiters | [2048](https://zenodo.org/records/23838562 "Skyborn 2048 on Zenodo"), [256](https://zenodo.org/records/23838507 "Skyborn 256 on Zenodo"), [128](https://zenodo.org/records/23838482 "Skyborn 128 on Zenodo"), [64](https://zenodo.org/records/23838469 "Skyborn 64 on Zenodo"), [32](https://zenodo.org/records/23838451 "Skyborn 32 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, SiO, TiO, VO, MgO, Na, K, Fe |
+| [Atmora](#atmora) | Rock vapours and volatiles (smaller set) | [2048](https://zenodo.org/records/23837640 "Atmora 2048 on Zenodo"), [256](https://zenodo.org/records/23837583 "Atmora 256 on Zenodo"), [128](https://zenodo.org/records/23837548 "Atmora 128 on Zenodo"), [64](https://zenodo.org/records/23837520 "Atmora 64 on Zenodo"), [32](https://zenodo.org/records/23837505 "Atmora 32 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, CH<sub>4</sub>, SO<sub>2</sub>, S<sub>2</sub>, H<sub>2</sub>S, NH<sub>3</sub>, SiO, TiO, Na, K |
+| [Sovngarde](#sovngarde) | Rock vapours and volatiles (larger set) | [2048](https://zenodo.org/records/23839054 "Sovngarde 2048 on Zenodo"), [256](https://zenodo.org/records/23838984 "Sovngarde 256 on Zenodo"), [128](https://zenodo.org/records/23838924 "Sovngarde 128 on Zenodo"), [64](https://zenodo.org/records/23838886 "Sovngarde 64 on Zenodo"), [32](https://zenodo.org/records/23838860 "Sovngarde 32 on Zenodo") | H<sub>2</sub>O, H<sub>2</sub>, CO<sub>2</sub>, CO, O<sub>2</sub>, O<sub>3</sub>, CH<sub>4</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub>, H<sub>2</sub>S, N<sub>2</sub>, NH<sub>3</sub>, HCN, SiO, TiO, MgO, Na, K, Fe |
 
 ### Generation II
 
@@ -320,6 +320,7 @@ Water. Made with `spectraltools`; see [Building spectral files](../Explanations/
     - 128: Medium resolution.
     - 64: Low resolution.
     - 32: Low resolution.
+- **Zenodo records**: [2048](https://zenodo.org/records/23806236 "Snowline 2048 on Zenodo"), [256](https://zenodo.org/records/23806212 "Snowline 256 on Zenodo"), [128](https://zenodo.org/records/23806166 "Snowline 128 on Zenodo"), [64](https://zenodo.org/records/23806186 "Snowline 64 on Zenodo"), [32](https://zenodo.org/records/23806138 "Snowline 32 on Zenodo")
 - **Absorbers**: H<sub>2</sub>O
 - **Continua**: H<sub>2</sub>O-H<sub>2</sub>O
 - **UV cross-sections**: No
@@ -343,6 +344,7 @@ Oxidised volatiles. Made with `spectraltools`; see [Building spectral files](../
     - 128: Medium resolution.
     - 64: Low resolution.
     - 32: Low resolution.
+- **Zenodo records**: [2048](https://zenodo.org/records/23808117 "Breezehome 2048 on Zenodo"), [256](https://zenodo.org/records/23808153 "Breezehome 256 on Zenodo"), [128](https://zenodo.org/records/23808184 "Breezehome 128 on Zenodo"), [64](https://zenodo.org/records/23808200 "Breezehome 64 on Zenodo"), [32](https://zenodo.org/records/23808218 "Breezehome 32 on Zenodo")
 - **Absorbers**: H<sub>2</sub>O, CO<sub>2</sub>, CO, O<sub>2</sub>, SO<sub>2</sub>, OCS, S<sub>2</sub>
 - **Continua**: H<sub>2</sub>O-H<sub>2</sub>O, O<sub>2</sub>-CO<sub>2</sub>, O<sub>2</sub>-O<sub>2</sub>, CO<sub>2</sub>-CO<sub>2</sub>, CO<sub>2</sub>-H<sub>2</sub>O
 - **UV cross-sections**: No
@@ -388,6 +390,7 @@ Rock vapours. Made with `spectraltools`; see [Building spectral files](../Explan
     - 128: Medium resolution.
     - 64: Low resolution.
     - 32: Low resolution.
+- **Zenodo records**: [2048](https://zenodo.org/records/23808275 "Volenfell 2048 on Zenodo"), [256](https://zenodo.org/records/23808259 "Volenfell 256 on Zenodo"), [128](https://zenodo.org/records/23808253 "Volenfell 128 on Zenodo"), [64](https://zenodo.org/records/23808244 "Volenfell 64 on Zenodo"), [32](https://zenodo.org/records/23808230 "Volenfell 32 on Zenodo")
 - **Absorbers**: CO, O<sub>2</sub>, SiO, TiO, MgO, Na, K, Fe
 - **Continua**: O<sub>2</sub>-O<sub>2</sub>
 - **UV cross-sections**: No
@@ -405,6 +408,7 @@ Rock vapours. Made with `spectraltools`; see [Building spectral files](../Explan
 Combined volatiles. Made with `spectraltools`; see [Building spectral files](../Explanations/spectraltools_pipeline.md).
 
 - **Bands**: 2048, 256, 128, 64, 32
+- **Zenodo records**: [2048](https://zenodo.org/records/23838267 "Proudspire 2048 on Zenodo"), [256](https://zenodo.org/records/23838213 "Proudspire 256 on Zenodo"), [128](https://zenodo.org/records/23838187 "Proudspire 128 on Zenodo"), [64](https://zenodo.org/records/23838157 "Proudspire 64 on Zenodo"), [32](https://zenodo.org/records/23837929 "Proudspire 32 on Zenodo")
 - **Gases (line list)**: H<sub>2</sub>O (POKAZATEL), H<sub>2</sub> (RACPPK), CO<sub>2</sub> (Dozen), CO (4thplus), O<sub>2</sub> (SWYT), O<sub>3</sub> (HITRAN2024), CH<sub>4</sub> (HITEMP2020), SO<sub>2</sub> (ExoAmes), OCS (OYT8), S<sub>2</sub> (Gomez), H<sub>2</sub>S (AYT2), N<sub>2</sub> (WCCRMT), NH<sub>3</sub> (CoYuTe), HCN (Harris)
 
 ### Skyborn
@@ -412,6 +416,7 @@ Combined volatiles. Made with `spectraltools`; see [Building spectral files](../
 Hot Jupiters. Made with `spectraltools`; see [Building spectral files](../Explanations/spectraltools_pipeline.md).
 
 - **Bands**: 2048, 256, 128, 64, 32
+- **Zenodo records**: [2048](https://zenodo.org/records/23838562 "Skyborn 2048 on Zenodo"), [256](https://zenodo.org/records/23838507 "Skyborn 256 on Zenodo"), [128](https://zenodo.org/records/23838482 "Skyborn 128 on Zenodo"), [64](https://zenodo.org/records/23838469 "Skyborn 64 on Zenodo"), [32](https://zenodo.org/records/23838451 "Skyborn 32 on Zenodo")
 - **Gases (line list)**: H<sub>2</sub>O (POKAZATEL), H<sub>2</sub> (RACPPK), CO<sub>2</sub> (Dozen), CO (4thplus), SiO (SiOUVenIR), TiO (Toto), VO (VOMYT), MgO (LiTY), Na (NIST), K (NIST), Fe (NIST)
 
 ### Atmora
@@ -419,6 +424,7 @@ Hot Jupiters. Made with `spectraltools`; see [Building spectral files](../Explan
 Rock vapours and volatiles (smaller set). Made with `spectraltools`; see [Building spectral files](../Explanations/spectraltools_pipeline.md).
 
 - **Bands**: 2048, 256, 128, 64, 32
+- **Zenodo records**: [2048](https://zenodo.org/records/23837640 "Atmora 2048 on Zenodo"), [256](https://zenodo.org/records/23837583 "Atmora 256 on Zenodo"), [128](https://zenodo.org/records/23837548 "Atmora 128 on Zenodo"), [64](https://zenodo.org/records/23837520 "Atmora 64 on Zenodo"), [32](https://zenodo.org/records/23837505 "Atmora 32 on Zenodo")
 - **Gases (line list)**: H<sub>2</sub>O (POKAZATEL), H<sub>2</sub> (RACPPK), CO<sub>2</sub> (Dozen), CO (4thplus), O<sub>2</sub> (SWYT), CH<sub>4</sub> (HITEMP2020), SO<sub>2</sub> (ExoAmes), S<sub>2</sub> (Gomez), H<sub>2</sub>S (AYT2), NH<sub>3</sub> (CoYuTe), SiO (SiOUVenIR), TiO (Toto), Na (NIST), K (NIST)
 
 ### Sovngarde
@@ -426,6 +432,7 @@ Rock vapours and volatiles (smaller set). Made with `spectraltools`; see [Buildi
 Rock vapours and volatiles (larger set). Made with `spectraltools`; see [Building spectral files](../Explanations/spectraltools_pipeline.md).
 
 - **Bands**: 2048, 256, 128, 64, 32
+- **Zenodo records**: [2048](https://zenodo.org/records/23839054 "Sovngarde 2048 on Zenodo"), [256](https://zenodo.org/records/23838984 "Sovngarde 256 on Zenodo"), [128](https://zenodo.org/records/23838924 "Sovngarde 128 on Zenodo"), [64](https://zenodo.org/records/23838886 "Sovngarde 64 on Zenodo"), [32](https://zenodo.org/records/23838860 "Sovngarde 32 on Zenodo")
 - **Gases (line list)**: H<sub>2</sub>O (POKAZATEL), H<sub>2</sub> (RACPPK), CO<sub>2</sub> (Dozen), CO (4thplus), O<sub>2</sub> (SWYT), O<sub>3</sub> (HITRAN2024), CH<sub>4</sub> (HITEMP2020), SO<sub>2</sub> (ExoAmes), OCS (OYT8), S<sub>2</sub> (Gomez), H<sub>2</sub>S (AYT2), N<sub>2</sub> (WCCRMT), NH<sub>3</sub> (CoYuTe), HCN (Harris), SiO (SiOUVenIR), TiO (Toto), MgO (LiTY), Na (NIST), K (NIST), Fe (NIST)
 
 The line list for each gas is the same as in the [line opacity table](#line-opacities).
